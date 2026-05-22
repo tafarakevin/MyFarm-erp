@@ -1431,7 +1431,11 @@ def get_audit_log():
 # ─── STATIC / FRONTEND ────────────────────────────────────────────────────────
 
 @app.route("/")
-def index():
+@app.route("/<path:path>")
+def index(path=None):
+    # Serve API routes normally; catch all others for the SPA
+    if path and path.startswith("api/"):
+        return jsonify({"error": "Not found"}), 404
     return send_from_directory(PUBLIC_DIR, "index.html")
 
 
