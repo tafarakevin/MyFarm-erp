@@ -4777,7 +4777,11 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     item.classList.add('active');
-    const pgEl=document.getElementById('page-'+pg);if(pgEl)pgEl.classList.add('active');
+    // Hide ERP container when switching to standard pages
+    const erpContainer=document.getElementById('erp-page-container');
+    if(erpContainer) erpContainer.style.display='none';
+    const pgEl=document.getElementById('page-'+pg);
+    if(pgEl) pgEl.classList.add('active');
     document.getElementById('topbar-title').textContent=pageLabels[pg];
     document.getElementById('content').scrollTop=0;
     currentPage=pg;loadPage(pg);
@@ -6643,7 +6647,20 @@ const erpFmt = {
   date: s => s ? new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'
 };
 
-function erpContent(html){ document.getElementById('content').innerHTML = html; }
+function erpContent(html){
+  // Hide all standard page divs
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // Get or create the ERP container
+  let erp = document.getElementById('erp-page-container');
+  if(!erp){
+    erp = document.createElement('div');
+    erp.id = 'erp-page-container';
+    erp.style.cssText = 'padding:0;min-height:100%';
+    document.getElementById('content').appendChild(erp);
+  }
+  erp.style.display = 'block';
+  erp.innerHTML = html;
+}
 
 async function erpFetch(path, method='GET', body=null){
   return api(path, method, body);
