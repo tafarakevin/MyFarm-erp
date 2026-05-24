@@ -3491,19 +3491,19 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <!-- GROUP ERP: Intelligence Platform -->
     <div class="nav-group" id="nav-group-erp">
       <div class="nav-group-toggle" onclick="toggleNavGroup('erp')">
-        <div class="nav-section-label" style="color:var(--gold-lt)">ERP Intelligence</div>
+        <div class="nav-section-label" style="color:var(--gold-lt)">Farm Intelligence</div>
         <span class="nav-group-chevron">expand_more</span>
       </div>
       <div class="nav-group-body">
-        <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span> Executive KPIs</div>
-        <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span> Profitability</div>
-        <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span> Budgets &amp; Forecasts</div>
-        <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span> Operational Log</div>
-        <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span> Cost Analytics</div>
-        <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span> Production</div>
-        <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span> Depreciation</div>
-        <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span> Operational Units</div>
-        <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span> Seasons</div>
+        <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span> Farm Overview</div>
+        <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span> Profit &amp; Loss</div>
+        <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span> Season Budget</div>
+        <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span> Farm Activities</div>
+        <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span> Cost Breakdown</div>
+        <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span> Harvest &amp; Sales</div>
+        <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span> Asset Values</div>
+        <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span> Farm Blocks &amp; Herds</div>
+        <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span> Seasons &amp; Planning</div>
       </div>
     </div>
 
@@ -4846,6 +4846,23 @@ async function loadDashboard(){
   document.getElementById('dash-activity').innerHTML=`<div class="skel skel-row"></div><div class="skel skel-row"></div>`;
   document.getElementById('weather-row').innerHTML=[1,2,3,4,5,6,7].map(()=>`<div class="weather-day"><div class="skel" style="height:22px;border-radius:4px;margin-bottom:6px"></div><div class="skel skel-text short" style="margin:0 auto"></div></div>`).join('');
 
+  // ── ERP Quick Links — inject into quick actions ──────────────────────────────
+  const erpQuickBtns = `
+  <div class="qa-btn" onclick="loadErpDashboard()" style="border-color:var(--gold-border)">
+    <div class="qa-icon" style="background:var(--gold-dim);border:1px solid var(--gold-border)">
+      <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1">insights</span>
+    </div>
+    <div><div class="qa-label" style="color:var(--gold-lt)">Farm Overview</div><div class="qa-sub">P&L &amp; KPIs</div></div>
+  </div>
+  <div class="qa-btn" onclick="loadErpActivities()">
+    <div class="qa-icon" style="background:var(--success-bg);border:1px solid var(--success-bdr)">
+      <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1">agriculture</span>
+    </div>
+    <div><div class="qa-label">Log Activity</div><div class="qa-sub">Record operations</div></div>
+  </div>`;
+  const qaContainer = document.getElementById('dash-quick-actions');
+  if(qaContainer) qaContainer.innerHTML += erpQuickBtns;
+
   // ── AI Panel — load concurrently ─────────────────────────────────────────
   loadAIInsights();
 
@@ -5006,7 +5023,10 @@ async function loadAssets(){
   const ops=rows.filter(r=>r.status==='Operational').length,maint=rows.filter(r=>r.status==='Maintenance'||r.status==='Repair').length,val=rows.reduce((s,r)=>s+(parseFloat(r.value)||0),0);
   document.getElementById('assets-stats').innerHTML=`<div class="stat-card"><div class="stat-label">Total Assets</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">registered</div></div><div class="stat-card stat-accent"><div class="stat-label">Operational</div><div class="stat-value">${ops}</div><div class="stat-delta delta-up">▲ ${rows.length?Math.round(ops/rows.length*100):0}% uptime</div></div><div class="stat-card"><div class="stat-label">In Maintenance</div><div class="stat-value">${maint}</div><div class="stat-delta ${maint>0?'delta-down':'delta-up'}">${maint>0?'▼ needs attention':'▲ all clear'}</div></div><div class="stat-card"><div class="stat-label">Asset Value</div><div class="stat-value">${fmtCurrency(val,true)}</div><div class="stat-delta" style="color:var(--text-muted)">total register</div></div>`;
   const cw=canWrite();
-  document.getElementById('assets-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('asset')">+ Add Asset</button>`:'';
+  document.getElementById('assets-add-btn').innerHTML=cw
+    ?`<button class="btn btn-primary btn-sm" onclick="openModal('asset')">+ Add Asset</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadErpDepreciation()" style="margin-left:8px" title="Track asset depreciation">📉 Asset Values</button>`
+    :'';
   document.getElementById('assets-tbody').innerHTML=rows.length
     ?rows.map(r=>`<tr onclick="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}</td><td>${r.description}</td><td>${r.category}</td><td>${r.location}</td><td>${spill(r.status)}</td><td>${r.last_service||'—'}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
     :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">🔧</div><span class="empty-title">No assets recorded yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block">Equipment, vehicles and infrastructure will appear here.</span>${cw?`<button class="empty-cta" onclick="openModal('asset')">+ Add your first asset</button>`:''}</td></tr>`;
@@ -5030,7 +5050,11 @@ async function loadLivestock(){
   const total=herds.reduce((s,h)=>s+(parseInt(h.count)||0),0);
   document.getElementById('livestock-stats').innerHTML=`<div class="stat-card stat-accent"><div class="stat-label">Total Head</div><div class="stat-value">${total.toLocaleString()}</div><div class="stat-delta delta-up">▲ herd total</div></div>${herds.slice(0,3).map(h=>`<div class="stat-card"><div class="stat-label">${h.breed}</div><div class="stat-value">${h.count}</div><div class="stat-delta" style="color:var(--text-muted)">head</div></div>`).join('')}`;
   const cw=canWrite();
-  document.getElementById('herd-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('herd')">+ Add Herd</button>`:'';
+  document.getElementById('herd-add-btn').innerHTML=cw
+    ?`<button class="btn btn-primary btn-sm" onclick="openModal('herd')">+ Add Herd</button>
+      <button class="btn btn-secondary btn-sm" onclick="openModal('event')" style="margin-left:8px">+ Log Event</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadErpActivities()" style="margin-left:8px" title="Log feeding, vaccination etc.">⚙ Log Activity</button>`
+    :'';
   document.getElementById('event-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('event')">+ Log Event</button>`:'';
   document.getElementById('livestock-tbody').innerHTML=herds.length
     ?herds.map(h=>`<tr onclick="${cw?`editRecord('herd',${h.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${h.herd_name}</td><td>${h.count}</td><td>${h.avg_weight} kg</td><td>${spill(h.health)}</td><td>${spill(h.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('herd',${h.id})">✕</button>`:''}</td></tr>`).join('')
@@ -5056,7 +5080,11 @@ async function loadCrops(){
   const totalHa=rows.reduce((s,r)=>s+(parseFloat(r.area_ha)||0),0),inProd=rows.filter(r=>r.status!=='Fallow').reduce((s,r)=>s+(parseFloat(r.area_ha)||0),0),fallow=rows.filter(r=>r.status==='Fallow').reduce((s,r)=>s+(parseFloat(r.area_ha)||0),0),yv=rows.reduce((s,r)=>s+(parseFloat(r.est_yield_value)||0),0);
   document.getElementById('crops-stats').innerHTML=`<div class="stat-card stat-accent"><div class="stat-label">Total Area</div><div class="stat-value">${(+totalHa).toFixed(1).replace(/\.0$/,'')} ha</div><div class="stat-delta delta-up">▲ total land</div></div><div class="stat-card"><div class="stat-label">In Production</div><div class="stat-value">${(+inProd).toFixed(1).replace(/\.0$/,'')} ha</div><div class="stat-delta" style="color:var(--text-muted)">${totalHa?Math.round(inProd/totalHa*100):0}% utilised</div></div><div class="stat-card"><div class="stat-label">Fallow</div><div class="stat-value">${(+fallow).toFixed(1).replace(/\.0$/,'')} ha</div><div class="stat-delta" style="color:var(--text-muted)">resting</div></div><div class="stat-card"><div class="stat-label">Est. Yield Value</div><div class="stat-value">${fmtCurrency(yv,true)}</div><div class="stat-delta delta-up">▲ projected</div></div>`;
   const cw=canWrite();
-  document.getElementById('crop-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('crop')">+ Add Field</button>`:'';
+  document.getElementById('crop-add-btn').innerHTML=cw
+    ?`<button class="btn btn-primary btn-sm" onclick="openModal('crop')">+ Add Field</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadErpActivities()" style="margin-left:8px" title="Log a farm activity">⚙ Log Activity</button>
+      <button class="btn btn-secondary btn-sm" onclick="loadErpProduction()" style="margin-left:8px" title="Record harvest">🌾 Record Harvest</button>`
+    :'';
   document.getElementById('crops-tbody').innerHTML=rows.length
     ?rows.map(r=>`<tr onclick="${cw?`editRecord('crop',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.block}</td><td>${r.crop||'—'}</td><td>${parseFloat(r.area_ha)||0} ha</td><td>${r.planted||'—'}</td><td>${r.est_harvest||'—'}</td><td>${spill(r.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('crop',${r.id})">✕</button>`:''}</td></tr>`).join('')
     :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">🌾</div><span class="empty-title">No fields recorded yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block">Add your field blocks to start tracking crops, planting and harvest dates.</span>${cw?`<button class="empty-cta" onclick="openModal('crop')">+ Add first field</button>`:''}</td></tr>`;
@@ -5110,7 +5138,8 @@ async function loadInventory(){
   const low=rows.filter(r=>(parseFloat(r.on_hand)||0)<=(parseFloat(r.par_level)||0)),totalVal=rows.reduce((s,r)=>s+((parseFloat(r.on_hand)||0)*(parseFloat(r.unit_cost)||0)),0);
   document.getElementById('inventory-stats').innerHTML=`<div class="stat-card"><div class="stat-label">SKU Lines</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">tracked items</div></div><div class="stat-card"><div class="stat-label">Low Stock</div><div class="stat-value">${low.length}</div><div class="stat-delta ${low.length>0?'delta-down':'delta-up'}">${low.length>0?'▼ reorder needed':'▲ all stocked'}</div></div><div class="stat-card stat-accent"><div class="stat-label">Total Value</div><div class="stat-value">${fmtCurrency(totalVal,true)}</div><div class="stat-delta" style="color:var(--text-muted)">on hand</div></div><div class="stat-card"><div class="stat-label">Last Updated</div><div class="stat-value" style="font-size:16px;letter-spacing:-0.01em">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div><div class="stat-delta" style="color:var(--text-muted)">today</div></div>`;
   const cw=canWrite();
-  document.getElementById('inv-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('inventory')">+ Add Item</button>`:'';
+  document.getElementById('inv-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('inventory')">+ Add Item</button>` + 
+    `<button class="btn btn-secondary btn-sm" onclick="openReceiveStockPicker()" style="margin-left:8px">↓ Receive Stock</button>`:'';
   document.getElementById('inventory-levels').innerHTML=rows.length
     ?rows.map(r=>{const p=Math.round(r.on_hand/r.max_level*100),c=p<25?'low':r.category==='Feed'||r.category==='Crop Input'?'moss':'info-fill';return`<div class="inv-row" onclick="${cw?`editRecord('inventory',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="inv-header"><span class="inv-name">${r.name}</span><span class="inv-qty">${r.on_hand.toLocaleString()} ${r.unit} / ${r.max_level.toLocaleString()} ${r.unit}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${Math.min(p,100)}%"></div></div></div>`;}).join('')
     :`<div style="padding:24px 0;text-align:center;color:var(--text-faint);font-style:italic;font-size:12.5px">No inventory items yet</div>`;
@@ -6553,21 +6582,21 @@ function copyInviteCode(){
 
 .kpi-card { background: var(--s2); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
 .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--gold-dk), var(--gold)); }
-.kpi-card .kpi-label { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+.kpi-card .kpi-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
 .kpi-card .kpi-value { font-size: 26px; font-weight: 600; color: var(--text-primary); line-height: 1; }
-.kpi-card .kpi-sub { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+.kpi-card .kpi-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
 .kpi-card .kpi-icon { position:absolute; top:16px; right:16px; font-size:22px; opacity:.22; color: var(--gold); }
 .kpi-positive { color: var(--success-txt) !important; }
 .kpi-negative { color: var(--error-txt) !important; }
 .kpi-warn { color: var(--warn-txt) !important; }
 
 .erp-panel { background: var(--s2); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
-.erp-panel-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing:.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.erp-panel-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing:.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
 .erp-panel-title .nav-icon { font-size: 16px; color: var(--gold); }
 
 .erp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.erp-table th { background: var(--s3); color: var(--text-muted); font-weight: 500; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--bdr); }
-.erp-table td { padding: 10px 12px; border-bottom: 1px solid var(--bdr2); color: var(--text-primary); vertical-align: middle; }
+.erp-table th { background: var(--s3); color: var(--text-muted); font-weight: 500; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--bdr); }
+.erp-table td { padding: 12px 14px; border-bottom: 1px solid var(--bdr2); color: var(--text-primary); vertical-align: middle; font-size: 13px; }
 .erp-table tr:hover td { background: var(--s3); }
 .erp-table .amount { font-family: var(--ff-mono); text-align: right; }
 .erp-table .positive { color: var(--success-txt); }
@@ -6596,7 +6625,7 @@ function copyInviteCode(){
 .variance-fill.under { background: var(--success-txt); }
 .variance-fill.over { background: var(--error-txt); }
 
-.erp-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--bdr); background: var(--s3); color: var(--text-primary); font-size: 13px; cursor: pointer; transition: var(--tr); }
+.erp-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--bdr); background: var(--s3); color: var(--text-primary); font-size: 13px; cursor: pointer; transition: var(--tr); }
 .erp-btn:hover { background: var(--s4); border-color: var(--bdr-hv); }
 .erp-btn.primary { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold-lt); }
 .erp-btn.primary:hover { background: rgba(184,146,74,0.2); }
@@ -6604,10 +6633,10 @@ function copyInviteCode(){
 .erp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .erp-form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
 @media(max-width:600px){ .erp-form-row,.erp-form-row.triple { grid-template-columns: 1fr; } }
-.erp-label { font-size: 11px; text-transform: uppercase; letter-spacing:.05em; color: var(--text-muted); margin-bottom: 5px; display: block; }
-.erp-input { width: 100%; padding: 9px 12px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
+.erp-label { font-size: 13px; text-transform: uppercase; letter-spacing:.05em; color: var(--text-muted); margin-bottom: 5px; display: block; }
+.erp-input { width: 100%; padding: 11px 14px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
 .erp-input:focus { outline: none; border-color: var(--gold-border); }
-.erp-select { width: 100%; padding: 9px 12px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
+.erp-select { width: 100%; padding: 11px 14px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
 
 .mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
 .mini-bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 6px; transition: height 0.3s; }
@@ -6623,6 +6652,19 @@ function copyInviteCode(){
 .donut-ring::after { content: attr(data-pct) '%'; position:absolute; inset:8px; background: var(--s2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-primary); }
 
 .notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: inline-block; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Larger touch targets for older users */
+.erp-btn { min-height: 42px; }
+.erp-input, .erp-select { min-height: 44px; font-size: 14px !important; }
+.kpi-value { font-size: 28px !important; }
+.profit-row { font-size: 15px; padding: 10px 0; }
+.erp-table td { font-size: 14px !important; }
+.erp-table th { font-size: 12px !important; }
 .notif-count { background: var(--gold); color: var(--bg); font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 5px; display: inline-block; }
 </style>
 
@@ -6662,15 +6704,128 @@ function erpContent(html){
   erp.innerHTML = html;
 }
 
+
 async function erpFetch(path, method='GET', body=null){
   return api(path, method, body);
+}
+
+// ── SHARED ERP MODAL ─────────────────────────────────────────────────────────
+// Replaces all prompt() and confirm() dialogs with a proper styled modal
+function erpModal(title, subtitle, fields, onSave){
+  const existing = document.getElementById('erp-shared-modal');
+  if(existing) existing.remove();
+
+  const fieldsHtml = fields.map(f => {
+    let input = '';
+    if(f.type === 'select'){
+      input = `<select id="${f.id}" class="erp-input" style="font-size:14px;cursor:pointer">
+        ${(f.options||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}
+      </select>`;
+    } else {
+      input = `<input id="${f.id}" type="${f.type||'text'}" class="erp-input" 
+        placeholder="${f.placeholder||''}" 
+        style="font-size:14px" 
+        ${f.type==='number' ? 'min="0" step="0.01"' : ''}>`;
+    }
+    return `<div style="margin-bottom:16px">
+      <label class="erp-label" style="font-size:13px;margin-bottom:6px">${f.label}</label>
+      ${input}
+    </div>`;
+  }).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'erp-shared-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:500px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6);animation:slideUp 0.2s ease">
+      <div style="margin-bottom:20px">
+        <div style="font-size:19px;font-weight:600;color:var(--text-primary);margin-bottom:5px">${title}</div>
+        ${subtitle ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.5">${subtitle}</div>` : ''}
+      </div>
+      ${fieldsHtml}
+      <div id="erp-modal-err" style="display:none;padding:10px 14px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:8px;color:var(--error-txt);font-size:13px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button id="erp-modal-save" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
+          <span class="material-symbols-outlined" style="font-size:16px">check</span> Save
+        </button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">
+          Cancel
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  // Focus first input
+  setTimeout(()=>{
+    const first = modal.querySelector('input, select');
+    if(first) first.focus();
+  }, 120);
+
+  // Close on backdrop click
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+
+  // Close on Escape
+  const escHandler = e => { if(e.key === 'Escape'){ modal.remove(); document.removeEventListener('keydown', escHandler); } };
+  document.addEventListener('keydown', escHandler);
+
+  // Save button
+  document.getElementById('erp-modal-save').addEventListener('click', async () => {
+    const btn = document.getElementById('erp-modal-save');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    const vals = {};
+    fields.forEach(f => { vals[f.id] = document.getElementById(f.id)?.value || ''; });
+    try {
+      const ok = await onSave(vals);
+      if(ok !== false) modal.remove();
+    } catch(e) {
+      erpModalError('Something went wrong. Please try again.');
+    } finally {
+      if(document.getElementById('erp-modal-save')){
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">check</span> Save';
+        btn.disabled = false;
+      }
+    }
+  });
+}
+
+function erpModalError(msg){
+  const el = document.getElementById('erp-modal-err');
+  if(el){ el.style.display='block'; el.textContent = msg; }
+}
+
+// ── SHARED ERP CONFIRM DIALOG ─────────────────────────────────────────────────
+function erpConfirm(title, message, onConfirm){
+  const existing = document.getElementById('erp-confirm-modal');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'erp-confirm-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:420px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
+      <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:10px">${title}</div>
+      <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px">${message}</div>
+      <div style="display:flex;gap:10px">
+        <button id="erp-confirm-yes" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">Confirm</button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-confirm-modal').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+  document.getElementById('erp-confirm-yes').addEventListener('click', async () => {
+    modal.remove();
+    await onConfirm();
+  });
 }
 
 // ── LOAD ERP DASHBOARD ────────────────────────────────────────────────────────
 async function loadErpDashboard(){
   currentPage = 'erp-dashboard';
-  erpContent(`<div class="page-header"><h1>Executive Dashboard</h1><p class="page-sub">Real-time farm operations & financial intelligence</p></div>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px"><div class="spinner" style="width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite"></div><span style="color:var(--text-muted);font-size:13px">Loading ERP data…</span></div>`);
+  erpContent(`<div class="page-header"><h1>Farm Overview</h1></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <div style="width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <span style="color:var(--text-muted);font-size:14px">Loading your farm data…</span>
+  </div>`);
 
   const [dash, prof] = await Promise.all([
     erpFetch('/erp/dashboard'),
@@ -6682,8 +6837,8 @@ async function loadErpDashboard(){
 
   erpContent(`
 <div class="page-header">
-  <h1>Executive Dashboard</h1>
-  <p class="page-sub">Live farm operations & financial intelligence — Thornfield Estate</p>
+  <h1>Farm Overview</h1>
+  <p class="page-sub">Your farm's financial and operational summary — updated live</p>
 </div>
 
 <!-- KPI ROW 1: Revenue & Profit -->
@@ -7015,12 +7170,21 @@ async function saveContingency(){
 let _projSeasonId = null;
 function openRevProjectionForm(seasonId){
   _projSeasonId = seasonId;
-  const desc = prompt('Projection description (e.g. "Maize Block N1 — 60t @ $220"):');
-  if(!desc) return;
-  const amt = parseFloat(prompt('Projected amount (USD):') || '0');
-  if(!amt) return;
-  erpFetch('/erp/revenue-projections','POST',{season_id:seasonId,description:desc,projected_amount:amt})
-    .then(()=>{ toast('Projection added'); loadErpProfitability(); });
+  erpModal('Add Revenue Projection',
+    'Enter the expected income for a crop, herd, or product this season',
+    [
+      {id:'rp-desc', label:'What are you projecting income from?', type:'text', placeholder:'e.g. Maize — Block N1 (60 tonnes @ $220 per tonne)'},
+      {id:'rp-amt',  label:'Expected Amount (USD $)',              type:'number', placeholder:'0.00'}
+    ],
+    async (vals) => {
+      if(!vals['rp-desc']){ erpModalError('Please enter a description'); return false; }
+      if(!vals['rp-amt'] || parseFloat(vals['rp-amt']) <= 0){ erpModalError('Please enter an amount greater than zero'); return false; }
+      await erpFetch('/erp/revenue-projections','POST',{season_id:_projSeasonId, description:vals['rp-desc'], projected_amount:parseFloat(vals['rp-amt'])});
+      toast('Revenue projection saved');
+      loadErpProfitability();
+      return true;
+    }
+  );
 }
 
 // ── BUDGETS & FORECASTS ───────────────────────────────────────────────────────
@@ -7120,13 +7284,20 @@ async function loadErpBudgets(){
 }
 
 async function openAddBudgetForm(seasonId){
-  const cat = prompt('Budget category (e.g. Labour, Fuel & Energy, Crop Inputs):');
-  if(!cat) return;
-  const amt = parseFloat(prompt('Planned amount ($):') || '0');
-  if(!amt) return;
-  await erpFetch('/erp/budgets','POST',{season_id:seasonId,category:cat,planned_amount:amt});
-  toast('Budget line added');
-  loadErpBudgets();
+  erpModal('Add Budget Line',
+    'Set a spending target for a category this season',
+    [
+      {id:'bg-cat', label:'Spending Category', type:'select', options:['Labour','Crop Inputs','Fuel & Energy','Equipment Maintenance','Livestock Feed & Vet','Irrigation','Seeds','Chemicals','Administration','Other']},
+      {id:'bg-amt', label:'Planned Budget Amount (USD $)', type:'number', placeholder:'0.00'}
+    ],
+    async (vals) => {
+      if(!vals['bg-amt'] || parseFloat(vals['bg-amt']) <= 0){ erpModalError('Please enter an amount'); return false; }
+      await erpFetch('/erp/budgets','POST',{season_id:seasonId, category:vals['bg-cat'], planned_amount:parseFloat(vals['bg-amt'])});
+      toast('Budget line added');
+      loadErpBudgets();
+      return true;
+    }
+  );
 }
 
 // ── OPERATIONAL ACTIVITIES ────────────────────────────────────────────────────
@@ -7134,12 +7305,14 @@ async function loadErpActivities(){
   currentPage = 'erp-activities';
   erpContent(`<div class="page-header"><h1>Operational Log</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
-  const [activities, units, inventory, seasons] = await Promise.all([
+  const [activities, units, inventory, seasons, workers] = await Promise.all([
     erpFetch('/erp/activities?limit=100'),
     erpFetch('/erp/units'),
     erpFetch('/inventory'),
-    erpFetch('/erp/seasons')
+    erpFetch('/erp/seasons'),
+    erpFetch('/workers')
   ]);
+  window._erpWorkers = workers || [];
 
   ERP.units = units || [];
   ERP.seasons = seasons || [];
@@ -7149,7 +7322,7 @@ async function loadErpActivities(){
 
   erpContent(`
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
-  <div><h1>Operational Log</h1><p class="page-sub">All farm activities with real-time inventory &amp; cost integration</p></div>
+  <div><h1>Farm Activities</h1><p class="page-sub">Record what happened on the farm — stock is deducted and costs updated automatically</p></div>
   <button class="erp-btn primary" onclick="openActivityForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Log Activity</button>
 </div>
 
@@ -7198,6 +7371,19 @@ async function loadErpActivities(){
     <div>
       <label class="erp-label">Activity Date</label>
       <input id="act-date" type="date" class="erp-input" value="${new Date().toISOString().split('T')[0]}">
+    </div>
+  </div>
+  <div class="erp-form-row">
+    <div>
+      <label class="erp-label">Assigned Worker (optional)</label>
+      <select id="act-worker" class="erp-select">
+        <option value="">— No specific worker —</option>
+        ${(window._erpWorkers||[]).map(w=>`<option value="${w.id}">${w.name} (${w.role})</option>`).join('')}
+      </select>
+    </div>
+    <div>
+      <label class="erp-label">Labour Hours (if applicable)</label>
+      <input id="act-hours" type="number" class="erp-input" placeholder="0" min="0" step="0.5">
     </div>
   </div>
 
@@ -7278,13 +7464,15 @@ async function saveActivity(){
   });
 
   const seasonId = ERP.seasons.find(s=>s.status==='Active')?.id || null;
+  const workerId = document.getElementById('act-worker')?.value || null;
+  const hours = parseFloat(document.getElementById('act-hours')?.value || '0');
 
   const btn = document.querySelector('#act-form-panel .erp-btn.primary');
   btn.textContent = 'Saving…';
   btn.disabled = true;
 
   try {
-    await erpFetch('/erp/activities','POST',{
+    const result = await erpFetch('/erp/activities','POST',{
       activity_type: type,
       unit_id: unitId || null,
       season_id: seasonId,
@@ -7292,15 +7480,33 @@ async function saveActivity(){
       activity_date: date,
       inventory_items: invItems
     });
+    // Save labour allocation if worker + hours specified
+    if(workerId && hours > 0 && result?.id){
+      const worker = (window._erpWorkers||[]).find(w=>w.id==workerId);
+      const hourlyRate = worker?.salary ? parseFloat(worker.salary)/176 : 0; // 176 working hours/month
+      await erpFetch('/erp/labor','POST',{
+        activity_id: result.id,
+        worker_id: parseInt(workerId),
+        unit_id: unitId || null,
+        hours: hours,
+        hourly_rate: Math.round(hourlyRate * 100) / 100,
+        allocation_date: date
+      });
+    }
     const msg = document.getElementById('act-form-msg');
     msg.style.display='block';
-    msg.textContent = `✓ Activity logged${invItems.length ? ` — ${invItems.length} inventory item(s) deducted` : ''}`;
-    setTimeout(()=>{ msg.style.display='none'; document.getElementById('act-form-panel').style.display='none'; loadErpActivities(); },1800);
+    let confirmMsg = '✓ Activity logged';
+    if(invItems.length) confirmMsg += ` — ${invItems.length} stock item(s) deducted`;
+    if(workerId && hours > 0) confirmMsg += ` — labour recorded`;
+    msg.textContent = confirmMsg;
+    setTimeout(()=>{ msg.style.display='none'; document.getElementById('act-form-panel').style.display='none'; loadErpActivities(); },2000);
   } catch(e) {
-    toast('Error saving activity','error');
+    toast('Error saving activity — please try again','error');
   } finally {
-    btn.textContent = 'Save Activity';
-    btn.disabled = false;
+    if(document.querySelector('#act-form-panel .erp-btn.primary')){
+      btn.textContent = 'Save Activity';
+      btn.disabled = false;
+    }
   }
 }
 
@@ -7564,10 +7770,15 @@ async function saveDepreciation(){
   loadErpDepreciation();
 }
 async function runDepreciation(id){
-  if(!confirm('Run one depreciation period? This will record an expense entry.')) return;
-  await erpFetch(`/erp/depreciation/${id}/run`,'POST');
-  toast('Depreciation period run');
-  loadErpDepreciation();
+  erpConfirm(
+    'Run Depreciation Period',
+    'This will reduce the asset value by one year of depreciation and record it as an expense in your finance records. This cannot be undone.',
+    async () => {
+      await erpFetch(`/erp/depreciation/${id}/run`,'POST');
+      toast('Depreciation period recorded');
+      loadErpDepreciation();
+    }
+  );
 }
 
 // ── OPERATIONAL UNITS ─────────────────────────────────────────────────────────
@@ -7709,18 +7920,115 @@ async function saveSeason(){
 }
 
 // ── RECEIVE INVENTORY (ERP-enhanced) ─────────────────────────────────────────
-async function erpReceiveInventory(inventoryId){
-  const qty = parseFloat(prompt('Quantity received:') || '0');
-  if(!qty) return;
-  const cost = parseFloat(prompt('Unit cost ($):') || '0');
-  if(!cost) return;
-  await erpFetch('/erp/inventory-lots','POST',{
-    inventory_id: inventoryId,
-    quantity_received: qty,
-    unit_cost: cost,
-    received_date: new Date().toISOString().split('T')[0]
+async function erpReceiveInventory(inventoryId, itemName){
+  erpModal('Receive Stock — ' + (itemName || 'Item'),
+    'Stock will be added to inventory and the cost recorded as an expense automatically',
+    [
+      {id:'ri-qty',  label:'Quantity Received', type:'number', placeholder:'0'},
+      {id:'ri-cost', label:'Unit Cost (USD $)',  type:'number', placeholder:'0.00'},
+      {id:'ri-supplier', label:'Supplier (optional)', type:'text', placeholder:'e.g. Agrochem Zimbabwe'}
+    ],
+    async (vals) => {
+      const qty = parseFloat(vals['ri-qty']);
+      const cost = parseFloat(vals['ri-cost']);
+      if(!qty || qty <= 0){ erpModalError('Please enter a quantity'); return false; }
+      if(!cost || cost <= 0){ erpModalError('Please enter a unit cost'); return false; }
+      await erpFetch('/erp/inventory-lots','POST',{
+        inventory_id: inventoryId,
+        quantity_received: qty,
+        unit_cost: cost,
+        supplier: vals['ri-supplier'] || null,
+        received_date: new Date().toISOString().split('T')[0]
+      });
+      toast('Stock received — inventory updated and expense recorded');
+      if(typeof loadInventory === 'function') loadInventory();
+      return true;
+    }
+  );
+}
+
+// ── RECEIVE STOCK PICKER (called from standard Inventory page) ───────────────
+async function openReceiveStockPicker(){
+  // Fetch current inventory to populate picker
+  const items = await erpFetch('/inventory').catch(()=>[]);
+  if(!items || !items.length){
+    toast('Add inventory items first before receiving stock','error');
+    return;
+  }
+  const existing = document.getElementById('erp-shared-modal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'erp-shared-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:520px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
+      <div style="font-size:19px;font-weight:600;color:var(--text-primary);margin-bottom:5px">Receive Stock</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px">Stock is added to inventory and the purchase cost is recorded as an expense automatically</div>
+      <div style="margin-bottom:16px">
+        <label class="erp-label" style="font-size:13px">Which item are you receiving?</label>
+        <select id="rs-item" class="erp-input" style="font-size:14px;cursor:pointer">
+          <option value="">— Select an item —</option>
+          ${items.map(i=>`<option value="${i.id}" data-name="${i.name}">${i.name} (${i.category}) — ${i.on_hand} ${i.unit} currently in stock</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <label class="erp-label" style="font-size:13px">Quantity Received</label>
+          <input id="rs-qty" type="number" class="erp-input" placeholder="0" min="0" step="0.01" style="font-size:14px">
+        </div>
+        <div>
+          <label class="erp-label" style="font-size:13px">Unit Cost (USD $)</label>
+          <input id="rs-cost" type="number" class="erp-input" placeholder="0.00" min="0" step="0.01" style="font-size:14px">
+        </div>
+      </div>
+      <div style="margin-bottom:20px">
+        <label class="erp-label" style="font-size:13px">Supplier (optional)</label>
+        <input id="rs-supplier" class="erp-input" placeholder="e.g. Agrochem Zimbabwe" style="font-size:14px">
+      </div>
+      <div id="erp-modal-err" style="display:none;padding:10px 14px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:8px;color:var(--error-txt);font-size:13px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px">
+        <button id="rs-save-btn" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
+          <span class="material-symbols-outlined" style="font-size:16px">inventory</span> Receive Stock
+        </button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+  setTimeout(()=>document.getElementById('rs-item')?.focus(), 100);
+
+  document.getElementById('rs-save-btn').addEventListener('click', async () => {
+    const itemId = document.getElementById('rs-item').value;
+    const qty = parseFloat(document.getElementById('rs-qty').value || '0');
+    const cost = parseFloat(document.getElementById('rs-cost').value || '0');
+    const supplier = document.getElementById('rs-supplier').value;
+    const errEl = document.getElementById('erp-modal-err');
+
+    if(!itemId){ errEl.style.display='block'; errEl.textContent='Please select an item'; return; }
+    if(!qty || qty<=0){ errEl.style.display='block'; errEl.textContent='Please enter a quantity'; return; }
+    if(!cost || cost<=0){ errEl.style.display='block'; errEl.textContent='Please enter the unit cost'; return; }
+
+    const btn = document.getElementById('rs-save-btn');
+    btn.textContent='Saving…'; btn.disabled=true;
+
+    try {
+      await erpFetch('/erp/inventory-lots','POST',{
+        inventory_id: parseInt(itemId),
+        quantity_received: qty,
+        unit_cost: cost,
+        supplier: supplier || null,
+        received_date: new Date().toISOString().split('T')[0]
+      });
+      modal.remove();
+      toast(`Stock received — inventory updated, $${(qty*cost).toLocaleString()} recorded as expense`);
+      loadInventory();
+    } catch(e) {
+      errEl.style.display='block'; errEl.textContent='Error saving — please try again';
+      btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">inventory</span> Receive Stock';
+      btn.disabled=false;
+    }
   });
-  toast('Inventory received — expense recorded automatically');
 }
 
 // ── INIT: Load ERP data on startup ───────────────────────────────────────────
