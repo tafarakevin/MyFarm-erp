@@ -4777,7 +4777,7 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     item.classList.add('active');
-    document.getElementById('page-'+pg).classList.add('active');
+    const pgEl=document.getElementById('page-'+pg);if(pgEl)pgEl.classList.add('active');
     document.getElementById('topbar-title').textContent=pageLabels[pg];
     document.getElementById('content').scrollTop=0;
     currentPage=pg;loadPage(pg);
@@ -6656,8 +6656,8 @@ async function loadErpDashboard(){
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px"><div class="spinner" style="width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite"></div><span style="color:var(--text-muted);font-size:13px">Loading ERP data…</span></div>`);
 
   const [dash, prof] = await Promise.all([
-    erpFetch('/api/erp/dashboard'),
-    erpFetch('/api/erp/profitability')
+    erpFetch('/erp/dashboard'),
+    erpFetch('/erp/profitability')
   ]);
 
   const profitColor = dash.original_profit >= 0 ? 'kpi-positive' : 'kpi-negative';
@@ -6820,12 +6820,12 @@ async function loadErpProfitability(){
   erpContent(`<div class="page-header"><h1>Profitability Analysis</h1></div><div style="color:var(--text-muted);padding:20px;font-size:13px">Loading…</div>`);
 
   const [prof, plData, cont] = await Promise.all([
-    erpFetch('/api/erp/profitability'),
-    erpFetch('/api/erp/analytics/pl-summary'),
-    erpFetch('/api/erp/contingency')
+    erpFetch('/erp/profitability'),
+    erpFetch('/erp/analytics/pl-summary'),
+    erpFetch('/erp/contingency')
   ]);
 
-  const seasons = await erpFetch('/api/erp/seasons');
+  const seasons = await erpFetch('/erp/seasons');
   ERP.seasons = seasons || [];
   ERP.profitability = prof;
 
@@ -6833,8 +6833,8 @@ async function loadErpProfitability(){
   const seasonId = activeSeason?.id;
 
   const [projections, budgets] = await Promise.all([
-    erpFetch('/api/erp/revenue-projections' + (seasonId ? `?season_id=${seasonId}` : '')),
-    erpFetch('/api/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
+    erpFetch('/erp/revenue-projections' + (seasonId ? `?season_id=${seasonId}` : '')),
+    erpFetch('/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
   ]);
 
   const profColor = prof.original_profit >= 0 ? '#7ecc74' : '#e06060';
@@ -6989,7 +6989,7 @@ async function saveContingency(){
   const type = document.querySelector('input[name="cont-type"]:checked')?.value || 'percentage';
   const pct = parseFloat(document.getElementById('cont-pct-val').value)||0;
   const fixed = parseFloat(document.getElementById('cont-fixed-val').value)||0;
-  await erpFetch('/api/erp/contingency','POST',{season_id:_contSeasonId, contingency_type:type, contingency_pct:pct, contingency_fixed:fixed});
+  await erpFetch('/erp/contingency','POST',{season_id:_contSeasonId, contingency_type:type, contingency_pct:pct, contingency_fixed:fixed});
   closeContEditor();
   toast('Contingency updated');
   loadErpProfitability();
@@ -7002,7 +7002,7 @@ function openRevProjectionForm(seasonId){
   if(!desc) return;
   const amt = parseFloat(prompt('Projected amount (USD):') || '0');
   if(!amt) return;
-  erpFetch('/api/erp/revenue-projections','POST',{season_id:seasonId,description:desc,projected_amount:amt})
+  erpFetch('/erp/revenue-projections','POST',{season_id:seasonId,description:desc,projected_amount:amt})
     .then(()=>{ toast('Projection added'); loadErpProfitability(); });
 }
 
@@ -7012,16 +7012,16 @@ async function loadErpBudgets(){
   erpContent(`<div class="page-header"><h1>Budgets &amp; Forecasts</h1></div><div style="color:var(--text-muted);padding:20px;font-size:13px">Loading…</div>`);
 
   const [seasons, cashFlow] = await Promise.all([
-    erpFetch('/api/erp/seasons'),
-    erpFetch('/api/erp/analytics/cash-flow')
+    erpFetch('/erp/seasons'),
+    erpFetch('/erp/analytics/cash-flow')
   ]);
 
   const activeSeason = seasons.find(s=>s.status==='Active') || seasons[0];
   const seasonId = activeSeason?.id;
 
   const [variance, budgets] = await Promise.all([
-    erpFetch('/api/erp/analytics/budget-variance' + (seasonId ? `?season_id=${seasonId}` : '')),
-    erpFetch('/api/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
+    erpFetch('/erp/analytics/budget-variance' + (seasonId ? `?season_id=${seasonId}` : '')),
+    erpFetch('/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
   ]);
 
   const totalPlanned = budgets.reduce((s,b)=>s+parseFloat(b.planned_amount||0),0);
@@ -7107,7 +7107,7 @@ async function openAddBudgetForm(seasonId){
   if(!cat) return;
   const amt = parseFloat(prompt('Planned amount ($):') || '0');
   if(!amt) return;
-  await erpFetch('/api/erp/budgets','POST',{season_id:seasonId,category:cat,planned_amount:amt});
+  await erpFetch('/erp/budgets','POST',{season_id:seasonId,category:cat,planned_amount:amt});
   toast('Budget line added');
   loadErpBudgets();
 }
@@ -7118,10 +7118,10 @@ async function loadErpActivities(){
   erpContent(`<div class="page-header"><h1>Operational Log</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
   const [activities, units, inventory, seasons] = await Promise.all([
-    erpFetch('/api/erp/activities?limit=100'),
-    erpFetch('/api/erp/units'),
-    erpFetch('/api/inventory'),
-    erpFetch('/api/erp/seasons')
+    erpFetch('/erp/activities?limit=100'),
+    erpFetch('/erp/units'),
+    erpFetch('/inventory'),
+    erpFetch('/erp/seasons')
   ]);
 
   ERP.units = units || [];
@@ -7267,7 +7267,7 @@ async function saveActivity(){
   btn.disabled = true;
 
   try {
-    await erpFetch('/api/erp/activities','POST',{
+    await erpFetch('/erp/activities','POST',{
       activity_type: type,
       unit_id: unitId || null,
       season_id: seasonId,
@@ -7293,9 +7293,9 @@ async function loadErpCosting(){
   erpContent(`<div class="page-header"><h1>Cost Analytics</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
   const [unitCosts, laborCosts, invVal] = await Promise.all([
-    erpFetch('/api/erp/analytics/unit-costs'),
-    erpFetch('/api/erp/analytics/labor-costs'),
-    erpFetch('/api/erp/analytics/inventory-valuation')
+    erpFetch('/erp/analytics/unit-costs'),
+    erpFetch('/erp/analytics/labor-costs'),
+    erpFetch('/erp/analytics/inventory-valuation')
   ]);
 
   erpContent(`
@@ -7371,10 +7371,10 @@ async function loadErpProduction(){
   erpContent(`<div class="page-header"><h1>Production Records</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
   const [batches, yieldData, units, seasons] = await Promise.all([
-    erpFetch('/api/erp/production'),
-    erpFetch('/api/erp/analytics/yield-analysis'),
-    erpFetch('/api/erp/units'),
-    erpFetch('/api/erp/seasons')
+    erpFetch('/erp/production'),
+    erpFetch('/erp/analytics/yield-analysis'),
+    erpFetch('/erp/units'),
+    erpFetch('/erp/seasons')
   ]);
 
   const totalRev = batches.reduce((s,b)=>s+parseFloat(b.actual_revenue||0),0);
@@ -7463,7 +7463,7 @@ async function saveProdBatch(){
     season_id: ERP.seasons.find(s=>s.status==='Active')?.id || null
   };
   if(!d.product_type||!d.quantity){ toast('Product type and quantity required','error'); return; }
-  await erpFetch('/api/erp/production','POST',d);
+  await erpFetch('/erp/production','POST',d);
   toast('Production batch logged');
   loadErpProduction();
 }
@@ -7474,8 +7474,8 @@ async function loadErpDepreciation(){
   erpContent(`<div class="page-header"><h1>Asset Depreciation</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
   const [assets, depr] = await Promise.all([
-    erpFetch('/api/assets'),
-    erpFetch('/api/erp/depreciation')
+    erpFetch('/assets'),
+    erpFetch('/erp/depreciation')
   ]);
 
   const totalAccum = depr.reduce((s,d)=>s+parseFloat(d.accumulated_depreciation||0),0);
@@ -7542,13 +7542,13 @@ async function saveDepreciation(){
     depreciation_start: document.getElementById('depr-start').value
   };
   if(!d.asset_id){ toast('Select an asset','error'); return; }
-  await erpFetch('/api/erp/depreciation','POST',d);
+  await erpFetch('/erp/depreciation','POST',d);
   toast('Depreciation schedule created');
   loadErpDepreciation();
 }
 async function runDepreciation(id){
   if(!confirm('Run one depreciation period? This will record an expense entry.')) return;
-  await erpFetch(`/api/erp/depreciation/${id}/run`,'POST');
+  await erpFetch(`/erp/depreciation/${id}/run`,'POST');
   toast('Depreciation period run');
   loadErpDepreciation();
 }
@@ -7559,8 +7559,8 @@ async function loadErpUnits(){
   erpContent(`<div class="page-header"><h1>Operational Units</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
   const [units, farms] = await Promise.all([
-    erpFetch('/api/erp/units'),
-    erpFetch('/api/erp/farms')
+    erpFetch('/erp/units'),
+    erpFetch('/erp/farms')
   ]);
 
   const byType = units.reduce((acc,u)=>{ acc[u.unit_type]=(acc[u.unit_type]||0)+1; return acc; },{});
@@ -7621,7 +7621,7 @@ async function saveUnit(){
     notes: document.getElementById('uf-notes').value
   };
   if(!d.farm_id||!d.name){ toast('Farm and name required','error'); return; }
-  await erpFetch('/api/erp/units','POST',d);
+  await erpFetch('/erp/units','POST',d);
   toast('Unit created');
   loadErpUnits();
 }
@@ -7632,8 +7632,8 @@ async function loadErpSeasons(){
   erpContent(`<div class="page-header"><h1>Seasons</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
 
   const [seasons, farms] = await Promise.all([
-    erpFetch('/api/erp/seasons'),
-    erpFetch('/api/erp/farms')
+    erpFetch('/erp/seasons'),
+    erpFetch('/erp/farms')
   ]);
 
   erpContent(`
@@ -7686,7 +7686,7 @@ async function saveSeason(){
     end_date: document.getElementById('sf-end').value || null
   };
   if(!d.farm_id||!d.name||!d.start_date){ toast('Farm, name, and start date required','error'); return; }
-  await erpFetch('/api/erp/seasons','POST',d);
+  await erpFetch('/erp/seasons','POST',d);
   toast('Season created');
   loadErpSeasons();
 }
@@ -7697,7 +7697,7 @@ async function erpReceiveInventory(inventoryId){
   if(!qty) return;
   const cost = parseFloat(prompt('Unit cost ($):') || '0');
   if(!cost) return;
-  await erpFetch('/api/erp/inventory-lots','POST',{
+  await erpFetch('/erp/inventory-lots','POST',{
     inventory_id: inventoryId,
     quantity_received: qty,
     unit_cost: cost,
@@ -7710,8 +7710,8 @@ async function erpReceiveInventory(inventoryId){
 async function initErpState(){
   try {
     const [farms, seasons] = await Promise.all([
-      erpFetch('/api/erp/farms'),
-      erpFetch('/api/erp/seasons')
+      erpFetch('/erp/farms'),
+      erpFetch('/erp/seasons')
     ]);
     ERP.farms = farms || [];
     ERP.seasons = seasons || [];
