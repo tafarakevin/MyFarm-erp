@@ -748,9 +748,16 @@ body {
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   height: 100vh;
   position: relative;
+  /* Scrollbar — minimal */
+  scrollbar-width: thin;
+  scrollbar-color: var(--bdr-hv) transparent;
 }
+#sidebar::-webkit-scrollbar { width: 3px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--bdr-hv); border-radius: 3px; }
 
 /* Subtle gold accent line on right edge */
 #sidebar::after {
@@ -805,15 +812,15 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-faint);
-  padding: 20px 24px 6px;
+  padding: 14px 24px 4px;
   font-weight: 600;
 }
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 10px 24px;
-  font-size: 12px;
+  gap: 10px;
+  padding: 7px 24px;
+  font-size: 11.5px;
   font-weight: 300;
   color: var(--text-muted);
   cursor: pointer;
@@ -2848,7 +2855,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px 6px;
+  padding: 12px 24px 4px;
   cursor: pointer;
   user-select: none;
 }
@@ -3097,6 +3104,186 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   .lp-field-image-strip { height: 220px; }
   .lp-field-caption-text { font-size: 17px; }
   .lp-hero-bg { opacity: 0.09; }
+}
+
+
+/* ─── SCENARIO CALCULATOR ──────────────────────────────────────────────────── */
+.calc-panel {
+  background: var(--s1);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.calc-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.4;
+}
+.calc-panel-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.calc-panel-title .ms-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 16px;
+  color: var(--gold);
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1; letter-spacing: 0; text-transform: none;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+.calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+.calc-field { display: flex; flex-direction: column; gap: 6px; }
+.calc-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.calc-input {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--ff-mono);
+  font-size: 13px;
+  font-weight: 400;
+  padding: 9px 12px;
+  outline: none;
+  transition: all var(--tr);
+  width: 100%;
+}
+.calc-input:focus {
+  border-color: var(--gold);
+  background: var(--s3);
+  box-shadow: 0 0 0 3px var(--gold-dim);
+}
+.calc-input.invalid { border-color: var(--error-txt); box-shadow: 0 0 0 3px var(--error-bg); }
+.calc-btn {
+  background: rgba(184,146,74,0.12);
+  border: 1px solid var(--gold-border);
+  color: var(--gold-lt);
+  border-radius: var(--radius-sm);
+  padding: 9px 18px;
+  font-family: var(--ff-ui);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--tr);
+  white-space: nowrap;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.calc-btn:hover { background: rgba(184,146,74,0.22); border-color: rgba(212,170,96,0.42); }
+.calc-results {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--bdr2);
+}
+.calc-result-card {
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: border-color var(--tr);
+}
+.calc-result-card.highlight {
+  border-color: var(--gold-border);
+  background: rgba(184,146,74,0.05);
+}
+.calc-result-card.positive { border-color: var(--success-bdr); background: var(--success-bg); }
+.calc-result-card.negative { border-color: var(--error-bdr); background: var(--error-bg); }
+.calc-result-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.calc-result-value {
+  font-family: var(--ff-mono);
+  font-size: 20px;
+  color: var(--text-primary);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+.calc-result-card.positive .calc-result-value { color: var(--success-txt); }
+.calc-result-card.negative .calc-result-value { color: var(--error-txt); }
+.calc-result-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 5px;
+  line-height: 1.45;
+}
+.calc-result-bar {
+  position: absolute;
+  bottom: 0; left: 0;
+  height: 2px;
+  border-radius: 0 0 0 0;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.calc-breakeven-note {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  line-height: 1.55;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.calc-breakeven-note.ok   { background: var(--success-bg); border: 1px solid var(--success-bdr); color: var(--success-txt); }
+.calc-breakeven-note.warn { background: var(--warn-bg);    border: 1px solid var(--warn-bdr);    color: var(--warn-txt); }
+.calc-breakeven-note.bad  { background: var(--error-bg);   border: 1px solid var(--error-bdr);   color: var(--error-txt); }
+.calc-reset {
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  font-family: var(--ff-ui);
+  font-size: 10.5px;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--tr);
+  margin-left: auto;
+  display: block;
+  margin-top: 12px;
+}
+.calc-reset:hover { color: var(--text-muted); }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .calc-grid { grid-template-columns: 1fr 1fr; }
+  .calc-btn { grid-column: span 2; }
+  .calc-results { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .calc-results { grid-template-columns: 1fr 1fr; }
 }
 
 </style>
@@ -3488,8 +3675,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       </div>
     </div>
 
-    <!-- GROUP ERP: Intelligence Platform -->
-    <div class="nav-group" id="nav-group-erp">
+    <!-- GROUP ERP: Intelligence Platform — collapsed by default to save space -->
+    <div class="nav-group collapsed" id="nav-group-erp">
       <div class="nav-group-toggle" onclick="toggleNavGroup('erp')">
         <div class="nav-section-label" style="color:var(--gold-lt)">Farm Intelligence</div>
         <span class="nav-group-chevron">expand_more</span>
@@ -3507,8 +3694,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       </div>
     </div>
 
-    <!-- GROUP 3: System — collapsed for new users, unlocks after onboarding -->
-    <div class="nav-group" id="nav-group-system">
+    <!-- GROUP 3: System — collapsed by default -->
+    <div class="nav-group collapsed" id="nav-group-system">
       <div class="nav-group-toggle" onclick="toggleNavGroup('system')">
         <div class="nav-section-label">System</div>
         <span class="nav-group-chevron">expand_more</span>
@@ -4777,6 +4964,11 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     item.classList.add('active');
+    // Auto-expand the nav group containing this item
+    (function expandGroup(){
+      const group = item.closest('.nav-group');
+      if(group && group.classList.contains('collapsed')) group.classList.remove('collapsed');
+    })();
     // Hide ERP container when switching to standard pages
     const erpContainer=document.getElementById('erp-page-container');
     if(erpContainer) erpContainer.style.display='none';
@@ -7511,6 +7703,128 @@ async function saveActivity(){
 }
 
 // ── COST ANALYTICS ────────────────────────────────────────────────────────────
+// ── SCENARIO CALCULATOR STATE ────────────────────────────────────────────────
+const _calcDefaults = { area:100, costPerHa:350, yieldPerHa:4.5, sellingPrice:120, overhead:8000 };
+let _calcState = { ..._calcDefaults };
+
+function runCalc(){
+  const get = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const area       = get('calc-area');
+  const costPerHa  = get('calc-cost-ha');
+  const yieldPerHa = get('calc-yield-ha');
+  const sellPrice  = get('calc-sell-price');
+  const overhead   = get('calc-overhead');
+
+  // Validate
+  let valid = true;
+  ['calc-area','calc-cost-ha','calc-yield-ha','calc-sell-price','calc-overhead'].forEach(id=>{
+    const el = document.getElementById(id);
+    const v = parseFloat(el?.value);
+    const bad = !el || isNaN(v) || v < 0;
+    el?.classList.toggle('invalid', bad);
+    if(bad) valid = false;
+  });
+  if(!valid) return;
+
+  // Calculations
+  const totalVariableCost = area * costPerHa;
+  const totalCost         = totalVariableCost + overhead;
+  const totalYield        = area * yieldPerHa;
+  const totalRevenue      = totalYield * sellPrice;
+  const grossProfit       = totalRevenue - totalCost;
+  const marginPct         = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
+  const costPerUnit       = totalYield > 0 ? totalCost / totalYield : 0;
+  const breakevenYield    = sellPrice > 0 ? totalCost / sellPrice : 0;
+  const breakevenPrice    = totalYield > 0 ? totalCost / totalYield : 0;
+  const roiPct            = totalCost > 0 ? (grossProfit / totalCost) * 100 : 0;
+
+  // Format helpers
+  const usd = v => {
+    const abs = Math.abs(v);
+    const str = abs >= 1000000 ? `$${(abs/1000000).toFixed(2)}M`
+              : abs >= 1000 ? `$${(abs/1000).toFixed(1)}k`
+              : `$${abs.toFixed(0)}`;
+    return v < 0 ? `−${str}` : str;
+  };
+  const pct  = v => (v>=0?'+':'')+v.toFixed(1)+'%';
+  const num  = v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(1);
+
+  // Update result cards
+  const set = (id, val, sub) => {
+    const el = document.getElementById(id);
+    if(el){
+      el.querySelector('.calc-result-value').textContent = val;
+      if(sub !== undefined) el.querySelector('.calc-result-sub').textContent = sub;
+    }
+  };
+
+  const rev  = document.getElementById('calc-r-revenue');
+  const prof = document.getElementById('calc-r-profit');
+  const mar  = document.getElementById('calc-r-margin');
+  const roi  = document.getElementById('calc-r-roi');
+  const cpu  = document.getElementById('calc-r-cpu');
+
+  if(rev)  rev.querySelector('.calc-result-value').textContent  = usd(totalRevenue);
+  if(rev)  rev.querySelector('.calc-result-sub').textContent    = `${num(totalYield)} units @ ${usd(sellPrice)}/unit`;
+
+  // Colour profit card
+  if(prof){
+    prof.className = 'calc-result-card ' + (grossProfit>=0?'positive':'negative');
+    prof.querySelector('.calc-result-value').textContent = usd(grossProfit);
+    prof.querySelector('.calc-result-sub').textContent   = `Total cost: ${usd(totalCost)}`;
+    const bar = prof.querySelector('.calc-result-bar');
+    if(bar){ bar.style.width = Math.min(100,Math.abs(marginPct))+'%'; bar.style.background = grossProfit>=0?'var(--success-txt)':'var(--error-txt)'; }
+  }
+
+  if(mar){
+    mar.className = 'calc-result-card ' + (marginPct>=20?'positive':marginPct>=0?'highlight':'negative');
+    mar.querySelector('.calc-result-value').textContent = marginPct.toFixed(1)+'%';
+    mar.querySelector('.calc-result-sub').textContent   = marginPct>=20?'Healthy margin':marginPct>=0?'Thin margin':'Loss-making';
+  }
+
+  if(roi){
+    roi.className = 'calc-result-card ' + (roiPct>=15?'positive':roiPct>=0?'highlight':'negative');
+    roi.querySelector('.calc-result-value').textContent = roiPct.toFixed(1)+'%';
+    roi.querySelector('.calc-result-sub').textContent   = 'Return on total cost';
+  }
+
+  if(cpu){
+    cpu.querySelector('.calc-result-value').textContent = usd(costPerUnit);
+    cpu.querySelector('.calc-result-sub').textContent   = `Break-even price: ${usd(breakevenPrice)}/unit`;
+  }
+
+  // Breakeven note
+  const note = document.getElementById('calc-breakeven-note');
+  if(note){
+    const surplus = totalYield - breakevenYield;
+    const surplusPct = breakevenYield>0 ? (surplus/breakevenYield)*100 : 0;
+    if(grossProfit >= 0){
+      note.className = 'calc-breakeven-note ok';
+      note.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0">check_circle</span><span>Break-even at <strong>${num(breakevenYield)} units</strong>. You project <strong>${num(totalYield)} units</strong> — a <strong>${surplusPct.toFixed(0)}% surplus</strong> above break-even. Your minimum viable selling price is <strong>${usd(breakevenPrice)}/unit</strong>.</span>`;
+    } else {
+      note.className = 'calc-breakeven-note bad';
+      note.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0">warning</span><span>At these inputs the operation is loss-making by <strong>${usd(Math.abs(grossProfit))}</strong>. Either increase yield above <strong>${num(breakevenYield)} units</strong>, raise price above <strong>${usd(breakevenPrice)}/unit</strong>, or reduce cost below <strong>${usd(totalRevenue/area)}/ha</strong>.</span>`;
+    }
+  }
+
+  // Save state
+  _calcState = { area, costPerHa, yieldPerHa, sellingPrice:sellPrice, overhead };
+}
+
+function resetCalc(){
+  Object.entries(_calcDefaults).forEach(([k,v])=>{
+    const el = document.getElementById('calc-'+k.replace(/([A-Z])/g,'-$1').toLowerCase());
+    if(el) el.value = v;
+  });
+  // Map defaults to input IDs manually
+  document.getElementById('calc-area').value        = _calcDefaults.area;
+  document.getElementById('calc-cost-ha').value     = _calcDefaults.costPerHa;
+  document.getElementById('calc-yield-ha').value    = _calcDefaults.yieldPerHa;
+  document.getElementById('calc-sell-price').value  = _calcDefaults.sellingPrice;
+  document.getElementById('calc-overhead').value    = _calcDefaults.overhead;
+  runCalc();
+}
+
 async function loadErpCosting(){
   currentPage = 'erp-costing';
   erpContent(`<div class="page-header"><h1>Cost Analytics</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
@@ -7522,7 +7836,72 @@ async function loadErpCosting(){
   ]);
 
   erpContent(`
-<div class="page-header"><h1>Cost Analytics</h1><p class="page-sub">Per-unit, labor, and inventory cost analysis</p></div>
+<div class="page-header"><h1>Cost Analytics</h1><p class="page-sub">Per-unit, labor, inventory analysis and scenario modelling</p></div>
+
+<!-- ════ SCENARIO CALCULATOR ════ -->
+<div class="calc-panel">
+  <div class="calc-panel-title">
+    <span class="ms-icon">calculate</span>
+    Scenario Calculator — set your own numbers
+  </div>
+  <div class="calc-grid">
+    <div class="calc-field">
+      <label class="calc-label" for="calc-area">Area (ha)</label>
+      <input class="calc-input" id="calc-area" type="number" min="0" step="0.1" value="${_calcState.area}" oninput="runCalc()" placeholder="e.g. 100">
+    </div>
+    <div class="calc-field">
+      <label class="calc-label" for="calc-cost-ha">Variable Cost / ha ($)</label>
+      <input class="calc-input" id="calc-cost-ha" type="number" min="0" step="1" value="${_calcState.costPerHa}" oninput="runCalc()" placeholder="e.g. 350">
+    </div>
+    <div class="calc-field">
+      <label class="calc-label" for="calc-yield-ha">Yield / ha (units)</label>
+      <input class="calc-input" id="calc-yield-ha" type="number" min="0" step="0.1" value="${_calcState.yieldPerHa}" oninput="runCalc()" placeholder="e.g. 4.5 t/ha">
+    </div>
+    <div class="calc-field">
+      <label class="calc-label" for="calc-sell-price">Selling Price / unit ($)</label>
+      <input class="calc-input" id="calc-sell-price" type="number" min="0" step="0.5" value="${_calcState.sellingPrice}" oninput="runCalc()" placeholder="e.g. 120">
+    </div>
+    <div class="calc-field">
+      <label class="calc-label" for="calc-overhead">Fixed Overhead ($)</label>
+      <input class="calc-input" id="calc-overhead" type="number" min="0" step="100" value="${_calcState.overhead}" oninput="runCalc()" placeholder="e.g. 8000">
+    </div>
+  </div>
+
+  <div class="calc-results">
+    <div class="calc-result-card highlight" id="calc-r-revenue">
+      <div class="calc-result-label">Total Revenue</div>
+      <div class="calc-result-value">—</div>
+      <div class="calc-result-sub">—</div>
+    </div>
+    <div class="calc-result-card" id="calc-r-profit">
+      <div class="calc-result-label">Gross Profit</div>
+      <div class="calc-result-value">—</div>
+      <div class="calc-result-sub">—</div>
+      <div class="calc-result-bar" style="width:0%"></div>
+    </div>
+    <div class="calc-result-card" id="calc-r-margin">
+      <div class="calc-result-label">Profit Margin</div>
+      <div class="calc-result-value">—</div>
+      <div class="calc-result-sub">—</div>
+    </div>
+    <div class="calc-result-card" id="calc-r-roi">
+      <div class="calc-result-label">ROI</div>
+      <div class="calc-result-value">—</div>
+      <div class="calc-result-sub">—</div>
+    </div>
+    <div class="calc-result-card" id="calc-r-cpu">
+      <div class="calc-result-label">Cost / Unit</div>
+      <div class="calc-result-value">—</div>
+      <div class="calc-result-sub">—</div>
+    </div>
+  </div>
+
+  <div class="calc-breakeven-note ok" id="calc-breakeven-note" style="display:none"></div>
+  <button class="calc-reset" onclick="resetCalc()">↺ Reset to defaults</button>
+</div>
+
+<!-- trigger first calc after DOM renders -->
+<script>requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ const bn=document.getElementById('calc-breakeven-note'); if(bn) bn.style.display='flex'; runCalc(); }); });<\/script>
 
 <!-- UNIT COST ANALYSIS -->
 <div class="erp-panel">
