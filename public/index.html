@@ -3305,6 +3305,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <button class="lp-nav-link" onclick="document.getElementById('lp-cta-bottom').scrollIntoView({behavior:'smooth'})">Pricing</button>
       </div>
       <div class="lp-nav-ctas">
+        <button class="lp-signin-btn" onclick="enterDemoMode()">▶ Demo</button>
         <button class="lp-signin-btn" onclick="goToAuth('login')">Sign In</button>
         <button class="lp-getstarted-btn" onclick="goToAuth('register')">Get Started →</button>
       </div>
@@ -3548,6 +3549,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div class="lp-cta-btns">
         <button class="lp-cta-primary" onclick="goToAuth('register')">Start free trial — no card needed</button>
         <button class="lp-cta-secondary" onclick="goToAuth('login')">Sign in to existing account</button>
+        <button class="lp-cta-secondary" onclick="enterDemoMode()" style="border-color:var(--gold-border);color:var(--gold-lt);background:var(--gold-dim)">▶ Preview demo</button>
       </div>
     </section>
 
@@ -3600,6 +3602,9 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         </div>
         <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
         <div class="auth-switch">Need access? <a onclick="showRegister()">Create account</a></div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr);text-align:center">
+          <button onclick="enterDemoMode()" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold-lt);border-radius:7px;padding:9px 20px;font-family:var(--ff-ui);font-size:12px;cursor:pointer;width:100%;transition:all var(--tr)" onmouseover="this.style.background='rgba(184,146,74,0.22)'" onmouseout="this.style.background='var(--gold-dim)'">▶ Enter Demo Mode (no login required)</button>
+        </div>
       </div>
       <!-- FORGOT PASSWORD -->
       <div id="forgot-box" class="auth-box" style="display:none" role="region" aria-label="Reset password">
@@ -6961,6 +6966,13 @@ function copyInviteCode(){
   as.classList.remove('hidden','auth-mode');
   as.classList.add('landing-mode');
 })();
+
+// ─── DEMO MODE — enter app without a backend ──────────────────────────────────
+function enterDemoMode(){
+  currentUser={id:0,name:'Demo User',role:'owner',email:'demo@thornfield.co.zw'};
+  saveUser(currentUser);
+  enterApp();
+}
 </script>
 </body>
 </html>
