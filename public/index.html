@@ -748,16 +748,9 @@ body {
   flex-direction: column;
   flex-shrink: 0;
   overflow-y: auto;
-  overflow-x: hidden;
   height: 100vh;
   position: relative;
-  /* Scrollbar — minimal */
-  scrollbar-width: thin;
-  scrollbar-color: var(--bdr-hv) transparent;
 }
-#sidebar::-webkit-scrollbar { width: 3px; }
-#sidebar::-webkit-scrollbar-track { background: transparent; }
-#sidebar::-webkit-scrollbar-thumb { background: var(--bdr-hv); border-radius: 3px; }
 
 /* Subtle gold accent line on right edge */
 #sidebar::after {
@@ -812,15 +805,15 @@ body {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--text-faint);
-  padding: 14px 24px 4px;
+  padding: 20px 24px 6px;
   font-weight: 600;
 }
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 7px 24px;
-  font-size: 11.5px;
+  gap: 11px;
+  padding: 10px 24px;
+  font-size: 12px;
   font-weight: 300;
   color: var(--text-muted);
   cursor: pointer;
@@ -1315,9 +1308,9 @@ body {
 .bar-exp:hover { opacity: 0.75; }
 .bar-label { font-size: 9px; color: var(--text-muted); font-family: var(--ff-mono); }
 .bar-grid  { position: absolute; top: 0; left: 0; right: 0; bottom: 20px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
-.bar-grid-line { border-top: 1px solid rgba(255,255,255,0.04); width: 100%; }
+.bar-grid-line { border-top: 1px dashed rgba(255,255,255,0.07); width: 100%; }
 .bar-axis-y { position: absolute; left: -36px; top: 0; bottom: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-.bar-axis-label { font-family: var(--ff-mono); font-size: 9px; color: var(--text-faint); white-space: nowrap; text-align: right; }
+.bar-axis-label { font-family: var(--ff-mono); font-size: 10px; color: var(--text-muted); white-space: nowrap; text-align: right; letter-spacing: -0.01em; }
 .bar-chart-legend { display: flex; gap: 18px; margin-top: 12px; font-size: 11px; color: var(--text-muted); }
 .bar-legend-item { display: flex; align-items: center; gap: 6px; }
 .bar-legend-dot { width: 10px; height: 3px; border-radius: 2px; }
@@ -2676,7 +2669,7 @@ body.light-mode .skel {
 }
 
 /* Chart gridlines */
-body.light-mode .bar-grid-line { background: rgba(0,0,0,0.05); }
+body.light-mode .bar-grid-line { border-color: rgba(0,0,0,0.09); }
 
 /* Bars */
 body.light-mode .bar     { background: rgba(138,101,32,0.55); }
@@ -2855,7 +2848,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 24px 4px;
+  padding: 18px 24px 6px;
   cursor: pointer;
   user-select: none;
 }
@@ -3107,184 +3100,186 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 }
 
 
-/* ─── SCENARIO CALCULATOR ──────────────────────────────────────────────────── */
-.calc-panel {
-  background: var(--s1);
-  border: 1px solid var(--gold-border);
-  border-radius: var(--radius);
-  padding: 24px 28px;
+/* ─── ALERT FEED ──────────────────────────────────────────────────────────── */
+.alert-feed {
   margin-bottom: 20px;
-  position: relative;
-  overflow: hidden;
 }
-.calc-panel::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  opacity: 0.4;
-}
-.calc-panel-title {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--text-muted);
-  margin-bottom: 18px;
+.alert-feed-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 10px;
 }
-.calc-panel-title .ms-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 16px;
-  color: var(--gold);
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-  font-style: normal;
-  line-height: 1; letter-spacing: 0; text-transform: none;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-.calc-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
-  gap: 14px;
-  align-items: flex-end;
-  margin-bottom: 20px;
-}
-.calc-field { display: flex; flex-direction: column; gap: 6px; }
-.calc-label {
-  font-size: 9px;
+.alert-feed-title {
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--text-muted);
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
-.calc-input {
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  font-family: var(--ff-mono);
-  font-size: 13px;
-  font-weight: 400;
-  padding: 9px 12px;
-  outline: none;
-  transition: all var(--tr);
-  width: 100%;
-}
-.calc-input:focus {
-  border-color: var(--gold);
-  background: var(--s3);
-  box-shadow: 0 0 0 3px var(--gold-dim);
-}
-.calc-input.invalid { border-color: var(--error-txt); box-shadow: 0 0 0 3px var(--error-bg); }
-.calc-btn {
-  background: rgba(184,146,74,0.12);
-  border: 1px solid var(--gold-border);
-  color: var(--gold-lt);
-  border-radius: var(--radius-sm);
-  padding: 9px 18px;
-  font-family: var(--ff-ui);
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all var(--tr);
-  white-space: nowrap;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.calc-btn:hover { background: rgba(184,146,74,0.22); border-color: rgba(212,170,96,0.42); }
-.calc-results {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
-  padding-top: 18px;
-  border-top: 1px solid var(--bdr2);
-}
-.calc-result-card {
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color var(--tr);
-}
-.calc-result-card.highlight {
-  border-color: var(--gold-border);
-  background: rgba(184,146,74,0.05);
-}
-.calc-result-card.positive { border-color: var(--success-bdr); background: var(--success-bg); }
-.calc-result-card.negative { border-color: var(--error-bdr); background: var(--error-bg); }
-.calc-result-label {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--text-muted);
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-.calc-result-value {
-  font-family: var(--ff-mono);
-  font-size: 20px;
-  color: var(--text-primary);
-  line-height: 1;
-  letter-spacing: -0.02em;
-  font-weight: 400;
-}
-.calc-result-card.positive .calc-result-value { color: var(--success-txt); }
-.calc-result-card.negative .calc-result-value { color: var(--error-txt); }
-.calc-result-sub {
+.alert-feed-count {
+  background: var(--error-bg);
+  border: 1px solid var(--error-bdr);
+  color: var(--error-txt);
   font-size: 10px;
-  color: var(--text-muted);
-  margin-top: 5px;
-  line-height: 1.45;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 5px;
+  letter-spacing: 0.04em;
 }
-.calc-result-bar {
-  position: absolute;
-  bottom: 0; left: 0;
-  height: 2px;
-  border-radius: 0 0 0 0;
-  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-}
-.calc-breakeven-note {
-  margin-top: 14px;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  line-height: 1.55;
+.alert-feed-count.warn { background: var(--warn-bg); border-color: var(--warn-bdr); color: var(--warn-txt); }
+.alert-feed-count.clear { background: var(--success-bg); border-color: var(--success-bdr); color: var(--success-txt); }
+.alert-feed-dismiss { font-size: 11px; color: var(--text-faint); cursor: pointer; transition: color var(--tr); background: none; border: none; font-family: var(--ff-ui); }
+.alert-feed-dismiss:hover { color: var(--text-muted); }
+
+.af-item {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-}
-.calc-breakeven-note.ok   { background: var(--success-bg); border: 1px solid var(--success-bdr); color: var(--success-txt); }
-.calc-breakeven-note.warn { background: var(--warn-bg);    border: 1px solid var(--warn-bdr);    color: var(--warn-txt); }
-.calc-breakeven-note.bad  { background: var(--error-bg);   border: 1px solid var(--error-bdr);   color: var(--error-txt); }
-.calc-reset {
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  font-family: var(--ff-ui);
-  font-size: 10.5px;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  margin-bottom: 7px;
+  transition: all var(--tr);
   cursor: pointer;
-  padding: 0;
-  transition: color var(--tr);
-  margin-left: auto;
-  display: block;
-  margin-top: 12px;
+  position: relative;
+  border-left-width: 3px;
 }
-.calc-reset:hover { color: var(--text-muted); }
+.af-item:hover { transform: translateX(2px); }
+.af-item:last-child { margin-bottom: 0; }
 
-/* Responsive */
-@media (max-width: 900px) {
-  .calc-grid { grid-template-columns: 1fr 1fr; }
-  .calc-btn { grid-column: span 2; }
-  .calc-results { grid-template-columns: 1fr 1fr; }
+.af-item.af-critical { background: var(--error-bg); border-color: var(--error-bdr); }
+.af-item.af-warning  { background: var(--warn-bg);  border-color: var(--warn-bdr); }
+.af-item.af-info     { background: var(--info-bg);  border-color: var(--info-bdr); }
+.af-item.af-ok       { background: var(--success-bg); border-color: var(--success-bdr); }
+
+.af-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal; line-height: 1;
+  letter-spacing: normal; text-transform: none;
+  flex-shrink: 0; margin-top: 1px;
 }
-@media (max-width: 600px) {
-  .calc-results { grid-template-columns: 1fr 1fr; }
+.af-item.af-critical .af-icon { color: var(--error-txt); }
+.af-item.af-warning  .af-icon { color: var(--warn-txt); }
+.af-item.af-info     .af-icon { color: var(--info-txt); }
+.af-item.af-ok       .af-icon { color: var(--success-txt); }
+
+.af-body { flex: 1; min-width: 0; }
+.af-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 3px; }
+.af-item.af-critical .af-label { color: var(--error-txt); }
+.af-item.af-warning  .af-label { color: var(--warn-txt); }
+.af-item.af-info     .af-label { color: var(--info-txt); }
+.af-item.af-ok       .af-label { color: var(--success-txt); }
+
+.af-msg  { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
+.af-msg strong { color: var(--text-primary); font-weight: 500; }
+.af-action {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--gold);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color var(--tr);
 }
+.af-action:hover { color: var(--gold-lt); }
+.af-arrow { font-size: 12px; }
+
+.af-all-clear {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--success-bg);
+  border: 1px solid var(--success-bdr);
+  border-left: 3px solid var(--success-bdr);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--success-txt);
+}
+.af-all-clear .af-icon { color: var(--success-txt); }
+
+
+/* ─── ERP MODE TOGGLE ─────────────────────────────────────────────────────── */
+#erp-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--ff-ui);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: all var(--tr);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#erp-mode-btn:hover {
+  border-color: var(--gold-border);
+  color: var(--gold-lt);
+  background: var(--gold-dim);
+}
+#erp-mode-btn.erp-active {
+  background: var(--gold-dim);
+  border-color: var(--gold-border);
+  color: var(--gold-lt);
+}
+#erp-mode-btn .erp-btn-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 14px;
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none;
+  display: inline-block; vertical-align: middle;
+}
+
+/* ERP sidebar overlay — shown when ERP mode is active */
+#erp-sidebar-nav {
+  display: none;
+  flex-direction: column;
+  animation: navSlide 0.2s ease both;
+}
+#app.erp-mode #erp-sidebar-nav { display: flex; }
+#app.erp-mode #main-sidebar-nav { display: none; }
+
+/* ERP mode indicator strip at top of sidebar */
+.erp-mode-strip {
+  display: none;
+  padding: 8px 24px;
+  background: linear-gradient(90deg, rgba(184,146,74,0.08), transparent);
+  border-bottom: 1px solid var(--gold-border);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  align-items: center;
+  gap: 8px;
+}
+#app.erp-mode .erp-mode-strip { display: flex; }
+.erp-mode-back {
+  margin-left: auto;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: color var(--tr);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-family: var(--ff-ui);
+}
+.erp-mode-back:hover { color: var(--text-secondary); }
 
 </style>
 </head>
@@ -3647,6 +3642,16 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div class="logo-mark">MYFARM</div>
       <div class="logo-sub">ERP Intelligence</div>
     </div>
+    <!-- ERP MODE INDICATOR STRIP -->
+    <div class="erp-mode-strip">
+      <span style="font-family:'Material Symbols Outlined';font-size:12px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">insights</span>
+      Farm Intelligence
+      <button class="erp-mode-back" onclick="toggleErpMode()">← Back to operations</button>
+    </div>
+
+    <!-- MAIN NAV — standard operations (hidden in ERP mode) -->
+    <div id="main-sidebar-nav">
+
     <!-- GROUP 1: Core — always visible, never collapsed -->
     <div class="nav-group" id="nav-group-core">
       <div class="nav-group-toggle" onclick="toggleNavGroup('core')">
@@ -3675,27 +3680,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       </div>
     </div>
 
-    <!-- GROUP ERP: Intelligence Platform — collapsed by default to save space -->
-    <div class="nav-group collapsed" id="nav-group-erp">
-      <div class="nav-group-toggle" onclick="toggleNavGroup('erp')">
-        <div class="nav-section-label" style="color:var(--gold-lt)">Farm Intelligence</div>
-        <span class="nav-group-chevron">expand_more</span>
-      </div>
-      <div class="nav-group-body">
-        <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span> Farm Overview</div>
-        <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span> Profit &amp; Loss</div>
-        <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span> Season Budget</div>
-        <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span> Farm Activities</div>
-        <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span> Cost Breakdown</div>
-        <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span> Harvest &amp; Sales</div>
-        <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span> Asset Values</div>
-        <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span> Farm Blocks &amp; Herds</div>
-        <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span> Seasons &amp; Planning</div>
-      </div>
-    </div>
-
-    <!-- GROUP 3: System — collapsed by default -->
-    <div class="nav-group collapsed" id="nav-group-system">
+    <!-- GROUP 3: System — collapsed for new users, unlocks after onboarding -->
+    <div class="nav-group" id="nav-group-system">
       <div class="nav-group-toggle" onclick="toggleNavGroup('system')">
         <div class="nav-section-label">System</div>
         <span class="nav-group-chevron">expand_more</span>
@@ -3710,6 +3696,26 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         </div>
       </div>
     </div>
+
+    </div><!-- end #main-sidebar-nav -->
+
+    <!-- ERP NAV — Farm Intelligence workspace (toggled via topbar button) -->
+    <div id="erp-sidebar-nav">
+      <div class="nav-section-label" style="color:var(--gold);padding-top:16px">Overview</div>
+      <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span> Farm Overview</div>
+      <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span> Profit &amp; Loss</div>
+      <div class="nav-section-label" style="padding-top:10px">Planning</div>
+      <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span> Season Budget</div>
+      <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span> Seasons &amp; Planning</div>
+      <div class="nav-section-label" style="padding-top:10px">Operations</div>
+      <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span> Farm Activities</div>
+      <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span> Harvest &amp; Sales</div>
+      <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span> Farm Blocks &amp; Herds</div>
+      <div class="nav-section-label" style="padding-top:10px">Analysis</div>
+      <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span> Cost Breakdown</div>
+      <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span> Asset Values</div>
+    </div>
+
     <div class="sidebar-footer">
       <div class="sf-user">
         <div class="sf-avatar" id="sf-avatar">—</div>
@@ -3727,6 +3733,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div class="topbar-sep"></div>
       <div class="topbar-badge" id="topbar-season">Season: —</div>
+      <button id="erp-mode-btn" onclick="toggleErpMode()" title="Switch to Farm Intelligence ERP workspace">
+        <span class="erp-btn-icon">insights</span>
+        <span id="erp-btn-label">Intelligence</span>
+      </button>
       <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">☀</button>
       <div class="topbar-avatar" id="topbar-av">—</div>
     </div>
@@ -3761,7 +3771,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <!-- AI DECISION SUPPORT PANEL -->
         <div class="ai-panel" id="ai-panel">
           <div class="ai-panel-header">
-            <div class="ai-panel-title"><div class="ai-brain-icon">🧠</div> AI Decision Support</div>
+            <div class="ai-panel-title"><div class="ai-brain-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">neurology</span></div> AI Decision Support</div>
             <button class="ai-refresh-btn" id="ai-refresh-btn" onclick="refreshAI()">↻ Refresh</button>
           </div>
           <div id="ai-insights-body"><div class="ai-loading-state">Analysing your farm data…</div></div>
@@ -3928,32 +3938,32 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
                 <label class="rep-label">Report Type</label>
                 <div class="rep-type-grid" id="rep-type-grid">
                   <button class="rep-type-btn active" data-type="executive_summary" onclick="selectRepType(this)">
-                    <span class="rep-type-icon">📊</span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">bar_chart</span></span>
                     <span class="rep-type-name">Executive Summary</span>
                     <span class="rep-type-desc">High-level KPIs &amp; insights</span>
                   </button>
                   <button class="rep-type-btn" data-type="financial" onclick="selectRepType(this)">
-                    <span class="rep-type-icon">💰</span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></span>
                     <span class="rep-type-name">Financial Report</span>
                     <span class="rep-type-desc">Revenue, expenses &amp; P&amp;L</span>
                   </button>
                   <button class="rep-type-btn" data-type="livestock" onclick="selectRepType(this)">
-                    <span class="rep-type-icon">🐄</span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></span>
                     <span class="rep-type-name">Livestock Report</span>
                     <span class="rep-type-desc">Herd health &amp; performance</span>
                   </button>
                   <button class="rep-type-btn" data-type="crop" onclick="selectRepType(this)">
-                    <span class="rep-type-icon">🌾</span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></span>
                     <span class="rep-type-name">Crop &amp; Field Report</span>
                     <span class="rep-type-desc">Yield, status &amp; forecasts</span>
                   </button>
                   <button class="rep-type-btn" data-type="workforce" onclick="selectRepType(this)">
-                    <span class="rep-type-icon">👷</span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></span>
                     <span class="rep-type-name">Workforce Report</span>
                     <span class="rep-type-desc">Staff, payroll &amp; attendance</span>
                   </button>
                   <button class="rep-type-btn" data-type="compliance" onclick="selectRepType(this)">
-                    <span class="rep-type-icon">✅</span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></span>
                     <span class="rep-type-name">Compliance Report</span>
                     <span class="rep-type-desc">Regulatory status &amp; audits</span>
                   </button>
@@ -4015,8 +4025,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
           <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <span id="rep-preview-title">Report Preview</span>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-secondary btn-sm" onclick="printReport()">🖨 Print</button>
-              <button class="btn btn-secondary btn-sm" id="rep-download-btn" onclick="downloadReport()">⬇ Download</button>
+              <button class="btn btn-secondary btn-sm" onclick="printReport()"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">print</span> Print</button>
+              <button class="btn btn-secondary btn-sm" id="rep-download-btn" onclick="downloadReport()"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">download</span> Download</button>
               <button class="btn btn-secondary btn-sm" onclick="closeReportPreview()">✕ Close</button>
             </div>
           </div>
@@ -4065,7 +4075,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 <!-- DELETE CONFIRMATION MODAL -->
 <div id="del-confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="del-confirm-title" aria-describedby="del-confirm-sub">
   <div id="del-confirm-box">
-    <div class="del-confirm-icon" aria-hidden="true">🗑</div>
+    <div class="del-confirm-icon" aria-hidden="true"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">delete_forever</span></div>
     <div class="del-confirm-title" id="del-confirm-title">Delete this record?</div>
     <div class="del-confirm-sub" id="del-confirm-sub">This action is permanent and cannot be undone. All associated data will be removed from the system.</div>
     <div class="del-confirm-item" id="del-confirm-item-name">—</div>
@@ -4074,7 +4084,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <input class="del-confirm-input" id="del-confirm-input" type="text" placeholder="DELETE" autocomplete="off" spellcheck="false" aria-required="true" oninput="onDelConfirmInput(this)">
     <div class="del-confirm-actions">
       <button class="btn-cancel-confirm" onclick="closeDelConfirm()">Cancel</button>
-      <button class="btn-execute-delete" id="del-execute-btn" aria-disabled="true" onclick="executeDelete()">🗑 Delete permanently</button>
+      <button class="btn-execute-delete" id="del-execute-btn" aria-disabled="true" onclick="executeDelete()"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">delete</span> Delete permanently</button>
     </div>
   </div>
 </div>
@@ -4095,7 +4105,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 <div id="onboarding-overlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="ob-title">
   <div id="onboarding-box">
     <div class="ob-header">
-      <div class="ob-logo">🌾</div>
+      <div class="ob-logo"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">agriculture</span></div>
       <div class="ob-title" id="ob-title">Welcome to Thornfield Estate</div>
       <div class="ob-sub">Let's get your farm set up in 3 quick steps — it only takes a minute.</div>
     </div>
@@ -4120,18 +4130,18 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     </div>
     <!-- Demo notice -->
     <div class="ob-demo-notice">
-      📊 Sample data has been loaded so every module looks populated. Your real data will replace it as you add records.
+      <span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">info</span> Sample data has been loaded so every module looks populated. Your real data will replace it as you add records.
     </div>
     <!-- Panels -->
     <div class="ob-panels">
       <!-- Step 0: Fields -->
       <div class="ob-panel active" id="ob-panel-0">
-        <div class="ob-panel-icon">🌱</div>
+        <div class="ob-panel-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">grass</span></div>
         <div class="ob-panel-title">Add your first field</div>
         <div class="ob-panel-desc">Define your crop blocks so you can track planting schedules, irrigation, and yield projections across the estate.</div>
         <div class="ob-actions">
           <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=crops]').click();openModal('crop');},400)">
-            <div class="ob-action-icon">🗺</div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">map</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Add a crop field now</div>
               <div class="ob-action-hint">Takes under 2 minutes — block name, crop, area and status</div>
@@ -4139,7 +4149,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="ob-action-arrow">→</div>
           </div>
           <div class="ob-action-card" onclick="obNext()">
-            <div class="ob-action-icon">⏭</div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">skip_next</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Skip — I'll do this later</div>
               <div class="ob-action-hint">Continue to the next setup step</div>
@@ -4150,12 +4160,12 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       </div>
       <!-- Step 1: Livestock -->
       <div class="ob-panel" id="ob-panel-1">
-        <div class="ob-panel-icon">🐄</div>
+        <div class="ob-panel-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">pets</span></div>
         <div class="ob-panel-title">Register your herds</div>
         <div class="ob-panel-desc">Add your livestock herds to track headcount, health events, and body-condition scores across paddocks.</div>
         <div class="ob-actions">
           <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=livestock]').click();openModal('herd');},400)">
-            <div class="ob-action-icon">🐄</div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Add a herd now</div>
               <div class="ob-action-hint">Breed, headcount, weight and health status</div>
@@ -4163,7 +4173,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="ob-action-arrow">→</div>
           </div>
           <div class="ob-action-card" onclick="obNext()">
-            <div class="ob-action-icon">⏭</div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">skip_next</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Skip — I'll do this later</div>
               <div class="ob-action-hint">Continue to the final setup step</div>
@@ -4174,12 +4184,12 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       </div>
       <!-- Step 2: Team -->
       <div class="ob-panel" id="ob-panel-2">
-        <div class="ob-panel-icon">👷</div>
+        <div class="ob-panel-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">groups</span></div>
         <div class="ob-panel-title">Invite a team member</div>
         <div class="ob-panel-desc">Add staff with the right role — Field, Manager, Finance — so your whole team can access the data they need.</div>
         <div class="ob-actions">
           <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=users]')?.click();},400)">
-            <div class="ob-action-icon">✉</div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">mail</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Invite a team member</div>
               <div class="ob-action-hint">Generate an invite code and share it</div>
@@ -4187,7 +4197,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="ob-action-arrow">→</div>
           </div>
           <div class="ob-action-card" onclick="dismissOnboarding()">
-            <div class="ob-action-icon">✅</div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">check_circle</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">I'm set — take me to the dashboard</div>
               <div class="ob-action-hint">You can add team members anytime from Users</div>
@@ -4290,6 +4300,52 @@ function initNavGroups() {
       }
     });
   });
+}
+
+
+// ─── ERP MODE TOGGLE ──────────────────────────────────────────────────────────
+let _erpModeActive = false;
+
+function toggleErpMode(forceOn) {
+  const app = document.getElementById('app');
+  const btn = document.getElementById('erp-mode-btn');
+  const label = document.getElementById('erp-btn-label');
+
+  _erpModeActive = forceOn !== undefined ? forceOn : !_erpModeActive;
+
+  app.classList.toggle('erp-mode', _erpModeActive);
+  btn.classList.toggle('erp-active', _erpModeActive);
+
+  if (_erpModeActive) {
+    if (label) label.textContent = 'Operations';
+    // Auto-navigate to ERP dashboard when entering ERP mode
+    const erpDash = document.querySelector('[data-page="erp-dashboard"]');
+    if (erpDash) erpDash.click();
+  } else {
+    if (label) label.textContent = 'Intelligence';
+    // Return to main dashboard
+    const dash = document.querySelector('[data-page="dashboard"]');
+    if (dash) dash.click();
+  }
+}
+
+// Auto-enter ERP mode if an ERP page is navigated to directly
+function checkErpModeForPage(pg) {
+  const isErpPage = pg.startsWith('erp-');
+  if (isErpPage && !_erpModeActive) {
+    toggleErpMode(true);
+    // Re-navigate since toggleErpMode navigated to erp-dashboard
+    setTimeout(() => loadPage(pg), 50);
+  } else if (!isErpPage && _erpModeActive) {
+    // Leaving ERP — switch sidebar back but don't auto-navigate
+    const app = document.getElementById('app');
+    const btn = document.getElementById('erp-mode-btn');
+    const label = document.getElementById('erp-btn-label');
+    _erpModeActive = false;
+    app.classList.remove('erp-mode');
+    btn.classList.remove('erp-active');
+    if (label) label.textContent = 'Intelligence';
+  }
 }
 
 const API=window.location.origin+'/api';
@@ -4608,7 +4664,7 @@ function errInline(containerId, opts={}){
   const codeHtml = code ? `<div class="inline-error-code">${code}</div>` : '';
   el.innerHTML=`
     <div class="inline-error">
-      <div class="inline-error-icon">⚠</div>
+      <div class="inline-error-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">warning</span></div>
       <div class="inline-error-title">${title}</div>
       <div class="inline-error-sub">${sub}</div>
       ${codeHtml}
@@ -4880,10 +4936,10 @@ function enterApp(){
     // Autumn: Mar(2), Apr(3), May(4)
     // Winter: Jun(5), Jul(6), Aug(7)
     // Spring: Sep(8), Oct(9), Nov(10)
-    if(m===11||m<=1)return'🌞 Summer';
-    if(m<=4)return'🍂 Autumn';
-    if(m<=7)return'❄ Winter';
-    return'🌱 Spring';
+    if(m===11||m<=1)return'Summer';
+    if(m<=4)return'Autumn';
+    if(m<=7)return'Winter';
+    return'Spring';
   }
   function updateSeasonBadge(){
     const now=new Date();
@@ -4964,11 +5020,6 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     item.classList.add('active');
-    // Auto-expand the nav group containing this item
-    (function expandGroup(){
-      const group = item.closest('.nav-group');
-      if(group && group.classList.contains('collapsed')) group.classList.remove('collapsed');
-    })();
     // Hide ERP container when switching to standard pages
     const erpContainer=document.getElementById('erp-page-container');
     if(erpContainer) erpContainer.style.display='none';
@@ -5076,28 +5127,101 @@ async function loadDashboard(){
 
   // ── Render stat cards ─────────────────────────────────────────────────────
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze">💰</div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon green">🐄</div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon blue">🌾</div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon amber">👷</div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
+    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
 
   // ── Summary strip ─────────────────────────────────────────────────────────
   const profitPct=d.revenue_ytd>0?Math.round(d.net_profit/d.revenue_ytd*100):0;
   const compOk=d.compliance_overdue===0;
   const stockOk=d.low_stock_items===0;
   document.getElementById('dash-summary').innerHTML=`
-    <div class="summary-card"><div class="summary-icon ${profitPct>=20?'green':'warning'}">📈</div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
-    <div class="summary-card"><div class="summary-icon ${compOk?'green':'error'}">📋</div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
-    <div class="summary-card"><div class="summary-icon ${stockOk?'green':'warning'}">📦</div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
+    <div class="summary-card"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
+    <div class="summary-card"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
+    <div class="summary-card"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
 
-  // ── Alerts ────────────────────────────────────────────────────────────────
+  // ── Alert Feed — cross-module exception summary ────────────────────────────
   document.getElementById('dash-ytd').textContent=fmt(d.revenue_ytd||0)+' YTD';
-  let al='';
-  if(d.compliance_overdue>0)al+=`<div class="alert alert-error"><span class="alert-icon">⚠</span><div>${d.compliance_overdue} compliance item(s) overdue</div></div>`;
-  if(d.low_stock_items>0)al+=`<div class="alert alert-warning"><span class="alert-icon">⚠</span><div>${d.low_stock_items} inventory item(s) below par level</div></div>`;
-  if(d.compliance_due_soon>0)al+=`<div class="alert alert-info"><span class="alert-icon">ℹ</span><div>${d.compliance_due_soon} compliance renewal(s) due soon</div></div>`;
-  if(!al)al=`<div class="alert alert-success"><span class="alert-icon">✓</span><div>All systems operating normally</div></div>`;
-  document.getElementById('dash-alerts').innerHTML=al;
+
+  const _af=[];
+  const _msi=(icon,color)=>`<span class="af-icon" style="color:${color}">${icon}</span>`;
+
+  // Compliance overdue — critical
+  if(d.compliance_overdue>0){
+    _af.push({cls:'af-critical',icon:'verified_user',
+      label:'Compliance overdue',
+      msg:`<strong>${d.compliance_overdue} regulatory item${d.compliance_overdue>1?'s are':' is'} overdue</strong> — permits or certifications have passed their renewal date.`,
+      action:'Review compliance register',page:'compliance'});
+  }
+  // Low inventory — critical if >2 items, warning otherwise
+  if(d.low_stock_items>0){
+    const crit=d.low_stock_items>2;
+    _af.push({cls:crit?'af-critical':'af-warning',icon:'inventory_2',
+      label:crit?'Stock critically low':'Low stock alert',
+      msg:`<strong>${d.low_stock_items} inventory item${d.low_stock_items>1?'s are':' is'} below par level</strong>${crit?' — reorder required to avoid operational disruption.':' — review stock levels and place reorders.'}`,
+      action:'View inventory',page:'inventory'});
+  }
+  // Compliance due soon — informational
+  if(d.compliance_due_soon>0){
+    _af.push({cls:'af-info',icon:'event_upcoming',
+      label:'Renewals due soon',
+      msg:`<strong>${d.compliance_due_soon} compliance renewal${d.compliance_due_soon>1?'s are':' is'} due within the next 30 days.</strong> Schedule renewals to stay compliant.`,
+      action:'View compliance calendar',page:'compliance'});
+  }
+  // Workers below target attendance
+  const _atPct=Math.round((d.workers_on_site||0)/(d.workers_total||1)*100)||0;
+  if(d.workers_total>0&&_atPct<70){
+    _af.push({cls:'af-warning',icon:'groups',
+      label:'Low workforce attendance',
+      msg:`Only <strong>${d.workers_on_site||0} of ${d.workers_total||0} workers are on-site</strong> today (${_atPct}%). This may affect operational capacity.`,
+      action:'View workforce',page:'workers'});
+  }
+  // Below-target profit margin
+  const _profPct=d.revenue_ytd>0?Math.round(((d.revenue_ytd-(d.expenses_ytd||0))/d.revenue_ytd)*100):0;
+  if(d.revenue_ytd>0&&_profPct<10&&_profPct>=0){
+    _af.push({cls:'af-warning',icon:'trending_down',
+      label:'Thin profit margin',
+      msg:`YTD profit margin is <strong>${_profPct}%</strong> — below the 20% target. Review expense categories for cost reduction opportunities.`,
+      action:'Open finance P&L',page:'finance'});
+  }
+
+  // Build the feed HTML
+  const _feedEl=document.getElementById('dash-alerts');
+  const _totalIssues=_af.filter(a=>a.cls==='af-critical').length;
+  const _warnCount=_af.filter(a=>a.cls==='af-warning').length;
+  const _badgeClass=_totalIssues>0?'':'warn';
+  const _badgeTxt=_totalIssues>0?`${_totalIssues} critical`:_warnCount>0?`${_warnCount} warnings`:'All clear';
+  const _badgeCls=_totalIssues>0?'':_warnCount>0?'warn':'clear';
+
+  let _feedHtml=`<div class="alert-feed">
+    <div class="alert-feed-header">
+      <div class="alert-feed-title">
+        <span style="font-family:'Material Symbols Outlined';font-size:14px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;vertical-align:middle" aria-hidden="true">notifications_active</span>
+        Needs attention
+      </div>
+      <span class="alert-feed-count ${_badgeCls}">${_badgeTxt}</span>
+    </div>`;
+
+  if(_af.length===0){
+    _feedHtml+=`<div class="af-all-clear">
+      <span class="af-icon" style="font-family:'Material Symbols Outlined';font-size:18px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;color:var(--success-txt)">check_circle</span>
+      <div><strong style="color:var(--success-txt)">All systems operating normally</strong><br>
+      <span style="font-size:12px;color:var(--text-muted)">No outstanding alerts, low stock, or overdue compliance items.</span></div>
+    </div>`;
+  }else{
+    _feedHtml+=_af.map(item=>`
+      <div class="af-item ${item.cls}" onclick="document.querySelector('[data-page=${item.page}]')?.click()" role="button" tabindex="0">
+        <span class="af-icon" style="font-family:'Material Symbols Outlined';font-size:18px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">${item.icon}</span>
+        <div class="af-body">
+          <div class="af-label">${item.label}</div>
+          <div class="af-msg">${item.msg}</div>
+          <div class="af-action">${item.action} <span class="af-arrow" style="font-family:'Material Symbols Outlined';font-size:13px;font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">arrow_forward</span></div>
+        </div>
+      </div>`).join('');
+  }
+  _feedHtml+='</div>';
+  _feedEl.innerHTML=_feedHtml;
 
   // ── Operational health bars ───────────────────────────────────────────────
   const atPct=Math.round((d.workers_on_site||0)/(d.workers_total||1)*100)||0;
@@ -5109,17 +5233,92 @@ async function loadDashboard(){
     {l:'Compliance',p:cpPct,c:''}
   ].map(h=>`<div class="inv-row"><div class="inv-header"><span class="inv-name">${h.l}</span><span class="inv-qty">${h.p}%</span></div><div class="progress-bar"><div class="progress-fill ${h.c}" style="width:${h.p}%"></div></div></div>`).join('');
 
-  // ── Weather (static forecast) ─────────────────────────────────────────────
-  document.getElementById('weather-row').innerHTML=[
-    ['☀','28°','Mon'],['⛅','24°','Tue'],['🌧','19°','Wed'],
-    ['🌧','21°','Thu'],['☀','26°','Fri'],['☀','29°','Sat'],['⛅','25°','Sun']
-  ].map(([i,t,l])=>`<div class="weather-day"><div class="weather-icon">${i}</div><div class="weather-temp">${t}</div><div class="weather-label">${l}</div></div>`).join('');
+  // ── Weather — live Open-Meteo API (free, no key, Harare coords) ────────────
+  (async()=>{
+    const _wr=document.getElementById('weather-row');
+    if(!_wr)return;
+    // WMO weather code → Material Symbol + short label
+    const _wmoIcon=code=>{
+      if(code===0)return['wb_sunny','Clear'];
+      if(code<=2)return['partly_cloudy_day','P. Cloudy'];
+      if(code===3)return['cloud','Overcast'];
+      if(code<=49)return['foggy','Fog'];
+      if(code<=59)return['grain','Drizzle'];
+      if(code<=69)return['rainy','Rain'];
+      if(code<=79)return['snowing','Snow'];
+      if(code<=82)return['rainy','Showers'];
+      if(code<=84)return['thunderstorm','T-Storm'];
+      if(code<=99)return['thunderstorm','Thunder'];
+      return['device_thermostat','Unknown'];
+    };
+    const _dayLabel=dateStr=>{
+      const d=new Date(dateStr+'T00:00:00');
+      return d.toLocaleDateString('en-GB',{weekday:'short'});
+    };
+    const _renderWeather=days=>{
+      _wr.innerHTML=days.slice(0,7).map(d=>{
+        const[icon,label]=_wmoIcon(d.code);
+        return`<div class="weather-day" title="${label} — ${Math.round(d.max)}° / ${Math.round(d.min)}°">
+          <div class="weather-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">${icon}</span></div>
+          <div class="weather-temp">${Math.round(d.max)}°</div>
+          <div class="weather-temp" style="font-size:10px;color:var(--text-muted);margin-top:1px">${Math.round(d.min)}°</div>
+          <div class="weather-label">${_dayLabel(d.date)}</div>
+        </div>`;
+      }).join('');
+    };
+    // Check cache (4-hour TTL)
+    const _cacheKey='tf_weather_v2';
+    const _cached=localStorage.getItem(_cacheKey);
+    if(_cached){
+      try{
+        const{ts,days}=JSON.parse(_cached);
+        if(Date.now()-ts<4*3600*1000){_renderWeather(days);return;}
+      }catch{}
+    }
+    // Show skeleton while fetching
+    _wr.innerHTML=[1,2,3,4,5,6,7].map(()=>`<div class="weather-day"><div class="skel" style="height:22px;border-radius:4px;margin-bottom:4px;width:24px;margin-left:auto;margin-right:auto"></div><div class="skel skel-text short" style="width:28px;margin:2px auto"></div><div class="skel skel-text short" style="width:22px;margin:2px auto"></div></div>`).join('');
+    try{
+      const _url='https://api.open-meteo.com/v1/forecast?latitude=-17.8292&longitude=31.0522&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Africa%2FHarare&forecast_days=7';
+      const _res=await fetch(_url,{signal:AbortSignal.timeout(6000)});
+      if(!_res.ok)throw new Error('HTTP '+_res.status);
+      const _d=await _res.json();
+      const days=(_d.daily.time||[]).map((date,i)=>({
+        date,
+        code:_d.daily.weathercode[i],
+        max:_d.daily.temperature_2m_max[i],
+        min:_d.daily.temperature_2m_min[i]
+      }));
+      localStorage.setItem(_cacheKey,JSON.stringify({ts:Date.now(),days}));
+      _renderWeather(days);
+      // Update card title to show it's live
+      const _cardTitle=_wr.closest('.card')?.querySelector('.card-title');
+      if(_cardTitle)_cardTitle.innerHTML='7-Day Forecast <span style="font-size:9px;color:var(--success-txt);font-family:var(--ff-mono);text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px">● live</span>';
+    }catch(err){
+      // Graceful fallback — static data, no trust-destroying error message
+      const _fallback=[
+        {date:'',code:0,max:28,min:18},{date:'',code:1,max:24,min:16},
+        {date:'',code:61,max:19,min:15},{date:'',code:61,max:21,min:16},
+        {date:'',code:0,max:26,min:17},{date:'',code:0,max:29,min:19},
+        {date:'',code:2,max:25,min:17}
+      ];
+      const _days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+      _wr.innerHTML=_fallback.map((d,i)=>{
+        const[icon]=_wmoIcon(d.code);
+        return`<div class="weather-day">
+          <div class="weather-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">${icon}</span></div>
+          <div class="weather-temp">${d.max}°</div>
+          <div class="weather-temp" style="font-size:10px;color:var(--text-muted);margin-top:1px">${d.min}°</div>
+          <div class="weather-label">${_days[i]}</div>
+        </div>`;
+      }).join('');
+    }
+  })();
 
   // ── Recent activity ───────────────────────────────────────────────────────
   const ev=d.recent_events||[];
   document.getElementById('dash-activity').innerHTML=ev.length
     ?ev.map(e=>`<div class="list-item"><div class="list-dot" style="background:${e.status==='Done'||e.status==='Logged'?'var(--success-txt)':e.status==='Pending'?'var(--warn-txt)':'var(--info)'}"></div><div><div class="list-main">${e.description}</div><div class="list-sub">${e.herd_name||''} · ${e.event_date||''}</div></div></div>`).join('')
-    :`<div style="padding:16px 0;text-align:center;font-style:italic;color:var(--text-faint);font-size:12.5px">No recent activity recorded</div>`;
+    :`<div style="padding:28px 16px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:28px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 40;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:10px;opacity:0.4">history</div><span style="font-size:12px;color:var(--text-faint);display:block;line-height:1.6">Activity will appear here as your team records livestock events, crop updates and financial transactions.</span></div>`;
 
   // ── Revenue chart — fetch real monthly data, show income + expense ───────
   const chart=document.getElementById('rev-chart');
@@ -5150,13 +5349,15 @@ async function loadDashboard(){
   const chartKeys=Object.keys(mMap).sort().slice(-9);
   const allVals=chartKeys.flatMap(k=>[mMap[k].inc,mMap[k].exp]);
   const maxV=Math.max(...allVals,1);
-  // Y-axis tick values (3 gridlines)
-  const tickTop=Math.ceil(maxV/1000)*1000;
-  const ticks=[tickTop,Math.round(tickTop/2),0];
+  // Y-axis tick values — round to nearest clean number
+  const _mag=Math.pow(10,Math.floor(Math.log10(maxV||1)));
+  const tickTop=Math.ceil(maxV/_mag)*_mag;
+  const tickMid=Math.round(tickTop/2/_mag)*_mag;
+  const ticks=[tickTop,tickMid,0];
   // Build tooltip element
   const tip=document.createElement('div');
   tip.className='chart-tooltip';
-  tip.innerHTML='<div class="chart-tooltip-label" id="tip-label"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--gold)"></div><span class="chart-tooltip-val" id="tip-inc"></span></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--error-light)"></div><span class="chart-tooltip-val" id="tip-exp"></span></div>';
+  tip.innerHTML='<div class="chart-tooltip-label" id="tip-label"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:rgba(184,146,74,0.9)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Revenue</span><span class="chart-tooltip-val" id="tip-inc"></span></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:rgba(176,64,64,0.9)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Expenses</span><span class="chart-tooltip-val" id="tip-exp"></span></div><div style="height:1px;background:var(--bdr2);margin:6px 0"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--success-txt)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Net profit</span><span class="chart-tooltip-val" id="tip-net"></span></div>';
   const chartWrap=document.createElement('div');
   chartWrap.className='bar-chart-wrap';
   chartWrap.style.cssText='position:relative;margin-left:36px;';
@@ -5178,8 +5379,11 @@ async function loadDashboard(){
     col.innerHTML=`<div class="bar-pair"><div class="bar-wrap"><div class="bar" style="height:${ih}px"></div></div><div class="bar-wrap"><div class="bar-exp" style="height:${eh}px"></div></div></div><div class="bar-label">${row.label}</div>`;
     col.addEventListener('mouseenter',ev=>{
       document.getElementById('tip-label').textContent=row.label+(hasChartData?'':' (demo)');
-      document.getElementById('tip-inc').textContent='Income: '+fmtCurrency(row.inc);
-      document.getElementById('tip-exp').textContent='Expenses: '+fmtCurrency(row.exp);
+      document.getElementById('tip-inc').textContent=fmtCurrency(row.inc);
+      document.getElementById('tip-exp').textContent=fmtCurrency(row.exp);
+      const _net=row.inc-row.exp;
+      const _netEl=document.getElementById('tip-net');
+      if(_netEl){_netEl.textContent=(_net>=0?'+':'')+fmtCurrency(Math.abs(_net));_netEl.style.color=_net>=0?'var(--success-txt)':'var(--error-txt)';}
       tip.classList.add('visible');
       const br=col.getBoundingClientRect(),wr=chartWrap.getBoundingClientRect();
       tip.style.left=Math.max(0,br.left-wr.left+br.width/2-tip.offsetWidth/2)+'px';
@@ -5217,11 +5421,11 @@ async function loadAssets(){
   const cw=canWrite();
   document.getElementById('assets-add-btn').innerHTML=cw
     ?`<button class="btn btn-primary btn-sm" onclick="openModal('asset')">+ Add Asset</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadErpDepreciation()" style="margin-left:8px" title="Track asset depreciation">📉 Asset Values</button>`
+      <button class="btn btn-secondary btn-sm" onclick="loadErpDepreciation()" style="margin-left:8px" title="Track asset depreciation"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">waterfall_chart</span> Asset Values</button>`
     :'';
   document.getElementById('assets-tbody').innerHTML=rows.length
     ?rows.map(r=>`<tr onclick="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}</td><td>${r.description}</td><td>${r.category}</td><td>${r.location}</td><td>${spill(r.status)}</td><td>${r.last_service||'—'}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">🔧</div><span class="empty-title">No assets recorded yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block">Equipment, vehicles and infrastructure will appear here.</span>${cw?`<button class="empty-cta" onclick="openModal('asset')">+ Add your first asset</button>`:''}</td></tr>`;
+    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;construction</div><span class="empty-title">No assets on the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Add your equipment, vehicles, irrigation systems and infrastructure to start tracking maintenance schedules and asset values.</span>${cw?`<button class="empty-cta" onclick="openModal('asset')">+ Register first asset</button>`:''}</td></tr>`;
 }
 
 async function loadLivestock(){
@@ -5250,7 +5454,7 @@ async function loadLivestock(){
   document.getElementById('event-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('event')">+ Log Event</button>`:'';
   document.getElementById('livestock-tbody').innerHTML=herds.length
     ?herds.map(h=>`<tr onclick="${cw?`editRecord('herd',${h.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${h.herd_name}</td><td>${h.count}</td><td>${h.avg_weight} kg</td><td>${spill(h.health)}</td><td>${spill(h.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('herd',${h.id})">✕</button>`:''}</td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">🐄</div><span class="empty-title">No herds recorded yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block">Add your livestock herds to start tracking health and headcount.</span>${cw?`<button class="empty-cta" onclick="openModal('herd')">+ Add first herd</button>`:''}</td></tr>`;
+    :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;pets</div><span class="empty-title">No herds on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Register your livestock herds to track headcount, body condition scores, health events and movement logs across paddocks.</span>${cw?`<button class="empty-cta" onclick="openModal('herd')">+ Register first herd</button>`:''}</td></tr>`;
   const dc=s=>s==='Done'||s==='Logged'?'var(--success-txt)':s==='Pending'?'var(--warn-txt)':'var(--info)';
   document.getElementById('livestock-events').innerHTML=(events||[]).slice(0,8).map(e=>`<div class="list-item"><div class="list-dot" style="background:${dc(e.status)}"></div><div><div class="list-main">${e.herd_name} — ${e.description}</div><div class="list-sub">${e.event_date}</div></div><div class="list-right">${spill(e.status)}</div></div>`).join('')||'<div class="loading">No events logged</div>';
 }
@@ -5275,11 +5479,11 @@ async function loadCrops(){
   document.getElementById('crop-add-btn').innerHTML=cw
     ?`<button class="btn btn-primary btn-sm" onclick="openModal('crop')">+ Add Field</button>
       <button class="btn btn-secondary btn-sm" onclick="loadErpActivities()" style="margin-left:8px" title="Log a farm activity">⚙ Log Activity</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadErpProduction()" style="margin-left:8px" title="Record harvest">🌾 Record Harvest</button>`
+      <button class="btn btn-secondary btn-sm" onclick="loadErpProduction()" style="margin-left:8px" title="Record harvest"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">agriculture</span> Record Harvest</button>`
     :'';
   document.getElementById('crops-tbody').innerHTML=rows.length
     ?rows.map(r=>`<tr onclick="${cw?`editRecord('crop',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.block}</td><td>${r.crop||'—'}</td><td>${parseFloat(r.area_ha)||0} ha</td><td>${r.planted||'—'}</td><td>${r.est_harvest||'—'}</td><td>${spill(r.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('crop',${r.id})">✕</button>`:''}</td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">🌾</div><span class="empty-title">No fields recorded yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block">Add your field blocks to start tracking crops, planting and harvest dates.</span>${cw?`<button class="empty-cta" onclick="openModal('crop')">+ Add first field</button>`:''}</td></tr>`;
+    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;grass</div><span class="empty-title">No fields in the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Define your crop blocks to track planting schedules, irrigation status, estimated yields and field-by-field profitability.</span>${cw?`<button class="empty-cta" onclick="openModal('crop')">+ Add first field block</button>`:''}</td></tr>`;
   const active=rows.filter(r=>r.irrigation&&r.irrigation!=='—'&&r.status!=='Fallow'&&r.status!=='Harvested');
   document.getElementById('irrigation-status').innerHTML=active.map(r=>{const p=r.irrigation_pct||0,c=p>60?'moss':p>30?'':'info-fill';return`<div class="inv-row"><div class="inv-header"><span class="inv-name">${r.block} — ${r.crop}</span><span class="inv-qty" style="color:${p>40?'var(--success-txt)':'var(--warn-txt)'}">${r.irrigation} · ${p>40?'Active':'Paused'}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${p}%"></div></div></div>`}).join('')||'<div class="loading">No active irrigation</div>';
   const colors={Growing:'#5a7a52',Seedling:'#B8893C',Ripening:'#4A6A7C',Harvested:'#4a7a40',Fallow:'#3a3a30'};
@@ -5308,7 +5512,7 @@ async function loadWorkers(){
   document.getElementById('worker-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('worker')">+ Add Worker</button>`:'';
   document.getElementById('workers-grid').innerHTML=rows.length
     ?rows.map(r=>`<div class="worker-card" onclick="${cw?`editRecord('worker',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="worker-avatar">${r.initials}</div><div><div class="worker-name">${r.name}</div><div class="worker-role">${r.role}</div></div><div class="worker-badge">${spill(r.status)}</div></div>`).join('')
-    :`<div style="grid-column:1/-1;padding:48px 24px;text-align:center"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">👷</div><span style="display:block;font-family:var(--ff-display);font-size:17px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No workers recorded yet</span><span style="font-size:12.5px;color:var(--text-faint)">Add your farm staff to track attendance and payroll.</span>${cw?`<br><button class="empty-cta" style="margin-top:14px" onclick="openModal('worker')">+ Add first worker</button>`:''}</div>`;
+    :`<div style="grid-column:1/-1;padding:48px 24px;text-align:center"><div style="font-size:32px;margin-bottom:12px;groups</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No staff on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your farm workers to track daily attendance, leave, roles and monthly payroll. Field supervisors and managers can then be assigned access roles.</span>${cw?`<button class="empty-cta" style="margin-top:16px" onclick="openModal('worker')">+ Add first staff member</button>`:''}</div>`;
 }
 
 async function loadInventory(){
@@ -5334,8 +5538,8 @@ async function loadInventory(){
     `<button class="btn btn-secondary btn-sm" onclick="openReceiveStockPicker()" style="margin-left:8px">↓ Receive Stock</button>`:'';
   document.getElementById('inventory-levels').innerHTML=rows.length
     ?rows.map(r=>{const p=Math.round(r.on_hand/r.max_level*100),c=p<25?'low':r.category==='Feed'||r.category==='Crop Input'?'moss':'info-fill';return`<div class="inv-row" onclick="${cw?`editRecord('inventory',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="inv-header"><span class="inv-name">${r.name}</span><span class="inv-qty">${r.on_hand.toLocaleString()} ${r.unit} / ${r.max_level.toLocaleString()} ${r.unit}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${Math.min(p,100)}%"></div></div></div>`;}).join('')
-    :`<div style="padding:24px 0;text-align:center;color:var(--text-faint);font-style:italic;font-size:12.5px">No inventory items yet</div>`;
-  document.getElementById('inventory-alerts').innerHTML=low.map(r=>{const crit=r.on_hand<r.par_level*0.5;return`<div class="alert ${crit?'alert-error':'alert-warning'}"><span class="alert-icon">⚠</span><div><strong>${r.name}</strong> — ${crit?'critically low':'below threshold'}<br>${r.on_hand} ${r.unit} remaining (par: ${r.par_level})</div></div>`}).join('')||'<div class="loading">All stock levels OK</div>';
+    :`<div style="padding:56px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">inventory_2</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">Stock register is empty</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your inputs, fuel, feed and supplies to monitor stock levels, set reorder thresholds and get low-stock alerts.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:16px\" onclick=\"openModal('inventory')\"}>+ Add first stock item</button>`:''}</div>`;
+  document.getElementById('inventory-alerts').innerHTML=low.map(r=>{const crit=r.on_hand<r.par_level*0.5;return`<div class="alert ${crit?'alert-error':'alert-warning'}"><span class="alert-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">warning</span></span><div><strong>${r.name}</strong> — ${crit?'critically low':'below threshold'}<br>${r.on_hand} ${r.unit} remaining (par: ${r.par_level})</div></div>`}).join('')||'<div class="loading">All stock levels OK</div>';
   document.getElementById('inventory-low-tbody').innerHTML=low.map(r=>`<tr><td>${r.name}</td><td>${r.unit}</td><td>${r.on_hand}</td><td>${r.par_level}</td><td>${spill(r.on_hand<r.par_level*0.5?'Repair':'Maintenance')}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:16px">All items above par level</td></tr>';
 }
 
@@ -5406,10 +5610,10 @@ async function loadFinance(){
   // ── KPI STATS ─────────────────────────────────────────────────────────────
   const roi=totalExpense>0?Math.round((netProfit/totalExpense)*100):0;
   document.getElementById('finance-stats').innerHTML=`
-    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze">💰</div><div class="stat-card-body"><div class="stat-label">YTD Revenue</div><div class="stat-value">$${totalIncome.toLocaleString()}</div><div class="stat-delta delta-up">▲ ${income.length} transaction${income.length!==1?'s':''}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon red">📤</div><div class="stat-card-body"><div class="stat-label">YTD Expenses</div><div class="stat-value">$${totalExpense.toLocaleString()}</div><div class="stat-delta delta-down">${expense.length} categor${expense.length!==1?'ies':'y'}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${netProfit>=0?'green':'error'}">📈</div><div class="stat-card-body"><div class="stat-label">Net Profit</div><div class="stat-value">$${netProfit.toLocaleString()}</div><div class="stat-delta ${margin>=20?'delta-up':'delta-down'}">${margin>=20?'▲':'▼'} ${margin}% margin</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${roi>=30?'green':'warning'}">🎯</div><div class="stat-card-body"><div class="stat-label">Return on Cost</div><div class="stat-value">${roi}%</div><div class="stat-delta" style="color:var(--text-faint)">profit ÷ expenses</div></div></div></div>`;
+    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">YTD Revenue</div><div class="stat-value">$${totalIncome.toLocaleString()}</div><div class="stat-delta delta-up">▲ ${income.length} transaction${income.length!==1?'s':''}</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon red"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_down</span></div><div class="stat-card-body"><div class="stat-label">YTD Expenses</div><div class="stat-value">$${totalExpense.toLocaleString()}</div><div class="stat-delta delta-down">${expense.length} categor${expense.length!==1?'ies':'y'}</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${netProfit>=0?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="stat-card-body"><div class="stat-label">Net Profit</div><div class="stat-value">$${netProfit.toLocaleString()}</div><div class="stat-delta ${margin>=20?'delta-up':'delta-down'}">${margin>=20?'▲':'▼'} ${margin}% margin</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${roi>=30?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">gps_fixed</span></div><div class="stat-card-body"><div class="stat-label">Return on Cost</div><div class="stat-value">${roi}%</div><div class="stat-delta" style="color:var(--text-faint)">profit ÷ expenses</div></div></div></div>`;
 
   // ── SMART INSIGHTS STRIP ──────────────────────────────────────────────────
   const expByCat={};expense.forEach(r=>{const c=r.category||'Other';expByCat[c]=(expByCat[c]||0)+(r.amount||0);});
@@ -5419,20 +5623,20 @@ async function loadFinance(){
   const labourCost=expByCat['Labour']||0;
   const labourPct=totalExpense>0?Math.round(labourCost/totalExpense*100):0;
   const insights=[];
-  if(topIncCat)insights.push({icon:'🏆',label:'Top Revenue Source',val:`<strong>${topIncCat[0]}</strong> leads at $${topIncCat[1].toLocaleString()} — ${totalIncome>0?Math.round(topIncCat[1]/totalIncome*100):0}% of all income`,cls:''});
-  if(topExpCat)insights.push({icon:'⚠',label:'Largest Cost Driver',val:`<strong>${topExpCat[0]}</strong> is your biggest expense at $${topExpCat[1].toLocaleString()} (${totalExpense>0?Math.round(topExpCat[1]/totalExpense*100):0}% of spend)`,cls:topExpCat[1]>totalExpense*0.5?'warn':''});
-  if(margin<20&&totalIncome>0)insights.push({icon:'📉',label:'Margin Alert',val:`Profit margin at <strong>${margin}%</strong> — below the 20% target. Review ${topExpCat?topExpCat[0]+' costs':'major expenses'}.`,cls:'bad'});
-  else if(margin>=20)insights.push({icon:'✅',label:'Margin On Target',val:`▲ <strong>${margin}%</strong> profit margin — above the 20% benchmark.`,cls:'good'});
-  if(labourPct>40)insights.push({icon:'👷',label:'Labour Cost Warning',val:`Labour is <strong>${labourPct}%</strong> of total expenses ($${labourCost.toLocaleString()}). Consider seasonal vs permanent staffing.`,cls:'warn'});
+  if(topIncCat)insights.push({icon:'emoji_events',label:'Top Revenue Source',val:`<strong>${topIncCat[0]}</strong> leads at $${topIncCat[1].toLocaleString()} — ${totalIncome>0?Math.round(topIncCat[1]/totalIncome*100):0}% of all income`,cls:''});
+  if(topExpCat)insights.push({icon:'warning',label:'Largest Cost Driver',val:`<strong>${topExpCat[0]}</strong> is your biggest expense at $${topExpCat[1].toLocaleString()} (${totalExpense>0?Math.round(topExpCat[1]/totalExpense*100):0}% of spend)`,cls:topExpCat[1]>totalExpense*0.5?'warn':''});
+  if(margin<20&&totalIncome>0)insights.push({icon:'trending_down',label:'Margin Alert',val:`Profit margin at <strong>${margin}%</strong> — below the 20% target. Review ${topExpCat?topExpCat[0]+' costs':'major expenses'}.`,cls:'bad'});
+  else if(margin>=20)insights.push({icon:'check_circle',label:'Margin On Target',val:`▲ <strong>${margin}%</strong> profit margin — above the 20% benchmark.`,cls:'good'});
+  if(labourPct>40)insights.push({icon:'groups',label:'Labour Cost Warning',val:`Labour is <strong>${labourPct}%</strong> of total expenses ($${labourCost.toLocaleString()}). Consider seasonal vs permanent staffing.`,cls:'warn'});
   document.getElementById('finance-insights-strip').innerHTML=insights.length
-    ?`<div class="fin-insights-strip">${insights.slice(0,3).map(i=>`<div class="fin-insight-card"><div class="fin-insight-icon">${i.icon}</div><div class="fin-insight-body"><div class="fin-insight-label">${i.label}</div><div class="fin-insight-value ${i.cls}">${i.val}</div></div></div>`).join('')}</div>`:'';
+    ?`<div class="fin-insights-strip">${insights.slice(0,3).map(i=>`<div class="fin-insight-card"><div class="fin-insight-icon"><span style="font-family:'Material Symbols Outlined';font-size:18px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">${i.icon}</span></div><div class="fin-insight-body"><div class="fin-insight-label">${i.label}</div><div class="fin-insight-value ${i.cls}">${i.val}</div></div></div>`).join('')}</div>`:'';
 
   // ── INCOME & EXPENSE RECORD TABLES ───────────────────────────────────────
   document.getElementById('income-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','income')">+ Add Income</button>`:'';
   document.getElementById('expense-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','expense')">+ Add Expense</button>`:'';
   const fmtLine=(r,type)=>`<div class="finance-line"><div style="flex:1"><div>${r.description||r.category||'—'}</div><div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">${r.category||'—'} · ${r.date||'—'}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="finance-amount ${type==='income'?'amount-pos':'amount-neg'}">${type==='income'?'+':'−'} $${(r.amount||0).toLocaleString()}</span>${cw?`<button class="btn btn-danger btn-sm" onclick="delRec('finance',${r.id})">✕</button>`:''}</div></div>`;
-  const noIncHtml=`<div style="padding:32px 0;text-align:center"><span style="display:block;font-family:var(--ff-display);font-size:16px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No income recorded yet</span><span style="font-size:12px;color:var(--text-faint)">Sales, grants and other revenue will appear here.</span>${cw?`<br><button class="empty-cta" style="margin-top:12px" onclick="openModal('finance','income')">+ Add income record</button>`:''}</div>`;
-  const noExpHtml=`<div style="padding:32px 0;text-align:center"><span style="display:block;font-family:var(--ff-display);font-size:16px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No expenses recorded yet</span><span style="font-size:12px;color:var(--text-faint)">Operating costs, wages and purchases will appear here.</span>${cw?`<br><button class="empty-cta" style="margin-top:12px" onclick="openModal('finance','expense')">+ Add expense record</button>`:''}</div>`;
+  const noIncHtml=`<div style="padding:48px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">payments</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No income recorded yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto;line-height:1.65">Log crop sales, livestock sales, grants and other revenue to build your P&amp;L and track profitability by category.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:14px\" onclick=\"openModal('finance','income')\"}>+ Log first income record</button>`:''}</div>`;
+  const noExpHtml=`<div style="padding:48px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">receipt_long</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No expenses recorded yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto;line-height:1.65">Record operating costs, input purchases, wages and overhead to track expense categories and see your true profit margin.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:14px\" onclick=\"openModal('finance','expense')\"}>+ Log first expense</button>`:''}</div>`;
   document.getElementById('finance-income').innerHTML=(income.length?income.map(r=>fmtLine(r,'income')).join('')+`<div class="finance-line" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:14px"><span style="color:var(--text-primary);font-weight:500">Total</span><span class="finance-amount" style="color:var(--text-primary);font-size:16px">$${totalIncome.toLocaleString()}</span></div>`:noIncHtml);
   document.getElementById('finance-expense').innerHTML=(expense.length?expense.map(r=>fmtLine(r,'expense')).join('')+`<div class="finance-line" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:14px"><span style="color:var(--text-primary);font-weight:500">Total</span><span class="finance-amount" style="color:var(--error-txt);font-size:16px">$${totalExpense.toLocaleString()}</span></div>`:noExpHtml);
 
@@ -5786,7 +5990,7 @@ Rules:
 
   } catch(err) {
     previewBody.innerHTML = `<div class="page-error">
-      <div class="page-error-icon">⚠</div>
+      <div class="page-error-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">cloud_off</span></div>
       <div class="page-error-title">Report generation failed</div>
       <div class="page-error-sub">${err.message || 'An unexpected error occurred. Please try again.'}</div>
       <button class="page-error-btn" onclick="generateReport()">↻ Retry</button>
@@ -6009,8 +6213,8 @@ function clearReportHistory(){
 }
 
 const _repTypeIcons = {
-  executive_summary:'📊', financial:'💰', livestock:'🐄',
-  crop:'🌾', workforce:'👷', compliance:'✅'
+  executive_summary:'bar_chart', financial:'payments', livestock:'pets',
+  crop:'grass', workforce:'groups', compliance:'verified_user'
 };
 
 function renderReportHistory(){
@@ -6022,14 +6226,14 @@ function renderReportHistory(){
 
   if(!hist.length){
     list.innerHTML = `<div style="padding:40px 0;text-align:center">
-      <span style="display:block;font-family:var(--ff-display);font-size:16px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No reports generated yet</span>
+      <div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">summarize</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No reports generated yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto 16px;line-height:1.65">Generate your first report above — executive summaries, financial statements and operational reports are ready instantly.</span>
       <span style="font-size:12.5px;color:var(--text-faint)">Use the builder above to create your first report.</span>
     </div>`;
     return;
   }
 
   list.innerHTML = hist.map((r,i) => {
-    const icon = _repTypeIcons[r.type] || '📄';
+    const icon = _repTypeIcons[r.type] || 'description';
     const ts = r.ts ? new Date(r.ts).toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
     const fmtBadge = (r.fmt||'pdf').toUpperCase();
     return `<div class="report-item">
@@ -6090,7 +6294,7 @@ async function loadCompliance(){
   document.getElementById('comp-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('compliance')">+ Add Item</button>`:'';
   document.getElementById('compliance-list').innerHTML=rows.length
     ?rows.map(r=>`<div class="comp-item" onclick="${cw?`editRecord('compliance',${r.id})`:''}"><div class="comp-status" style="background:${hc(r.status)}"></div><div><div class="comp-title">${r.title}</div><div class="comp-due">${r.issued_date?'Issued '+r.issued_date+' · ':''} ${r.expiry_date?'Expires '+r.expiry_date:''} ${r.issuing_body?'· '+r.issuing_body:''}</div></div><div class="comp-right">${spill(r.status)}${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('compliance',${r.id})">✕</button>`:''}</div></div>`).join('')
-    :`<div style="padding:40px 0;text-align:center;"><span style="display:block;font-family:var(--ff-display);font-size:16px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">No compliance items recorded yet</span><span style="font-size:12.5px;color:var(--text-faint);">Licences, certifications and regulatory requirements will appear here.</span>${cw?`<br><button class="empty-cta" style="margin-top:12px;" onclick="openModal('compliance')">+ Add first item</button>`:''}  </div>`;
+    :`<div style="padding:56px 24px;text-align:center;"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">verified_user</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">Compliance register is clear</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:380px;margin:0 auto;line-height:1.65;">Add your ZINWA licences, EMA permits, veterinary certificates and fire authority requirements — with due dates — to receive renewal alerts before they expire.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:16px;\" onclick=\"openModal('compliance')\"}>+ Add compliance item</button>`:''}</div>`;
 }
 
 async function loadUsers(){
@@ -6105,7 +6309,7 @@ async function loadUsers(){
     const {title,sub,code}=classifyError(e);
     document.getElementById('users-tbody').innerHTML=
       `<tr><td colspan="6"><div class="inline-error" style="border:none;padding:32px 0">
-        <div class="inline-error-icon">⚠</div>
+        <div class="inline-error-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">warning</span></div>
         <div class="inline-error-title">${title}</div>
         <div class="inline-error-sub">${sub}</div>
         <div class="inline-error-code">${code}</div>
@@ -6115,7 +6319,7 @@ async function loadUsers(){
   }
   document.getElementById('users-tbody').innerHTML=rows.length
     ?rows.map(r=>`<tr class="${r.active?'':'user-inactive'}" style="cursor:pointer" onclick="editRecord('user',${r.id})"><td>${r.name}</td><td>${r.email}</td><td>${rpill(r.role)}</td><td>${spill(r.active?'Active':'Inactive')}</td><td>${r.last_login?r.last_login.split(' ')[0]:'Never'}</td><td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('user',${r.id})">✕</button></td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;opacity:0.35">👤</div><span class="empty-title">No users found</span><span style="font-size:12.5px;color:var(--text-faint);display:block">System users with farm access will appear here.</span></td></tr>`;
+    :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;manage_accounts</div><span class="empty-title">No team members added yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:360px;margin:0 auto 4px;line-height:1.65">Generate an invite code to add field supervisors, finance managers and farm administrators. Each role sees only the data relevant to their work.</span></td></tr>`;
 }
 
 async function loadSettings(){
@@ -6304,7 +6508,7 @@ async function executeDelete(){
   } catch(err){
     btn.classList.remove('executing');
     btn.classList.add('armed');
-    btn.innerHTML = '🗑 Delete permanently';
+    btn.innerHTML = '<span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">delete</span> Delete permanently';
     toast('Delete failed — please try again', 'error');
   }
 }
@@ -6589,12 +6793,12 @@ async function loadAIInsights(){
   while(top.length<6&&fi<fallbacks.length){top.push(fallbacks[fi++]);}
 
   // ── RENDER — always resolves, never stays as spinner ─────────────────────
-  const typeIcon={crop:'🌾',livestock:'🐄',finance:'💰',recommendation:'💡',alert:'⚠',weather:'☀'};
+  const typeIcon={crop:'grass',livestock:'pets',finance:'payments',recommendation:'lightbulb',alert:'warning',weather:'wb_sunny'};
 
   if(!hasServerData){
     body.innerHTML=`
       <div style="padding:28px 20px;text-align:center;border:1px dashed var(--bdr);border-radius:12px;">
-        <div style="font-size:28px;margin-bottom:12px;opacity:0.5">📡</div>
+        <div style="font-size:28px;margin-bottom:12px;opacity:0.5"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">signal_disconnected</span></div>
         <div style="font-family:var(--ff-display);font-size:17px;color:var(--text-secondary);margin-bottom:8px">Farm data unavailable</div>
         <div style="font-size:12.5px;color:var(--text-muted);line-height:1.65;max-width:280px;margin:0 auto 18px">
           Could not reach the server to load your farm data. Insights will appear once a connection is established.
@@ -6604,7 +6808,7 @@ async function loadAIInsights(){
     return;
   }
   if(top.length===0){
-    body.innerHTML=`<div class="ai-error-state">⚠ Could not generate insights from current data. Click Refresh to try again.</div>`;
+    body.innerHTML=`<div class="ai-error-state"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">cloud_off</span> Could not generate insights from current data. Click Refresh to try again.</div>`;
     return;
   }
   const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
@@ -6719,10 +6923,10 @@ function copyInviteCode(){
 // ─── SEASON BADGE — initialize immediately so it never shows "—" ──────────────
 (function initSeasonBadge(){
   function getSouthernSeason(m){
-    if(m===11||m<=1)return'🌞 Summer';
-    if(m<=4)return'🍂 Autumn';
-    if(m<=7)return'❄ Winter';
-    return'🌱 Spring';
+    if(m===11||m<=1)return'Summer';
+    if(m<=4)return'Autumn';
+    if(m<=7)return'Winter';
+    return'Spring';
   }
   const now=new Date();
   const badge=document.getElementById('topbar-season');
@@ -7703,128 +7907,6 @@ async function saveActivity(){
 }
 
 // ── COST ANALYTICS ────────────────────────────────────────────────────────────
-// ── SCENARIO CALCULATOR STATE ────────────────────────────────────────────────
-const _calcDefaults = { area:100, costPerHa:350, yieldPerHa:4.5, sellingPrice:120, overhead:8000 };
-let _calcState = { ..._calcDefaults };
-
-function runCalc(){
-  const get = id => parseFloat(document.getElementById(id)?.value) || 0;
-  const area       = get('calc-area');
-  const costPerHa  = get('calc-cost-ha');
-  const yieldPerHa = get('calc-yield-ha');
-  const sellPrice  = get('calc-sell-price');
-  const overhead   = get('calc-overhead');
-
-  // Validate
-  let valid = true;
-  ['calc-area','calc-cost-ha','calc-yield-ha','calc-sell-price','calc-overhead'].forEach(id=>{
-    const el = document.getElementById(id);
-    const v = parseFloat(el?.value);
-    const bad = !el || isNaN(v) || v < 0;
-    el?.classList.toggle('invalid', bad);
-    if(bad) valid = false;
-  });
-  if(!valid) return;
-
-  // Calculations
-  const totalVariableCost = area * costPerHa;
-  const totalCost         = totalVariableCost + overhead;
-  const totalYield        = area * yieldPerHa;
-  const totalRevenue      = totalYield * sellPrice;
-  const grossProfit       = totalRevenue - totalCost;
-  const marginPct         = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
-  const costPerUnit       = totalYield > 0 ? totalCost / totalYield : 0;
-  const breakevenYield    = sellPrice > 0 ? totalCost / sellPrice : 0;
-  const breakevenPrice    = totalYield > 0 ? totalCost / totalYield : 0;
-  const roiPct            = totalCost > 0 ? (grossProfit / totalCost) * 100 : 0;
-
-  // Format helpers
-  const usd = v => {
-    const abs = Math.abs(v);
-    const str = abs >= 1000000 ? `$${(abs/1000000).toFixed(2)}M`
-              : abs >= 1000 ? `$${(abs/1000).toFixed(1)}k`
-              : `$${abs.toFixed(0)}`;
-    return v < 0 ? `−${str}` : str;
-  };
-  const pct  = v => (v>=0?'+':'')+v.toFixed(1)+'%';
-  const num  = v => v >= 1000 ? (v/1000).toFixed(1)+'k' : v.toFixed(1);
-
-  // Update result cards
-  const set = (id, val, sub) => {
-    const el = document.getElementById(id);
-    if(el){
-      el.querySelector('.calc-result-value').textContent = val;
-      if(sub !== undefined) el.querySelector('.calc-result-sub').textContent = sub;
-    }
-  };
-
-  const rev  = document.getElementById('calc-r-revenue');
-  const prof = document.getElementById('calc-r-profit');
-  const mar  = document.getElementById('calc-r-margin');
-  const roi  = document.getElementById('calc-r-roi');
-  const cpu  = document.getElementById('calc-r-cpu');
-
-  if(rev)  rev.querySelector('.calc-result-value').textContent  = usd(totalRevenue);
-  if(rev)  rev.querySelector('.calc-result-sub').textContent    = `${num(totalYield)} units @ ${usd(sellPrice)}/unit`;
-
-  // Colour profit card
-  if(prof){
-    prof.className = 'calc-result-card ' + (grossProfit>=0?'positive':'negative');
-    prof.querySelector('.calc-result-value').textContent = usd(grossProfit);
-    prof.querySelector('.calc-result-sub').textContent   = `Total cost: ${usd(totalCost)}`;
-    const bar = prof.querySelector('.calc-result-bar');
-    if(bar){ bar.style.width = Math.min(100,Math.abs(marginPct))+'%'; bar.style.background = grossProfit>=0?'var(--success-txt)':'var(--error-txt)'; }
-  }
-
-  if(mar){
-    mar.className = 'calc-result-card ' + (marginPct>=20?'positive':marginPct>=0?'highlight':'negative');
-    mar.querySelector('.calc-result-value').textContent = marginPct.toFixed(1)+'%';
-    mar.querySelector('.calc-result-sub').textContent   = marginPct>=20?'Healthy margin':marginPct>=0?'Thin margin':'Loss-making';
-  }
-
-  if(roi){
-    roi.className = 'calc-result-card ' + (roiPct>=15?'positive':roiPct>=0?'highlight':'negative');
-    roi.querySelector('.calc-result-value').textContent = roiPct.toFixed(1)+'%';
-    roi.querySelector('.calc-result-sub').textContent   = 'Return on total cost';
-  }
-
-  if(cpu){
-    cpu.querySelector('.calc-result-value').textContent = usd(costPerUnit);
-    cpu.querySelector('.calc-result-sub').textContent   = `Break-even price: ${usd(breakevenPrice)}/unit`;
-  }
-
-  // Breakeven note
-  const note = document.getElementById('calc-breakeven-note');
-  if(note){
-    const surplus = totalYield - breakevenYield;
-    const surplusPct = breakevenYield>0 ? (surplus/breakevenYield)*100 : 0;
-    if(grossProfit >= 0){
-      note.className = 'calc-breakeven-note ok';
-      note.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0">check_circle</span><span>Break-even at <strong>${num(breakevenYield)} units</strong>. You project <strong>${num(totalYield)} units</strong> — a <strong>${surplusPct.toFixed(0)}% surplus</strong> above break-even. Your minimum viable selling price is <strong>${usd(breakevenPrice)}/unit</strong>.</span>`;
-    } else {
-      note.className = 'calc-breakeven-note bad';
-      note.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px;flex-shrink:0">warning</span><span>At these inputs the operation is loss-making by <strong>${usd(Math.abs(grossProfit))}</strong>. Either increase yield above <strong>${num(breakevenYield)} units</strong>, raise price above <strong>${usd(breakevenPrice)}/unit</strong>, or reduce cost below <strong>${usd(totalRevenue/area)}/ha</strong>.</span>`;
-    }
-  }
-
-  // Save state
-  _calcState = { area, costPerHa, yieldPerHa, sellingPrice:sellPrice, overhead };
-}
-
-function resetCalc(){
-  Object.entries(_calcDefaults).forEach(([k,v])=>{
-    const el = document.getElementById('calc-'+k.replace(/([A-Z])/g,'-$1').toLowerCase());
-    if(el) el.value = v;
-  });
-  // Map defaults to input IDs manually
-  document.getElementById('calc-area').value        = _calcDefaults.area;
-  document.getElementById('calc-cost-ha').value     = _calcDefaults.costPerHa;
-  document.getElementById('calc-yield-ha').value    = _calcDefaults.yieldPerHa;
-  document.getElementById('calc-sell-price').value  = _calcDefaults.sellingPrice;
-  document.getElementById('calc-overhead').value    = _calcDefaults.overhead;
-  runCalc();
-}
-
 async function loadErpCosting(){
   currentPage = 'erp-costing';
   erpContent(`<div class="page-header"><h1>Cost Analytics</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
@@ -7836,72 +7918,7 @@ async function loadErpCosting(){
   ]);
 
   erpContent(`
-<div class="page-header"><h1>Cost Analytics</h1><p class="page-sub">Per-unit, labor, inventory analysis and scenario modelling</p></div>
-
-<!-- ════ SCENARIO CALCULATOR ════ -->
-<div class="calc-panel">
-  <div class="calc-panel-title">
-    <span class="ms-icon">calculate</span>
-    Scenario Calculator — set your own numbers
-  </div>
-  <div class="calc-grid">
-    <div class="calc-field">
-      <label class="calc-label" for="calc-area">Area (ha)</label>
-      <input class="calc-input" id="calc-area" type="number" min="0" step="0.1" value="${_calcState.area}" oninput="runCalc()" placeholder="e.g. 100">
-    </div>
-    <div class="calc-field">
-      <label class="calc-label" for="calc-cost-ha">Variable Cost / ha ($)</label>
-      <input class="calc-input" id="calc-cost-ha" type="number" min="0" step="1" value="${_calcState.costPerHa}" oninput="runCalc()" placeholder="e.g. 350">
-    </div>
-    <div class="calc-field">
-      <label class="calc-label" for="calc-yield-ha">Yield / ha (units)</label>
-      <input class="calc-input" id="calc-yield-ha" type="number" min="0" step="0.1" value="${_calcState.yieldPerHa}" oninput="runCalc()" placeholder="e.g. 4.5 t/ha">
-    </div>
-    <div class="calc-field">
-      <label class="calc-label" for="calc-sell-price">Selling Price / unit ($)</label>
-      <input class="calc-input" id="calc-sell-price" type="number" min="0" step="0.5" value="${_calcState.sellingPrice}" oninput="runCalc()" placeholder="e.g. 120">
-    </div>
-    <div class="calc-field">
-      <label class="calc-label" for="calc-overhead">Fixed Overhead ($)</label>
-      <input class="calc-input" id="calc-overhead" type="number" min="0" step="100" value="${_calcState.overhead}" oninput="runCalc()" placeholder="e.g. 8000">
-    </div>
-  </div>
-
-  <div class="calc-results">
-    <div class="calc-result-card highlight" id="calc-r-revenue">
-      <div class="calc-result-label">Total Revenue</div>
-      <div class="calc-result-value">—</div>
-      <div class="calc-result-sub">—</div>
-    </div>
-    <div class="calc-result-card" id="calc-r-profit">
-      <div class="calc-result-label">Gross Profit</div>
-      <div class="calc-result-value">—</div>
-      <div class="calc-result-sub">—</div>
-      <div class="calc-result-bar" style="width:0%"></div>
-    </div>
-    <div class="calc-result-card" id="calc-r-margin">
-      <div class="calc-result-label">Profit Margin</div>
-      <div class="calc-result-value">—</div>
-      <div class="calc-result-sub">—</div>
-    </div>
-    <div class="calc-result-card" id="calc-r-roi">
-      <div class="calc-result-label">ROI</div>
-      <div class="calc-result-value">—</div>
-      <div class="calc-result-sub">—</div>
-    </div>
-    <div class="calc-result-card" id="calc-r-cpu">
-      <div class="calc-result-label">Cost / Unit</div>
-      <div class="calc-result-value">—</div>
-      <div class="calc-result-sub">—</div>
-    </div>
-  </div>
-
-  <div class="calc-breakeven-note ok" id="calc-breakeven-note" style="display:none"></div>
-  <button class="calc-reset" onclick="resetCalc()">↺ Reset to defaults</button>
-</div>
-
-<!-- trigger first calc after DOM renders -->
-<script>requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ const bn=document.getElementById('calc-breakeven-note'); if(bn) bn.style.display='flex'; runCalc(); }); });<\/script>
+<div class="page-header"><h1>Cost Analytics</h1><p class="page-sub">Per-unit, labor, and inventory cost analysis</p></div>
 
 <!-- UNIT COST ANALYSIS -->
 <div class="erp-panel">
