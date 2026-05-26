@@ -3560,6 +3560,463 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 }
 .erp-mode-back:hover { color: var(--text-secondary); }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   LAYOUT & VISUAL FIX PATCH
+   ─ Fix 1: bar-chart height — remove hardcoded 140px, let flex fill parent
+   ─ Fix 2: .page.active — dashboard needs display:flex, not display:block
+   ─ Fix 3: Sidebar nav alignment — section labels, icon/label rows, footer
+   ─ Fix 4: Mobile responsive overhaul
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── FIX 1: BAR CHART — grow to fill available flex space ────────────────── */
+/* The chart card is flex:1 inside dash-split-left, so the chart itself       */
+/* must also fill its parent. Remove the static 140px ceiling.                */
+.bar-chart {
+  height: auto;         /* was 140px — let flex control it */
+  flex: 1;
+  min-height: 100px;    /* never collapse completely */
+}
+.bar-wrap { height: 100%; }   /* bar-wrap was also hardcoded to 140px */
+.bar-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+/* Revenue chart card needs to be a flex column to propagate height */
+.dash-chart-card.card {
+  display: flex;
+  flex-direction: column;
+}
+.dash-chart-card .bar-chart-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── FIX 2: PAGE DISPLAY — dashboard must be flex, not block ─────────────── */
+/* .page.active { display: block } is the global rule (line 1166).            */
+/* #page-dashboard already gets display:flex via the ID rule (line 1056–1061) */
+/* but the global .page.active rule wins due to source order specificity.     */
+/* Lift specificity for the dashboard ID rule so flex wins cleanly.           */
+#page-dashboard.active {
+  display: flex !important;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+/* ── FIX 3: SIDEBAR — clean, aligned, professional ──────────────────────── */
+
+/* Logo zone: consistent padding, no weirdness */
+.sidebar-logo {
+  padding: 22px 20px 18px;
+}
+.logo-mark {
+  font-size: 15px;
+  letter-spacing: 0.16em;
+  gap: 9px;
+}
+.logo-sub {
+  padding-left: 0;
+  margin-top: 5px;
+  font-size: 8.5px;
+  letter-spacing: 0.20em;
+}
+
+/* Section labels: clean baseline, no top-padding weirdness */
+.nav-section-label {
+  padding: 18px 20px 5px;
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  color: var(--text-faint);
+  font-weight: 600;
+  text-transform: uppercase;
+  /* Prevent labels from collapsing oddly when group is used as a block */
+  display: block;
+  line-height: 1;
+}
+
+/* Nav items: perfectly aligned icon + label, no gap drift */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all var(--tr);
+  user-select: none;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  /* prevent text wrapping pushing items taller */
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nav-item:hover {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.025);
+  border-left-color: rgba(255,255,255,0.06);
+}
+.nav-item.active {
+  color: var(--gold-lt);
+  border-left-color: var(--gold);
+  background: rgba(184,146,74,0.06);
+  font-weight: 400;
+}
+
+/* Icon: fixed width so label always starts at the same x */
+.nav-icon {
+  font-size: 16px;
+  width: 18px;
+  min-width: 18px;   /* prevent shrink */
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Sidebar footer: tighter, better proportioned */
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--bdr);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+.sf-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  min-width: 0;        /* allow text truncation */
+}
+.sf-name {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sf-role {
+  font-size: 9px;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: 1px;
+  white-space: nowrap;
+}
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+/* Nav group toggle row: same sizing as a nav-item so it sits flush */
+.nav-group-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 5px;
+  cursor: pointer;
+  transition: all var(--tr);
+  background: none;
+  border: none;
+  width: 100%;
+  font-family: var(--ff-ui);
+}
+.nav-group-toggle:hover { opacity: 0.75; }
+.nav-group-toggle .nav-section-label {
+  /* Reset padding since the toggle row already has it */
+  padding: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+/* ── FIX 4: MOBILE RESPONSIVE OVERHAUL ──────────────────────────────────── */
+
+/* ≤1024px — sidebar becomes off-canvas drawer */
+@media (max-width: 1024px) {
+  #sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 150;
+    width: 260px;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
+                box-shadow 0.28s ease;
+    box-shadow: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    /* Always show full labels in drawer mode */
+    --sidebar-w: 260px;
+  }
+  #sidebar.open {
+    transform: translateX(0);
+    box-shadow: var(--sh-lg), 8px 0 40px rgba(0,0,0,0.5);
+  }
+  #mob-toggle { display: flex; }
+  #main { width: 100%; }
+  #topbar { padding: 0 16px; gap: 10px; }
+  .topbar-title { font-size: 15px; }
+  #content { padding: 20px 18px; }
+
+  /* Dashboard flex layout on tablet */
+  .dash-split { grid-template-columns: 1fr; padding: 14px 16px; }
+  .dash-split-right .card:nth-child(n+3) { display: none; }
+
+  /* Grids */
+  .stat-grid { grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 18px; }
+  .two-col   { grid-template-columns: 1fr; }
+  .three-col { grid-template-columns: 1fr 1fr; }
+  .dash-grid { grid-template-columns: 1fr; }
+  .quick-actions { grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .dash-summary-strip { grid-template-columns: repeat(3,1fr); gap: 12px; }
+  .ai-insights { grid-template-columns: 1fr 1fr; }
+  .worker-grid { grid-template-columns: 1fr 1fr !important; }
+  .form-row { grid-template-columns: 1fr; }
+  .fin-metrics-grid { grid-template-columns: 1fr 1fr; }
+  .fin-insights-strip { grid-template-columns: 1fr 1fr; }
+
+  /* Dashboard greeting */
+  .dash-greeting { flex-direction: column; align-items: flex-start; gap: 4px; margin-bottom: 20px; }
+  .dash-greeting-left h1 { font-size: 30px; }
+  .dash-greeting-right { text-align: left; }
+  .dash-time { font-size: 24px; }
+
+  /* Headers + cards */
+  .page-header { margin-bottom: 22px; }
+  .page-header h1 { font-size: 30px; }
+  .card { padding: 18px; margin-bottom: 14px; }
+  .stat-card { padding: 18px 20px; }
+  .stat-value { font-size: 24px; }
+
+  /* Quick actions */
+  .qa-btn { padding: 14px 10px; gap: 8px; }
+  .qa-sub { display: none; }
+
+  /* Summary strip */
+  .summary-card { padding: 14px; gap: 10px; }
+  .summary-value { font-size: 18px; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -18px; padding: 0 18px; }
+  .data-table { min-width: 540px; }
+
+  /* Finance */
+  .fin-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+  .fin-tab { white-space: nowrap; flex: none; font-size: 10px; padding: 8px 14px; }
+  .fin-mom-row { grid-template-columns: 55px 1fr 1fr 55px; gap: 6px; font-size: 10.5px; }
+  .fin-cat-bar-wrap { width: 70px; }
+  .fin-profit-bar-wrap { width: 80px; }
+  .fin-donut-wrap { flex-direction: column; align-items: flex-start; gap: 14px; }
+
+  /* Modal → bottom sheet */
+  .modal {
+    width: 100%; max-width: 100%;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-height: 92vh;
+    transform: translateY(100%);
+  }
+  .modal-overlay { align-items: flex-end; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions .btn { width: 100%; justify-content: center; }
+
+  /* Misc */
+  .weather-row { gap: 4px; }
+  .weather-day { padding: 8px 3px; }
+  .weather-temp { font-size: 12px; }
+  .weather-label { font-size: 8.5px; }
+  .weather-icon { font-size: 15px; }
+  .report-actions { flex-direction: column; gap: 4px; }
+  .comp-right { gap: 4px; }
+  #toast-container { bottom: 16px; right: 12px; left: 12px; }
+  .toast { max-width: 100%; }
+  .worker-card { padding: 12px; }
+  .fin-mom-row.header { display: none; }
+}
+
+/* ≤768px — full mobile */
+@media (max-width: 768px) {
+  body { overflow: hidden; }
+  #app  { overflow: hidden; height: 100dvh; }
+  #main { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+  #topbar { height: 50px; padding: 0 14px; flex-shrink: 0; }
+  #content { padding: 14px 14px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; min-height: 0; }
+
+  /* Dashboard layout: single column, scrollable */
+  #page-dashboard.active { overflow: hidden; }
+  .dash-split { display: flex; flex-direction: column; padding: 12px 14px; gap: 14px; overflow-y: auto; flex: 1; }
+  .dash-split-right .card:nth-child(n+3) { display: none; }
+  .bar-chart { min-height: 120px; }
+
+  /* Stat grid: 2 columns */
+  .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .stat-card { padding: 14px 16px; }
+  .stat-value { font-size: 20px; letter-spacing: -0.02em; }
+  .stat-label { font-size: 8.5px; }
+  .stat-delta { font-size: 9.5px; }
+  .stat-card-icon { width: 28px; height: 28px; font-size: 13px; margin-bottom: 10px; }
+
+  /* Page headers */
+  .page-header { margin-bottom: 18px; padding-left: 12px; }
+  .page-header h1 { font-size: 26px; }
+  .page-header h1 .ph-icon { font-size: 18px; }
+  .page-header p { font-size: 11px; }
+
+  /* Dashboard greeting */
+  .dash-greeting { margin-bottom: 16px; padding-bottom: 16px; }
+  .dash-greeting-left h1 { font-size: 26px; }
+  .dash-time { font-size: 22px; }
+  .dash-sub { font-size: 11px; }
+
+  /* Quick actions: 3 per row, stacked icon+label */
+  .quick-actions { grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
+  .qa-btn { padding: 10px 8px; gap: 6px; flex-direction: column; align-items: center; text-align: center; }
+  .qa-icon { width: 28px; height: 28px; font-size: 14px; }
+  .qa-label { font-size: 10px; }
+
+  /* Summary strip: 3 per row on most phones */
+  .dash-summary-strip { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .summary-card { padding: 12px; gap: 8px; }
+  .summary-icon { width: 32px; height: 32px; font-size: 14px; }
+  .summary-value { font-size: 15px; }
+  .summary-label { font-size: 9px; }
+  .summary-delta { font-size: 9px; }
+
+  /* AI panel */
+  .ai-insights { grid-template-columns: 1fr; }
+  .ai-panel { padding: 16px 18px; }
+
+  /* Cards */
+  .card { padding: 14px 16px; margin-bottom: 12px; }
+  .card-title { font-size: 9px; margin-bottom: 14px; padding-bottom: 12px; }
+
+  /* Grids */
+  .two-col { grid-template-columns: 1fr; gap: 12px; }
+  .three-col { grid-template-columns: 1fr; gap: 10px; }
+  .dash-grid { grid-template-columns: 1fr; gap: 12px; }
+  .worker-grid { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .fin-metrics-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .fin-insights-strip { grid-template-columns: 1fr; gap: 10px; }
+  .form-row { grid-template-columns: 1fr; gap: 0; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -16px; padding: 0 16px; }
+  .data-table { min-width: 480px; font-size: 11.5px; }
+  .data-table th { font-size: 8.5px; padding: 8px 10px; }
+  .data-table td { padding: 10px; font-size: 11.5px; }
+
+  /* Finance */
+  .fin-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fin-tab { font-size: 9.5px; padding: 7px 12px; white-space: nowrap; flex: none; }
+  .fin-mom-row { grid-template-columns: 45px 1fr 1fr 55px; gap: 6px; font-size: 10px; }
+  .fin-mom-row.header { display: none; }
+  .fin-cat-bar-wrap { width: 50px; }
+  .fin-profit-bar-wrap { width: 60px; }
+  .fin-donut-wrap { flex-direction: column; gap: 12px; }
+
+  /* Workers */
+  .worker-card { padding: 10px 12px; gap: 10px; }
+  .worker-avatar { width: 32px; height: 32px; font-size: 10px; }
+  .worker-name { font-size: 12px; }
+  .worker-role { font-size: 9.5px; }
+
+  /* Compliance / Reports */
+  .comp-right { flex-direction: column; gap: 4px; align-items: flex-end; }
+  .report-actions { flex-direction: column; gap: 4px; }
+  .rep-type-grid { grid-template-columns: repeat(2, 1fr); }
+  .rep-options-row { flex-direction: column; }
+  #report-preview-body { padding: 18px 16px; }
+  .comp-item { gap: 10px; }
+  .comp-title { font-size: 12px; }
+
+  /* Topbar */
+  .topbar-badge { display: none; }
+  .topbar-title { font-size: 14px; }
+  #theme-toggle { width: 28px; height: 28px; font-size: 13px; }
+
+  /* Modal → full bottom sheet */
+  .modal {
+    width: 100%; max-width: 100%;
+    border-radius: 16px 16px 0 0;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-height: 94dvh;
+    transform: translateY(100%);
+    padding: 24px 20px 0;
+  }
+  .modal-overlay { align-items: flex-end; }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-actions { flex-direction: column-reverse; padding: 14px 0 20px; }
+  .modal-actions .btn { width: 100%; justify-content: center; padding: 12px; font-size: 13px; }
+  .modal-title { font-size: 20px; margin-bottom: 18px; }
+
+  /* Delete confirm */
+  #del-confirm-box { width: calc(100vw - 24px); margin: 12px; max-height: 90dvh; overflow-y: auto; }
+  .del-confirm-actions { flex-direction: column-reverse; }
+  .del-confirm-actions button { width: 100%; padding: 12px; }
+
+  /* Toast */
+  #toast-container { bottom: 16px; right: 10px; left: 10px; }
+  .toast { max-width: 100%; }
+
+  /* Settings */
+  .setting-row { flex-wrap: wrap; gap: 8px; }
+  .setting-input { width: 100%; max-width: 240px; }
+
+  /* Auth mobile */
+  #auth-screen { flex-direction: column; }
+  .auth-hero { display: none; }
+  .auth-panel { width: 100%; min-height: 100dvh; align-items: center; padding: 40px 24px; }
+  .auth-panel-logo { display: block; text-align: center; margin-bottom: 32px; font-family: var(--ff-display); font-size: 22px; color: var(--gold-lt); letter-spacing: 0.14em; text-transform: uppercase; }
+  .auth-box { max-width: 400px; width: 100%; }
+}
+
+/* ≤480px — small phones */
+@media (max-width: 480px) {
+  #content { padding: 12px 12px 80px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat-value { font-size: 18px; }
+  .quick-actions { grid-template-columns: repeat(3,1fr); gap: 6px; }
+  .qa-btn { padding: 8px 6px; }
+  .qa-icon { width: 24px; height: 24px; }
+  .qa-label { font-size: 9.5px; }
+  .dash-summary-strip { grid-template-columns: 1fr; gap: 8px; }
+  .dash-summary-strip .summary-card { flex-direction: row; }
+  .worker-grid { grid-template-columns: 1fr !important; }
+  .fin-metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .dash-greeting-left h1 { font-size: 22px; }
+  .page-header h1 { font-size: 22px; }
+  .topbar-title { font-size: 13px; }
+  .bar-label { font-size: 8px; }
+  .data-table { min-width: 440px; }
+  .estate-status-bar { grid-template-columns: 1fr; max-height: none; }
+  .esb-col { border-right: none; border-bottom: 1px solid var(--bdr); }
+  .esb-col:last-child { border-bottom: none; }
+  .auth-panel { padding: 32px 20px; }
+}
+
+/* Landscape mobile */
+@media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+  #content { padding: 10px 14px 56px; }
+  .stat-grid { grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+  .stat-card { padding: 10px 12px; }
+  .stat-value { font-size: 18px; }
+  .dash-greeting { margin-bottom: 10px; padding-bottom: 8px; }
+  .dash-greeting-left h1 { font-size: 20px; }
+  .page-header { margin-bottom: 12px; }
+  .page-header h1 { font-size: 22px; }
+  .bar-chart { min-height: 80px; }
+}
+
 </style>
 </head>
 <body>
