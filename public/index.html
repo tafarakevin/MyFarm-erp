@@ -3125,39 +3125,222 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero .hero-features,
 .auth-hero .hero-ctas { position: relative; z-index: 3; }
 
-/* ─── PROGRESSIVE DISCLOSURE SIDEBAR CSS ─────────────────────────────────── */
-/* Section group containers — collapsible */
+/* ═══════════════════════════════════════════════════════════════════════════
+   ENTERPRISE NAV SYSTEM — Grouped, collapsible, contextual sub-navigation
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Nav group container */
 .nav-group { overflow: hidden; }
+
+/* Section group toggle row */
 .nav-group-toggle {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 4px;
+  cursor: pointer;
+  transition: opacity var(--tr);
+  background: none;
+  border: none;
+  width: 100%;
+  font-family: var(--ff-ui);
 }
-.nav-group-toggle:hover .nav-section-label { color: var(--text-muted); }
-.nav-group-toggle .nav-section-label { margin: 0; padding: 0; }
+.nav-group-toggle:hover { opacity: 0.75; }
+.nav-group-toggle .nav-section-label { padding: 0; margin: 0; pointer-events: none; }
+
 .nav-group-chevron {
   font-family: 'Material Symbols Outlined';
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-faint);
   transition: transform var(--tr), color var(--tr);
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga';
+  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
 }
 .nav-group.collapsed .nav-group-chevron { transform: rotate(-90deg); }
 .nav-group-toggle:hover .nav-group-chevron { color: var(--text-muted); }
 
 .nav-group-body {
   overflow: hidden;
-  max-height: 400px;
+  max-height: 500px;
   transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease;
   opacity: 1;
 }
-.nav-group.collapsed .nav-group-body {
+.nav-group.collapsed .nav-group-body { max-height: 0; opacity: 0; }
+
+/* ── CONTEXTUAL SUBNAV ──────────────────────────────────────────────────── */
+.nav-subnav {
+  overflow: hidden;
   max-height: 0;
+  transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
   opacity: 0;
+  background: rgba(0,0,0,0.12);
+  border-left: 1px solid var(--bdr);
+  margin-left: 20px;
+  margin-right: 12px;
+  border-radius: 0 0 6px 6px;
+}
+.nav-item.has-subnav.subnav-open + .nav-subnav,
+.nav-item.has-subnav.subnav-open ~ .nav-subnav { /* fallback, JS handles this */ }
+.nav-subnav.open { max-height: 400px; opacity: 1; }
+.nav-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--tr);
+  border-left: 2px solid transparent;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.nav-sub-item:hover { color: var(--text-secondary); background: rgba(255,255,255,0.025); }
+.nav-sub-item.active { color: var(--gold-lt); border-left-color: var(--gold); background: rgba(184,146,74,0.06); }
+.nav-sub-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 13px; width: 14px; min-width: 14px; text-align: center; flex-shrink: 0;
+  opacity: 0.55; transition: opacity var(--tr);
+  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+.nav-sub-item.active .nav-sub-icon { opacity: 0.9; color: var(--gold); font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; }
+
+/* ── NAV ITEM SUBNAV INDICATOR ──────────────────────────────────────────── */
+.nav-item.has-subnav .nav-chevron {
+  font-family: 'Material Symbols Outlined';
+  font-size: 12px; color: var(--text-faint); margin-left: auto;
+  transition: transform var(--tr), color var(--tr);
+  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+.nav-item.has-subnav.subnav-open .nav-chevron { transform: rotate(180deg); color: var(--gold); }
+
+/* ── COMMAND PALETTE ────────────────────────────────────────────────────── */
+#cmd-palette-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9000;
+  display: none; align-items: flex-start; justify-content: center;
+  padding-top: 15vh; backdrop-filter: blur(8px); animation: fadeIn 0.15s ease;
+}
+#cmd-palette-overlay.open { display: flex; }
+#cmd-palette {
+  background: var(--s2); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; width: min(560px, 92vw);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(184,146,74,0.08);
+  overflow: hidden; animation: scaleIn 0.18s var(--tr-spr) both;
+}
+.cmd-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; border-bottom: 1px solid var(--bdr);
+}
+.cmd-search-icon {
+  font-family: 'Material Symbols Outlined'; font-size: 18px;
+  color: var(--text-muted); flex-shrink: 0; font-style: normal; line-height: 1;
+  letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+#cmd-input {
+  flex: 1; background: none; border: none; outline: none;
+  color: var(--text-primary); font-family: var(--ff-ui);
+  font-size: 15px; font-weight: 300; letter-spacing: 0.01em;
+}
+#cmd-input::placeholder { color: var(--text-faint); }
+.cmd-kbd {
+  font-family: var(--ff-mono); font-size: 10px; color: var(--text-faint);
+  background: var(--s3); border: 1px solid var(--bdr); border-radius: 4px;
+  padding: 2px 6px; flex-shrink: 0;
+}
+#cmd-results { max-height: 380px; overflow-y: auto; padding: 6px 0; }
+.cmd-section-label {
+  font-size: 9px; text-transform: uppercase; letter-spacing: 0.22em;
+  color: var(--text-faint); padding: 10px 18px 4px; font-weight: 600;
+}
+.cmd-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px; cursor: pointer; transition: background var(--tr-fast);
+  border-radius: 0;
+}
+.cmd-item:hover, .cmd-item.selected {
+  background: rgba(255,255,255,0.04);
+}
+.cmd-item.selected { background: rgba(184,146,74,0.08); }
+.cmd-item-icon {
+  font-family: 'Material Symbols Outlined'; font-size: 16px;
+  color: var(--text-muted); width: 20px; text-align: center; flex-shrink: 0;
+  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+.cmd-item-label { font-size: 13px; color: var(--text-primary); flex: 1; }
+.cmd-item-group { font-size: 10px; color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; }
+.cmd-footer {
+  padding: 10px 18px; border-top: 1px solid var(--bdr);
+  display: flex; gap: 16px; align-items: center;
+}
+.cmd-hint { font-size: 10px; color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
+
+/* ── QUICK CREATE FAB ───────────────────────────────────────────────────── */
+#fab-btn {
+  position: fixed; bottom: 28px; right: 28px; z-index: 200;
+  width: 48px; height: 48px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dk));
+  color: var(--bg); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(184,146,74,0.45), 0 2px 8px rgba(0,0,0,0.3);
+  transition: all var(--tr-spr); font-family: 'Material Symbols Outlined';
+  font-size: 20px; font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+#fab-btn:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 8px 32px rgba(184,146,74,0.55); }
+#fab-menu {
+  position: fixed; bottom: 84px; right: 28px; z-index: 200;
+  background: var(--s2); border: 1px solid var(--bdr); border-radius: 10px;
+  padding: 6px 0; box-shadow: var(--sh-lg); min-width: 200px;
+  display: none; animation: fadeUp 0.18s ease;
+}
+#fab-menu.open { display: block; }
+.fab-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px; cursor: pointer; font-size: 12.5px;
+  color: var(--text-secondary); transition: all var(--tr-fast);
+  font-weight: 300;
+}
+.fab-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
+.fab-item-icon {
+  font-family: 'Material Symbols Outlined'; font-size: 15px;
+  color: var(--gold); font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+
+/* ── SIDEBAR SEARCH BAR ─────────────────────────────────────────────────── */
+.sidebar-search {
+  padding: 10px 14px; border-bottom: 1px solid var(--bdr);
+}
+.sidebar-search-inner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--s3); border: 1px solid var(--bdr); border-radius: 7px;
+  padding: 7px 10px; cursor: pointer; transition: all var(--tr);
+}
+.sidebar-search-inner:hover { border-color: var(--bdr-hv); background: var(--s4); }
+.sidebar-search-icon {
+  font-family: 'Material Symbols Outlined'; font-size: 13px;
+  color: var(--text-faint); flex-shrink: 0; font-style: normal; line-height: 1;
+  letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+.sidebar-search-text { font-size: 11px; color: var(--text-faint); flex: 1; letter-spacing: 0.02em; }
+.sidebar-search-shortcut {
+  font-family: var(--ff-mono); font-size: 9px; color: var(--text-faint);
+  background: var(--s4); border: 1px solid var(--bdr); border-radius: 3px;
+  padding: 1px 5px;
 }
 
 /* ── Locked nav items — dimmed, show tooltip on hover ──────────────────── */
@@ -3607,11 +3790,11 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   padding: 0 !important;
 }
 
-/* ── FIX 3: SIDEBAR — clean, aligned, professional ──────────────────────── */
+/* ── SIDEBAR CLEAN ENTERPRISE OVERRIDES ──────────────────────────────────── */
 
-/* Logo zone: consistent padding, no weirdness */
 .sidebar-logo {
-  padding: 22px 20px 18px;
+  padding: 20px 18px 16px;
+  display: flex; align-items: center; gap: 10px;
 }
 .logo-mark {
   font-size: 15px;
@@ -3625,25 +3808,24 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   letter-spacing: 0.20em;
 }
 
-/* Section labels: clean baseline, no top-padding weirdness */
+/* Section labels inside group toggles */
 .nav-section-label {
-  padding: 18px 20px 5px;
+  padding: 0;
   font-size: 8px;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.26em;
   color: var(--text-faint);
   font-weight: 600;
   text-transform: uppercase;
-  /* Prevent labels from collapsing oddly when group is used as a block */
   display: block;
   line-height: 1;
 }
 
-/* Nav items: perfectly aligned icon + label, no gap drift */
+/* Nav items */
 .nav-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 20px;
+  padding: 9px 18px;
   font-size: 12px;
   font-weight: 300;
   color: var(--text-muted);
@@ -3653,7 +3835,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   user-select: none;
   letter-spacing: 0.02em;
   line-height: 1.2;
-  /* prevent text wrapping pushing items taller */
   white-space: nowrap;
   overflow: hidden;
 }
@@ -3669,18 +3850,18 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   font-weight: 400;
 }
 
-/* Icon: fixed width so label always starts at the same x */
+/* Icon */
 .nav-icon {
   font-size: 16px;
   width: 18px;
-  min-width: 18px;   /* prevent shrink */
+  min-width: 18px;
   text-align: center;
   flex-shrink: 0;
 }
 
-/* Sidebar footer: tighter, better proportioned */
+/* Sidebar footer */
 .sidebar-footer {
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-top: 1px solid var(--bdr);
   margin-top: auto;
   flex-shrink: 0;
@@ -3690,7 +3871,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
-  min-width: 0;        /* allow text truncation */
+  min-width: 0;
 }
 .sf-name {
   font-size: 12px;
@@ -3717,28 +3898,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   white-space: nowrap;
 }
 
-/* Nav group toggle row: same sizing as a nav-item so it sits flush */
-.nav-group-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px 5px;
-  cursor: pointer;
-  transition: all var(--tr);
-  background: none;
-  border: none;
-  width: 100%;
-  font-family: var(--ff-ui);
-}
-.nav-group-toggle:hover { opacity: 0.75; }
-.nav-group-toggle .nav-section-label {
-  /* Reset padding since the toggle row already has it */
-  padding: 0;
-  margin: 0;
-  pointer-events: none;
-}
-
-/* ── FIX 4: MOBILE RESPONSIVE OVERHAUL ──────────────────────────────────── */
+/* ── MOBILE RESPONSIVE OVERHAUL ──────────────────────────────────────────── */
 
 /* ≤1024px — sidebar becomes off-canvas drawer */
 @media (max-width: 1024px) {
@@ -3746,7 +3906,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     position: fixed;
     left: 0; top: 0; bottom: 0;
     z-index: 150;
-    width: 260px;
+    width: 270px;
     height: 100dvh;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.4,0,0.2,1),
@@ -3754,13 +3914,14 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     box-shadow: none;
     overflow-y: auto;
     overflow-x: hidden;
-    /* Always show full labels in drawer mode */
-    --sidebar-w: 260px;
+    --sidebar-w: 270px;
   }
   #sidebar.open {
     transform: translateX(0);
     box-shadow: var(--sh-lg), 8px 0 40px rgba(0,0,0,0.5);
   }
+  /* FAB not needed on mobile since there's a nav drawer */
+  #fab-btn { bottom: 20px; right: 18px; width: 44px; height: 44px; font-size: 18px; }
   #mob-toggle { display: flex; }
   #main { width: 100%; }
   #topbar { padding: 0 16px; gap: 10px; }
@@ -4379,6 +4540,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
 <div id="app" class="hidden">
   <div id="sidebar">
+    <!-- LOGO -->
     <div class="sidebar-logo">
       <button class="sidebar-pin-btn" onclick="toggleSidebarPin()" title="Pin sidebar open">push_pin</button>
       <div class="sidebar-logo-text">
@@ -4386,6 +4548,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="logo-sub">Estate Intelligence</div>
       </div>
     </div>
+
     <!-- ERP MODE INDICATOR STRIP -->
     <div class="erp-mode-strip">
       <span style="font-family:'Material Symbols Outlined';font-size:12px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">insights</span>
@@ -4393,48 +4556,196 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <button class="erp-mode-back" onclick="toggleErpMode()">← Back</button>
     </div>
 
-    <!-- MAIN NAV — 5 core modules always visible as icon shortcuts -->
-    <div id="main-sidebar-nav">
-      <div class="nav-section-label">Operations</div>
-      <div class="nav-item active" data-page="dashboard" tabindex="0" role="button" aria-label="Dashboard" title="Dashboard"><span class="nav-icon">dashboard</span><span class="nav-label"> Dashboard</span></div>
-      <div class="nav-item" data-page="livestock" tabindex="0" role="button" aria-label="Livestock" title="Livestock"><span class="nav-icon">pets</span><span class="nav-label"> Livestock</span></div>
-      <div class="nav-item" data-page="crops" tabindex="0" role="button" aria-label="Crops" title="Crops"><span class="nav-icon">grass</span><span class="nav-label"> Crops</span></div>
-      <div class="nav-item" data-page="finance" tabindex="0" role="button" aria-label="Finance" title="Finance"><span class="nav-icon">account_balance</span><span class="nav-label"> Finance</span></div>
-      <div class="nav-item" data-page="workers" tabindex="0" role="button" aria-label="Workers" title="Workers"><span class="nav-icon">groups</span><span class="nav-label"> Workers</span></div>
-      <div class="nav-section-label">More</div>
-      <div class="nav-item" data-page="assets" tabindex="0" role="button" aria-label="Assets" title="Assets"><span class="nav-icon">construction</span><span class="nav-label"> Assets</span></div>
-      <div class="nav-item" data-page="inventory" tabindex="0" role="button" aria-label="Inventory" title="Inventory"><span class="nav-icon">inventory_2</span><span class="nav-label"> Inventory</span></div>
-      <div class="nav-item" data-page="reports" tabindex="0" role="button" aria-label="Reports" title="Reports"><span class="nav-icon">summarize</span><span class="nav-label"> Reports</span></div>
-    </div><!-- end #main-sidebar-nav -->
-
-    <!-- ERP NAV — Farm Intelligence workspace (toggled via topbar button) -->
-    <div id="erp-sidebar-nav">
-      <div class="nav-section-label" style="color:var(--gold)">Overview</div>
-      <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span><span class="nav-label"> Farm Overview</span></div>
-      <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span><span class="nav-label"> Profit &amp; Loss</span></div>
-      <div class="nav-section-label">Planning</div>
-      <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span><span class="nav-label"> Season Budget</span></div>
-      <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span><span class="nav-label"> Seasons &amp; Planning</span></div>
-      <div class="nav-section-label">Operations</div>
-      <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span><span class="nav-label"> Farm Activities</span></div>
-      <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span><span class="nav-label"> Harvest &amp; Sales</span></div>
-      <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span><span class="nav-label"> Farm Blocks &amp; Herds</span></div>
-      <div class="nav-section-label">Analysis</div>
-      <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span><span class="nav-label"> Cost Breakdown</span></div>
-      <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span><span class="nav-label"> Asset Values</span></div>
+    <!-- SIDEBAR SEARCH -->
+    <div class="sidebar-search">
+      <div class="sidebar-search-inner" onclick="openCommandPalette()" role="button" tabindex="0" aria-label="Search — Ctrl K">
+        <span class="sidebar-search-icon">search</span>
+        <span class="sidebar-search-text">Search or jump to…</span>
+        <span class="sidebar-search-shortcut">⌘K</span>
+      </div>
     </div>
 
+    <!-- MAIN NAV — grouped, collapsible sections -->
+    <div id="main-sidebar-nav" style="flex:1;overflow-y:auto;overflow-x:hidden;">
+
+      <!-- OVERVIEW -->
+      <div class="nav-group" id="navg-overview">
+        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-overview')" aria-expanded="true">
+          <span class="nav-section-label">Overview</span>
+          <span class="nav-group-chevron">expand_more</span>
+        </button>
+        <div class="nav-group-body">
+          <div class="nav-item active" data-page="dashboard" tabindex="0" role="button" aria-label="Dashboard">
+            <span class="nav-icon">grid_view</span><span class="nav-label">Dashboard</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- OPERATIONS -->
+      <div class="nav-group" id="navg-operations">
+        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-operations')" aria-expanded="true">
+          <span class="nav-section-label">Operations</span>
+          <span class="nav-group-chevron">expand_more</span>
+        </button>
+        <div class="nav-group-body">
+          <!-- Livestock with subnav -->
+          <div class="nav-item has-subnav" data-page="livestock" tabindex="0" role="button" aria-label="Livestock" data-subnav="subnav-livestock">
+            <span class="nav-icon">pets</span><span class="nav-label">Livestock</span><span class="nav-chevron">expand_more</span>
+          </div>
+          <div class="nav-subnav" id="subnav-livestock">
+            <div class="nav-sub-item" data-page="livestock" data-sub="herds" tabindex="0"><span class="nav-sub-icon">diversity_3</span>Herds</div>
+            <div class="nav-sub-item" data-page="livestock" data-sub="health" tabindex="0"><span class="nav-sub-icon">health_and_safety</span>Health</div>
+            <div class="nav-sub-item" data-page="livestock" data-sub="breeding" tabindex="0"><span class="nav-sub-icon">favorite</span>Breeding</div>
+            <div class="nav-sub-item" data-page="livestock" data-sub="feed" tabindex="0"><span class="nav-sub-icon">grass</span>Feed</div>
+            <div class="nav-sub-item" data-page="livestock" data-sub="production" tabindex="0"><span class="nav-sub-icon">egg_alt</span>Production</div>
+          </div>
+
+          <!-- Crops with subnav -->
+          <div class="nav-item has-subnav" data-page="crops" tabindex="0" role="button" aria-label="Crops" data-subnav="subnav-crops">
+            <span class="nav-icon">eco</span><span class="nav-label">Crops</span><span class="nav-chevron">expand_more</span>
+          </div>
+          <div class="nav-subnav" id="subnav-crops">
+            <div class="nav-sub-item" data-page="crops" data-sub="fields" tabindex="0"><span class="nav-sub-icon">landscape</span>Fields</div>
+            <div class="nav-sub-item" data-page="crops" data-sub="planting" tabindex="0"><span class="nav-sub-icon">energy_savings_leaf</span>Planting</div>
+            <div class="nav-sub-item" data-page="crops" data-sub="irrigation" tabindex="0"><span class="nav-sub-icon">water_drop</span>Irrigation</div>
+            <div class="nav-sub-item" data-page="crops" data-sub="harvests" tabindex="0"><span class="nav-sub-icon">agriculture</span>Harvests</div>
+            <div class="nav-sub-item" data-page="crops" data-sub="yield" tabindex="0"><span class="nav-sub-icon">bar_chart</span>Yield Analysis</div>
+          </div>
+
+          <div class="nav-item" data-page="assets" tabindex="0" role="button" aria-label="Equipment">
+            <span class="nav-icon">precision_manufacturing</span><span class="nav-label">Equipment</span>
+          </div>
+          <div class="nav-item" data-page="inventory" tabindex="0" role="button" aria-label="Inventory">
+            <span class="nav-icon">inventory_2</span><span class="nav-label">Inventory</span>
+          </div>
+          <div class="nav-item" data-page="workers" tabindex="0" role="button" aria-label="Workers">
+            <span class="nav-icon">groups</span><span class="nav-label">Workers</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FINANCE -->
+      <div class="nav-group" id="navg-finance">
+        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-finance')" aria-expanded="true">
+          <span class="nav-section-label">Finance</span>
+          <span class="nav-group-chevron">expand_more</span>
+        </button>
+        <div class="nav-group-body">
+          <div class="nav-item" data-page="finance" tabindex="0" role="button" aria-label="Finance">
+            <span class="nav-icon">account_balance</span><span class="nav-label">Accounting</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTELLIGENCE (ERP) -->
+      <div class="nav-group" id="navg-intelligence">
+        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-intelligence')" aria-expanded="true">
+          <span class="nav-section-label">Intelligence</span>
+          <span class="nav-group-chevron">expand_more</span>
+        </button>
+        <div class="nav-group-body">
+          <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button">
+            <span class="nav-icon">insights</span><span class="nav-label">Farm Overview</span>
+          </div>
+          <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button">
+            <span class="nav-icon">trending_up</span><span class="nav-label">Profit &amp; Loss</span>
+          </div>
+          <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button">
+            <span class="nav-icon">savings</span><span class="nav-label">Season Budget</span>
+          </div>
+          <div class="nav-item" data-page="erp-activities" tabindex="0" role="button">
+            <span class="nav-icon">agriculture</span><span class="nav-label">Farm Activities</span>
+          </div>
+          <div class="nav-item" data-page="erp-production" tabindex="0" role="button">
+            <span class="nav-icon">factory</span><span class="nav-label">Harvest &amp; Sales</span>
+          </div>
+          <div class="nav-item" data-page="erp-costing" tabindex="0" role="button">
+            <span class="nav-icon">calculate</span><span class="nav-label">Cost Breakdown</span>
+          </div>
+          <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button">
+            <span class="nav-icon">waterfall_chart</span><span class="nav-label">Asset Values</span>
+          </div>
+          <div class="nav-item" data-page="reports" tabindex="0" role="button" aria-label="Reports">
+            <span class="nav-icon">summarize</span><span class="nav-label">Reports</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMINISTRATION -->
+      <div class="nav-group" id="navg-admin">
+        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-admin')" aria-expanded="false">
+          <span class="nav-section-label">Administration</span>
+          <span class="nav-group-chevron">expand_more</span>
+        </button>
+        <div class="nav-group-body" style="max-height:0;opacity:0;">
+          <div class="nav-item" data-page="compliance" tabindex="0" role="button" aria-label="Compliance">
+            <span class="nav-icon">verified_user</span><span class="nav-label">Compliance</span>
+          </div>
+          <div class="nav-item" data-page="users" tabindex="0" role="button" aria-label="Users">
+            <span class="nav-icon">manage_accounts</span><span class="nav-label">Users</span>
+          </div>
+          <div class="nav-item" data-page="settings" tabindex="0" role="button" aria-label="Settings">
+            <span class="nav-icon">settings</span><span class="nav-label">Settings</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ERP NAV (hidden unless erp-mode) -->
+      <div id="erp-sidebar-nav">
+        <div class="nav-section-label" style="color:var(--gold)">Overview</div>
+        <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span><span class="nav-label"> Farm Overview</span></div>
+        <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span><span class="nav-label"> Profit &amp; Loss</span></div>
+        <div class="nav-section-label">Planning</div>
+        <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span><span class="nav-label"> Season Budget</span></div>
+        <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span><span class="nav-label"> Seasons &amp; Planning</span></div>
+        <div class="nav-section-label">Operations</div>
+        <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span><span class="nav-label"> Farm Activities</span></div>
+        <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span><span class="nav-label"> Harvest &amp; Sales</span></div>
+        <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span><span class="nav-label"> Farm Blocks &amp; Herds</span></div>
+        <div class="nav-section-label">Analysis</div>
+        <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span><span class="nav-label"> Cost Breakdown</span></div>
+        <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span><span class="nav-label"> Asset Values</span></div>
+      </div>
+    </div><!-- end #main-sidebar-nav -->
+
+    <!-- SIDEBAR FOOTER -->
     <div class="sidebar-footer">
-      <!-- System icons in footer — always visible as icon shortcuts -->
-      <div class="nav-item" data-page="compliance" tabindex="0" role="button" aria-label="Compliance" title="Compliance"><span class="nav-icon">verified_user</span><span class="nav-label"> Compliance</span></div>
-      <div class="nav-item" data-page="users" tabindex="0" role="button" aria-label="Users" title="Users"><span class="nav-icon">manage_accounts</span><span class="nav-label"> Users</span></div>
-      <div class="nav-item" data-page="settings" tabindex="0" role="button" aria-label="Settings" title="Settings"><span class="nav-icon">settings</span><span class="nav-label"> Settings</span></div>
-      <div class="sf-user" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:10px">
+      <div class="sf-user">
         <div class="sf-avatar" id="sf-avatar">—</div>
         <div class="sf-text"><div class="sf-name" id="sf-name">—</div><div class="sf-role" id="sf-role">—</div></div>
       </div>
-      <button class="logout-btn" onclick="confirmLogout()"><span class="nav-icon" style="font-size:15px;opacity:0.6">logout</span><span class="logout-text"> Sign out</span></button>
+      <button class="logout-btn" onclick="confirmLogout()">
+        <span class="nav-icon" style="font-size:15px;opacity:0.6">logout</span>
+        <span class="logout-text">Sign out</span>
+      </button>
     </div>
+  </div>
+
+  <!-- COMMAND PALETTE -->
+  <div id="cmd-palette-overlay" onclick="closeCmdPalette(event)">
+    <div id="cmd-palette" role="dialog" aria-label="Command palette">
+      <div class="cmd-header">
+        <span class="cmd-search-icon">search</span>
+        <input id="cmd-input" type="text" placeholder="Search pages, actions…" autocomplete="off" spellcheck="false">
+        <span class="cmd-kbd">ESC</span>
+      </div>
+      <div id="cmd-results"></div>
+      <div class="cmd-footer">
+        <span class="cmd-hint"><kbd class="cmd-kbd">↑↓</kbd> navigate</span>
+        <span class="cmd-hint"><kbd class="cmd-kbd">↵</kbd> open</span>
+        <span class="cmd-hint"><kbd class="cmd-kbd">ESC</kbd> close</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUICK CREATE FAB -->
+  <button id="fab-btn" onclick="toggleFabMenu()" title="Quick create" aria-label="Quick create">add</button>
+  <div id="fab-menu">
+    <div class="fab-item" onclick="fabAction('livestock')"><span class="fab-item-icon">pets</span>Add Livestock Record</div>
+    <div class="fab-item" onclick="fabAction('crops')"><span class="fab-item-icon">eco</span>Log Crop Activity</div>
+    <div class="fab-item" onclick="fabAction('finance')"><span class="fab-item-icon">receipt_long</span>Record Transaction</div>
+    <div class="fab-item" onclick="fabAction('inventory')"><span class="fab-item-icon">inventory_2</span>Receive Stock</div>
+    <div class="fab-item" onclick="fabAction('workers')"><span class="fab-item-icon">person_add</span>Add Worker</div>
   </div>
 
   <div id="main">
@@ -5061,50 +5372,31 @@ function toggleTheme(){
 const _navGroupState = {};
 
 function toggleNavGroup(id) {
-  const group = document.getElementById('nav-group-' + id);
+  const group = document.getElementById(id);
   if (!group) return;
   const collapsed = group.classList.toggle('collapsed');
-  _navGroupState[id] = collapsed;
+  const body = group.querySelector('.nav-group-body');
+  const toggle = group.querySelector('.nav-group-toggle');
+  if (body) {
+    if (collapsed) { body.style.maxHeight = '0'; body.style.opacity = '0'; }
+    else { body.style.maxHeight = '500px'; body.style.opacity = '1'; }
+  }
+  if (toggle) toggle.setAttribute('aria-expanded', String(!collapsed));
 }
 
 function initNavGroups() {
   const u = typeof currentUser !== 'undefined' ? currentUser : null;
   if (!u) return;
 
-  // Measure "data populated" — how many modules have real records
-  // We use localStorage timestamps set when a module first loads data
-  const firstLogin = localStorage.getItem('tf_first_login_' + u.id);
-  const now = Date.now();
-  if (!firstLogin) {
-    localStorage.setItem('tf_first_login_' + u.id, String(now));
+  // Start Admin group collapsed
+  const adminGroup = document.getElementById('navg-admin');
+  if (adminGroup) {
+    adminGroup.classList.add('collapsed');
+    const body = adminGroup.querySelector('.nav-group-body');
+    if (body) { body.style.maxHeight = '0'; body.style.opacity = '0'; }
+    const toggle = adminGroup.querySelector('.nav-group-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
   }
-  const daysSinceFirst = firstLogin ? (now - parseInt(firstLogin)) / 86400000 : 0;
-
-  // Count modules where user has visited and populated data
-  const visited = ['crops','livestock','finance','workers','assets','inventory']
-    .filter(m => localStorage.getItem('tf_visited_' + u.id + '_' + m));
-  const visitCount = visited.length;
-
-  // System group: collapsed by default for new users (< 2 days old AND < 3 modules visited)
-  const systemGroup = document.getElementById('nav-group-system');
-  const isNewUser = daysSinceFirst < 2 && visitCount < 3;
-
-  if (isNewUser && systemGroup) {
-    systemGroup.classList.add('collapsed');
-
-    // Show the unlock progress hint
-    const hint = document.getElementById('nav-unlock-hint');
-    const bar  = document.getElementById('nav-unlock-bar-fill');
-    if (hint) hint.style.display = 'block';
-    if (bar) {
-      const pct = Math.min(100, Math.round(visitCount / 3 * 100));
-      // Allow a frame so transition fires
-      requestAnimationFrame(() => { bar.style.width = pct + '%'; });
-    }
-  }
-
-  // Management group: starts open, but respect any manual toggle in this session
-  // (no forced collapse for management — inventory+finance are day-one useful)
 
   // Mark module visits when nav items are clicked
   document.querySelectorAll('.nav-item[data-page]').forEach(item => {
@@ -5115,7 +5407,165 @@ function initNavGroups() {
       }
     });
   });
+
+  // Init subnav toggles
+  document.querySelectorAll('.nav-item.has-subnav').forEach(item => {
+    item.addEventListener('click', (e) => {
+      const subnavId = item.dataset.subnav;
+      if (!subnavId) return;
+      const subnav = document.getElementById(subnavId);
+      if (!subnav) return;
+      const isOpen = item.classList.toggle('subnav-open');
+      subnav.classList.toggle('open', isOpen);
+      // Prevent the page navigation when just toggling subnav
+      e.stopImmediatePropagation();
+    });
+  });
 }
+
+// ── COMMAND PALETTE ────────────────────────────────────────────────────────────
+const CMD_PAGES = [
+  { label: 'Dashboard',       page: 'dashboard',         icon: 'grid_view',          group: 'Overview' },
+  { label: 'Livestock',       page: 'livestock',         icon: 'pets',               group: 'Operations' },
+  { label: 'Crops',           page: 'crops',             icon: 'eco',                group: 'Operations' },
+  { label: 'Equipment',       page: 'assets',            icon: 'precision_manufacturing', group: 'Operations' },
+  { label: 'Inventory',       page: 'inventory',         icon: 'inventory_2',        group: 'Operations' },
+  { label: 'Workers',         page: 'workers',           icon: 'groups',             group: 'Operations' },
+  { label: 'Finance',         page: 'finance',           icon: 'account_balance',    group: 'Finance' },
+  { label: 'Farm Overview',   page: 'erp-dashboard',     icon: 'insights',           group: 'Intelligence' },
+  { label: 'Profit & Loss',   page: 'erp-profitability', icon: 'trending_up',        group: 'Intelligence' },
+  { label: 'Season Budget',   page: 'erp-budgets',       icon: 'savings',            group: 'Intelligence' },
+  { label: 'Farm Activities', page: 'erp-activities',    icon: 'agriculture',        group: 'Intelligence' },
+  { label: 'Harvest & Sales', page: 'erp-production',    icon: 'factory',            group: 'Intelligence' },
+  { label: 'Cost Breakdown',  page: 'erp-costing',       icon: 'calculate',          group: 'Intelligence' },
+  { label: 'Asset Values',    page: 'erp-depreciation',  icon: 'waterfall_chart',    group: 'Intelligence' },
+  { label: 'Reports',         page: 'reports',           icon: 'summarize',          group: 'Intelligence' },
+  { label: 'Compliance',      page: 'compliance',        icon: 'verified_user',      group: 'Administration' },
+  { label: 'Users',           page: 'users',             icon: 'manage_accounts',    group: 'Administration' },
+  { label: 'Settings',        page: 'settings',          icon: 'settings',           group: 'Administration' },
+];
+let _cmdIdx = 0;
+
+function openCommandPalette() {
+  const overlay = document.getElementById('cmd-palette-overlay');
+  if (!overlay) return;
+  overlay.classList.add('open');
+  const input = document.getElementById('cmd-input');
+  if (input) { input.value = ''; input.focus(); }
+  renderCmdResults('');
+}
+
+function closeCmdPalette(e) {
+  if (e && e.target !== document.getElementById('cmd-palette-overlay')) return;
+  document.getElementById('cmd-palette-overlay')?.classList.remove('open');
+}
+
+function renderCmdResults(query) {
+  const container = document.getElementById('cmd-results');
+  if (!container) return;
+  const allowed = currentUser ? (window.ROLE_PAGES?.[currentUser.role] || []) : CMD_PAGES.map(p=>p.page);
+  const q = query.toLowerCase().trim();
+  let filtered = CMD_PAGES.filter(p => allowed.includes(p.page));
+  if (q) filtered = filtered.filter(p => p.label.toLowerCase().includes(q) || p.group.toLowerCase().includes(q));
+  _cmdIdx = 0;
+
+  if (!filtered.length) {
+    container.innerHTML = '<div style="padding:24px 18px;text-align:center;color:var(--text-faint);font-size:12px">No results found</div>';
+    return;
+  }
+
+  // Group by section
+  const groups = {};
+  filtered.forEach(p => { if (!groups[p.group]) groups[p.group] = []; groups[p.group].push(p); });
+
+  let html = '';
+  let globalIdx = 0;
+  Object.entries(groups).forEach(([group, items]) => {
+    html += `<div class="cmd-section-label">${group}</div>`;
+    items.forEach(item => {
+      const isSelected = globalIdx === 0 ? ' selected' : '';
+      html += `<div class="cmd-item${isSelected}" data-page="${item.page}" onclick="cmdNavigate('${item.page}')">
+        <span class="cmd-item-icon">${item.icon}</span>
+        <span class="cmd-item-label">${item.label}</span>
+        <span class="cmd-item-group">${item.group}</span>
+      </div>`;
+      globalIdx++;
+    });
+  });
+  container.innerHTML = html;
+}
+
+function cmdNavigate(page) {
+  document.getElementById('cmd-palette-overlay')?.classList.remove('open');
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) navItem.click();
+}
+
+// Keyboard shortcut Ctrl+K / Cmd+K
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    const overlay = document.getElementById('cmd-palette-overlay');
+    if (overlay?.classList.contains('open')) {
+      overlay.classList.remove('open');
+    } else {
+      openCommandPalette();
+    }
+  }
+  if (e.key === 'Escape') {
+    document.getElementById('cmd-palette-overlay')?.classList.remove('open');
+  }
+  // Arrow navigation inside palette
+  if (document.getElementById('cmd-palette-overlay')?.classList.contains('open')) {
+    const items = document.querySelectorAll('#cmd-results .cmd-item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      items[_cmdIdx]?.classList.remove('selected');
+      _cmdIdx = Math.min(_cmdIdx + 1, items.length - 1);
+      items[_cmdIdx]?.classList.add('selected');
+      items[_cmdIdx]?.scrollIntoView({block:'nearest'});
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      items[_cmdIdx]?.classList.remove('selected');
+      _cmdIdx = Math.max(_cmdIdx - 1, 0);
+      items[_cmdIdx]?.classList.add('selected');
+      items[_cmdIdx]?.scrollIntoView({block:'nearest'});
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const page = items[_cmdIdx]?.dataset.page;
+      if (page) cmdNavigate(page);
+    }
+  }
+});
+
+document.getElementById('cmd-input')?.addEventListener('input', e => {
+  renderCmdResults(e.target.value);
+});
+
+// ── FAB MENU ────────────────────────────────────────────────────────────────────
+let _fabOpen = false;
+function toggleFabMenu() {
+  _fabOpen = !_fabOpen;
+  document.getElementById('fab-menu')?.classList.toggle('open', _fabOpen);
+}
+function fabAction(page) {
+  document.getElementById('fab-menu')?.classList.remove('open');
+  _fabOpen = false;
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) navItem.click();
+  // Trigger add button if present
+  setTimeout(() => {
+    const addBtn = document.querySelector('#page-' + page + ' .btn.primary, #page-' + page + ' [onclick*="openModal"]');
+    if (addBtn) addBtn.click();
+  }, 300);
+}
+document.addEventListener('click', e => {
+  if (_fabOpen && !e.target.closest('#fab-btn') && !e.target.closest('#fab-menu')) {
+    document.getElementById('fab-menu')?.classList.remove('open');
+    _fabOpen = false;
+  }
+});
 
 
 // ─── ERP MODE TOGGLE ──────────────────────────────────────────────────────────
@@ -5174,7 +5624,7 @@ let currentPage='dashboard',modalCtx={},currentUser=null;
   }
 })();
 
-const ROLE_PAGES={owner:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','users','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],manager:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],finance:['dashboard','finance','reports','erp-dashboard','erp-profitability','erp-budgets','erp-costing'],field:['dashboard','assets','livestock','crops']};
+const ROLE_PAGES=window.ROLE_PAGES={owner:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','users','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],manager:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],finance:['dashboard','finance','reports','erp-dashboard','erp-profitability','erp-budgets','erp-costing'],field:['dashboard','assets','livestock','crops']};
 const CAN_WRITE_PAGES={owner:['dashboard','assets','livestock','crops','workers','inventory','finance','compliance','users','settings'],manager:['dashboard','assets','livestock','crops','workers','inventory','compliance','settings'],finance:['finance'],field:[]};
 
 // ─── CSRF TOKEN ────────────────────────────────────────────────────────────────
