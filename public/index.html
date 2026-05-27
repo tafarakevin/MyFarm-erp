@@ -87,7 +87,8 @@
   --ff-mono:    'DM Mono', monospace;
 
   /* ── LAYOUT ── */
-  --sidebar-w: 220px;
+  --sidebar-w: 290px;  /* kept for compat */
+  --sb-w: 290px;
   --radius:    10px;
   --radius-sm: 7px;
   --radius-lg: 14px;
@@ -113,7 +114,7 @@ body {
 }
 
 /* ─── KEYFRAMES ──────────────────────────────────────────────────────────── */
-@keyframes fadeUp    { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:none } }
+@keyframes fadeUp    { from { opacity:0; transform:translateY(4px) } to { opacity:1; transform:none } }
 @keyframes fadeIn    { from { opacity:0 } to { opacity:1 } }
 @keyframes scaleIn   { from { opacity:0; transform:scale(0.96) } to { opacity:1; transform:scale(1) } }
 @keyframes shimmer   { 0% { background-position:-200% 0 } 100% { background-position:200% 0 } }
@@ -736,173 +737,632 @@ body {
 /* ══════════════════════════════════════════════════════════════════════════
    APP SHELL
    ══════════════════════════════════════════════════════════════════════════ */
-#app { display: flex; width: 100%; height: 100%; }
+#app { display: flex; width: 100%; height: 100%; overflow: hidden; }
 #app.hidden { display: none; }
 
-/* ─── SIDEBAR — Icon-first, collapsible feel ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════
+   ENTERPRISE SIDEBAR — FULL REBUILD
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --sb-w:           290px;
+  --sb-collapsed:   72px;
+  --sb-bg:          linear-gradient(180deg, #11141b 0%, #0f1218 100%);
+  --sb-border:      rgba(255,255,255,0.055);
+  --sb-hover:       rgba(255,255,255,0.038);
+  --sb-active-bg:   linear-gradient(90deg, rgba(184,146,74,0.16), rgba(184,146,74,0.04));
+  --sb-section-clr: rgba(255,255,255,0.26);
+}
+
+/* SHELL */
 #sidebar {
-  width: var(--sidebar-w);
-  background: var(--s1);
-  border-right: 1px solid var(--bdr);
+  width: var(--sb-w);
+  min-width: var(--sb-w);
+  background: var(--sb-bg);
+  border-right: 1px solid var(--sb-border);
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  overflow-y: auto;
   height: 100vh;
-  position: relative;
+  flex-shrink: 0;
+  transition: width 0.28s cubic-bezier(.4,0,.2,1),
+              min-width 0.28s cubic-bezier(.4,0,.2,1);
+  z-index: 50;
 }
-
-/* Subtle gold accent line on right edge */
-#sidebar::after {
+#sidebar::before {
   content: '';
   position: absolute;
-  top: 60px; right: 0; bottom: 60px;
-  width: 1px;
-  background: linear-gradient(180deg, transparent, rgba(184,146,74,0.12) 40%, rgba(184,146,74,0.06) 70%, transparent);
+  inset: 0;
   pointer-events: none;
+  background: radial-gradient(circle at top left, rgba(184,146,74,0.07), transparent 38%);
+}
+#sidebar.collapsed {
+  width: var(--sb-collapsed);
+  min-width: var(--sb-collapsed);
+  overflow: hidden;
+}
+#sidebar.collapsed:hover {
+  /* Don't auto-expand on hover — only via button */
 }
 
-/* Logo area */
-.sidebar-logo {
-  padding: 26px 24px 22px;
-  border-bottom: 1px solid var(--bdr);
+/* TOP SECTION */
+.sb-top {
+  padding: 0 0 0;
+  border-bottom: 1px solid rgba(255,255,255,0.045);
   flex-shrink: 0;
 }
-.logo-mark {
-  font-family: var(--ff-display);
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--gold-lt);
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+
+/* BRAND ROW */
+.sb-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  padding: 20px 18px 16px;
 }
-.logo-mark::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background: var(--gold);
-  border-radius: 1px;
-  transform: rotate(45deg);
-  flex-shrink: 0;
-  opacity: 0.85;
-}
-.logo-sub {
-  font-size: 9px;
-  color: var(--text-faint);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  margin-top: 6px;
-  padding-left: 16px;
-  font-weight: 500;
-}
-
-/* Nav */
-.nav-section-label {
-  font-size: 8.5px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  padding: 20px 24px 6px;
-  font-weight: 600;
-}
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 10px 24px;
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: all var(--tr);
-  user-select: none;
-  position: relative;
-  letter-spacing: 0.02em;
-  animation: navSlide 0.3s ease both;
-}
-.nav-item:hover {
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.025);
-}
-.nav-item.active {
-  color: var(--gold-lt);
-  border-left-color: var(--gold);
-  background: rgba(184,146,74,0.06);
-  font-weight: 400;
-}
-.nav-item.nav-hidden { display: none; }
-
-.nav-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 16px;
-  width: 18px;
-  text-align: center;
-  opacity: 0.50;
-  transition: all var(--tr);
-  font-weight: 300;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  white-space: nowrap;
-  direction: ltr;
-  -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  flex-shrink: 0;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-}
-.nav-item.active .nav-icon {
-  opacity: 0.9;
-  color: var(--gold);
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-}
-.nav-item:hover .nav-icon { opacity: 0.65; }
-
-/* Sidebar footer */
-.sidebar-footer {
-  margin-top: auto;
-  padding: 18px 24px;
-  border-top: 1px solid var(--bdr);
-}
-.sf-user { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-.sf-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: rgba(184,146,74,0.12);
-  border: 1px solid var(--gold-border);
+.sb-brand-mark {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #c8a052, #8a6030);
+  box-shadow: 0 0 20px rgba(184,146,74,0.28);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--gold-lt);
   flex-shrink: 0;
-  letter-spacing: 0.04em;
 }
-.sf-name { color: var(--text-secondary); font-size: 12px; font-weight: 400; }
-.sf-role { font-size: 9.5px; color: var(--gold); text-transform: uppercase; letter-spacing: 0.14em; margin-top: 1px; }
-.logout-btn {
-  font-size: 11px;
-  color: var(--text-faint);
+.sb-brand-mark::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(255,255,255,0.7);
+  border-radius: 3px;
+  transform: rotate(45deg);
+}
+.sb-brand-text {
+  flex: 1;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-width 0.28s ease;
+  max-width: 200px;
+}
+.sb-brand-name {
+  font-family: var(--ff-display);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: #f3eee5;
+  white-space: nowrap;
+}
+.sb-brand-sub {
+  font-size: 8.5px;
+  letter-spacing: 0.18em;
+  color: #5a5752;
+  margin-top: 3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sb-collapse-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  color: #8a8480;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 7px;
-  transition: all var(--tr);
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  font-family: 'Material Symbols Outlined';
+  font-size: 16px;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.sb-collapse-btn:hover {
+  background: rgba(255,255,255,0.07);
+  color: #d4aa60;
+  border-color: rgba(184,146,74,0.2);
+}
+
+/* SEARCH TRIGGER */
+.sb-search {
+  margin: 0 14px 16px;
+}
+.sb-search-inner {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.sb-search-inner:hover {
+  border-color: rgba(184,146,74,0.22);
+  background: rgba(255,255,255,0.05);
+}
+.sb-search-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 15px;
+  color: #8a7a6a;
+  flex-shrink: 0;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.sb-search-text {
+  flex: 1;
+  font-size: 11.5px;
+  color: #6a6560;
+  transition: opacity 0.2s ease;
+}
+.sb-search-kbd {
+  font-size: 9.5px;
+  color: #4a4642;
+  letter-spacing: 0.08em;
+  background: rgba(255,255,255,0.04);
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: opacity 0.2s ease;
+}
+
+/* NAV SHELL */
+.sb-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 0 120px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.06) transparent;
+}
+.sb-nav::-webkit-scrollbar { width: 3px; }
+.sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }
+
+/* SECTION HEADERS */
+.sb-section-label {
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: #4a4743;
+  font-weight: 700;
+  padding: 18px 20px 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+}
+
+/* NAV ITEMS */
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  margin: 1px 10px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #a09a93;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.18s ease;
+  user-select: none;
+  position: relative;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.sb-item:hover {
+  background: var(--sb-hover);
+  color: #ddd8d0;
+}
+.sb-item.active {
+  background: var(--sb-active-bg);
+  color: #e8dcc8;
+  border-color: rgba(184,146,74,0.12);
+  box-shadow: inset 2px 0 0 rgba(184,146,74,0.55);
+}
+.sb-item.nav-hidden { display: none; }
+.sb-item.nav-locked {
+  opacity: 0.38;
+  pointer-events: none;
+}
+
+/* ITEM ICON */
+.sb-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  min-width: 20px;
+  width: 20px;
+  text-align: center;
+  color: #6e6860;
+  transition: color 0.18s ease;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  flex-shrink: 0;
+}
+.sb-item.active .sb-icon {
+  color: #d4aa60;
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+}
+.sb-item:hover .sb-icon { color: #c0b8ae; }
+
+/* ITEM LABEL */
+.sb-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.18s ease;
+}
+
+/* FOOTER */
+.sb-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 14px 14px 18px;
+  border-top: 1px solid rgba(255,255,255,0.045);
+  background: linear-gradient(180deg, rgba(15,18,24,0) 0%, rgba(15,18,24,0.98) 28%);
+  backdrop-filter: blur(10px);
+}
+.sb-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  overflow: hidden;
+}
+.sb-user:hover { background: var(--sb-hover); }
+.sb-avatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(184,146,74,0.3), rgba(184,146,74,0.1));
+  border: 1px solid rgba(184,146,74,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #d4aa60;
+  flex-shrink: 0;
+  letter-spacing: 0.04em;
+}
+.sb-user-meta {
+  flex: 1;
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+}
+.sb-user-name {
+  font-size: 12.5px;
+  color: #ede7de;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-user-role {
+  font-size: 9.5px;
+  color: #d4aa60;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-logout {
+  width: 100%;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.025);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  color: #7a7470;
+  font-size: 12px;
+  font-family: var(--ff-ui);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.sb-logout:hover {
+  border-color: rgba(255,100,100,0.2);
+  color: #f08080;
+  background: rgba(255,80,80,0.05);
+}
+.sb-logout-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 16px;
+  min-width: 16px;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.sb-logout-text {
+  transition: opacity 0.2s ease;
+}
+
+/* ERP MODE STRIP */
+.erp-mode-strip {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(184,146,74,0.08);
+  border-bottom: 1px solid rgba(184,146,74,0.14);
+  font-size: 11px;
+  color: #d4aa60;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.erp-mode-strip.active { display: flex; }
+.erp-mode-back {
+  margin-left: auto;
+  font-size: 10.5px;
+  color: #a08040;
   background: none;
   border: none;
+  cursor: pointer;
   font-family: var(--ff-ui);
+  transition: color 0.15s;
   padding: 0;
-  width: 100%;
-  letter-spacing: 0.02em;
 }
-.logout-btn:hover { color: var(--error-txt); }
+.erp-mode-back:hover { color: #d4aa60; }
+
+/* COLLAPSED STATE — hide text, show icons only */
+#sidebar.collapsed .sb-brand-text,
+#sidebar.collapsed .sb-search-text,
+#sidebar.collapsed .sb-search-kbd,
+#sidebar.collapsed .sb-section-label,
+#sidebar.collapsed .sb-label,
+#sidebar.collapsed .sb-user-meta,
+#sidebar.collapsed .sb-logout-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+#sidebar.collapsed .sb-brand-text { max-width: 0; }
+#sidebar.collapsed .sb-item {
+  padding: 10px;
+  justify-content: center;
+  margin: 1px 8px;
+}
+#sidebar.collapsed .sb-icon { min-width: 20px; }
+#sidebar.collapsed .sb-user {
+  padding: 8px;
+  justify-content: center;
+}
+#sidebar.collapsed .sb-search { margin: 0 8px 12px; }
+#sidebar.collapsed .sb-search-inner {
+  padding: 0;
+  justify-content: center;
+}
+#sidebar.collapsed .sb-footer { padding: 10px 8px 14px; }
+#sidebar.collapsed .sb-logout {
+  padding: 0;
+  justify-content: center;
+}
+
+/* TOOLTIP for collapsed items */
+#sidebar.collapsed .sb-item[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #1a1e28;
+  color: #e8e2d8;
+  font-size: 11.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* COMMAND PALETTE */
+.cmd-palette-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  z-index: 999;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8vh;
+}
+.cmd-palette-overlay.open { display: flex; }
+.cmd-palette-box {
+  width: min(680px, 92vw);
+  border-radius: 18px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #171b23, #11141a);
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(184,146,74,0.06);
+  animation: scaleIn 0.18s ease;
+}
+.cmd-input-row {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 22px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.cmd-search-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 20px;
+  color: #b8924a;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.cmd-input-row input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #f3eee5;
+  font-size: 15px;
+  font-family: var(--ff-ui);
+  letter-spacing: 0.01em;
+}
+.cmd-input-row input::placeholder { color: #5a5754; }
+.cmd-esc-hint {
+  font-size: 10px;
+  color: #4a4744;
+  background: rgba(255,255,255,0.04);
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.06);
+  letter-spacing: 0.08em;
+}
+.cmd-results { padding: 10px; max-height: 380px; overflow-y: auto; }
+.cmd-group-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: #4a4744;
+  padding: 8px 12px 6px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.cmd-result-btn {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 14px;
+  color: #d4cfc8;
+  font-size: 13px;
+  font-family: var(--ff-ui);
+  cursor: pointer;
+  transition: background 0.15s ease;
+  text-align: left;
+}
+.cmd-result-btn:hover,
+.cmd-result-btn.selected {
+  background: rgba(184,146,74,0.1);
+  color: #ede5d5;
+}
+.cmd-result-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  color: #b8924a;
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  width: 22px;
+  text-align: center;
+}
+.cmd-result-meta { flex: 1; }
+.cmd-result-name { font-size: 13px; color: #ede5d5; }
+.cmd-result-sub { font-size: 10.5px; color: #6a6560; margin-top: 1px; }
+.cmd-footer-bar {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+.cmd-hint { font-size: 10px; color: #4a4744; display: flex; align-items: center; gap: 5px; }
+.cmd-kbd {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-size: 9.5px;
+  color: #6a6560;
+  letter-spacing: 0.04em;
+}
+
+/* MOBILE BOTTOM NAV BAR */
+.mobile-nav-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 62px;
+  background: rgba(14,16,22,0.94);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  z-index: 260;
+  padding: 0 8px;
+  align-items: center;
+  justify-content: space-around;
+}
+.mobile-nav-item {
+  flex: 1;
+  height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+  border: none;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-nav-item:active { transform: scale(0.94); }
+.mobile-nav-item.active .mobile-nav-icon { color: #d4aa60; }
+.mobile-nav-item.active .mobile-nav-label { color: #d4aa60; }
+.mobile-nav-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 22px;
+  color: #6a6460;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24;
+  font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none;
+  transition: color 0.15s ease;
+}
+.mobile-nav-item.active .mobile-nav-icon {
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;
+}
+.mobile-nav-label {
+  font-size: 9px;
+  color: #5a5754;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 
 /* ─── ESTATE STATUS BAR ──────────────────────────────────────────────────── */
 .estate-status-bar {
@@ -1065,7 +1525,7 @@ body {
 
 /* ─── MAIN AREA — adjust for collapsed sidebar ───────────────────────────── */
 #app { display: flex; height: 100vh; overflow: hidden; }
-#main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
+#main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; transition: margin-left 0.28s cubic-bezier(.4,0,.2,1); }
 
 /* ─── MAIN AREA ─────────────────────────────────────────────────────────── */
 #main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
@@ -1163,7 +1623,12 @@ body {
   min-height: 0;
 }
 .page { display: none; }
-.page.active { display: block; animation: fadeUp 0.28s ease both; }
+.page.active { display: block; animation: pageFadeIn 0.22s ease both; }
+#page-dashboard.active { display: flex; animation: pageFadeIn 0.22s ease both; }
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
 
 /* ─── PAGE HEADER ────────────────────────────────────────────────────────── */
 .page-header {
@@ -2587,9 +3052,12 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
 @media (max-width: 768px) {
   body { overflow: hidden; }
   #app { overflow: hidden; height: 100dvh; }
-  #main { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+  #main { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; margin-left: 0 !important; }
   #topbar { height: 50px; padding: 0 14px; flex-shrink: 0; }
   #content { padding: 16px 16px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
+  /* Hide desktop sidebar, show mobile bottom nav */
+  #sidebar { display: none !important; }
+  .mobile-nav-bar { display: flex !important; }
 
   /* Auth: single column */
   #auth-screen { flex-direction: column; }
@@ -3126,18 +3594,132 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero .hero-ctas { position: relative; z-index: 3; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   ENTERPRISE NAV SYSTEM — Grouped, collapsible, contextual sub-navigation
+   ENTERPRISE NAV SYSTEM v2 — Mission control navigation architecture
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Nav group container */
-.nav-group { overflow: hidden; }
+/* ── SIDEBAR BASE — premium dark intelligence surface ───────────────────── */
+#sidebar {
+  background: var(--s1);
+  border-right: 1px solid rgba(255,255,255,0.045);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+/* Subtle vertical accent line */
+#sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 1px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(184,146,74,0.18) 20%,
+    rgba(184,146,74,0.08) 60%,
+    transparent 100%);
+  pointer-events: none; z-index: 1;
+}
 
-/* Section group toggle row */
+/* ── LOGO ZONE ──────────────────────────────────────────────────────────── */
+.sidebar-logo {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex; align-items: center; gap: 10px;
+  flex-shrink: 0;
+}
+.logo-mark {
+  font-family: var(--ff-display);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--gold-lt);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.logo-mark::before {
+  content: '';
+  width: 5px; height: 5px;
+  background: var(--gold);
+  border-radius: 1px;
+  transform: rotate(45deg);
+  flex-shrink: 0; opacity: 0.9;
+}
+.logo-sub {
+  font-size: 8px;
+  color: var(--text-faint);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  margin-top: 5px;
+  padding-left: 0;
+  font-weight: 500;
+}
+.sidebar-pin-btn {
+  margin-left: auto; flex-shrink: 0;
+  font-family: 'Material Symbols Outlined'; font-size: 14px;
+  color: var(--text-faint); background: none; border: none; cursor: pointer;
+  padding: 4px; border-radius: 5px; transition: all var(--tr);
+  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+}
+.sidebar-pin-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
+
+/* ── SIDEBAR SEARCH ─────────────────────────────────────────────────────── */
+.sidebar-search {
+  padding: 10px 14px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  flex-shrink: 0;
+}
+.sidebar-search-inner {
+  display: flex; align-items: center; gap: 9px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  padding: 8px 12px; cursor: pointer;
+  transition: all var(--tr);
+}
+.sidebar-search-inner:hover {
+  border-color: rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+}
+.sidebar-search-icon {
+  font-family: 'Material Symbols Outlined'; font-size: 13px;
+  color: var(--text-faint); flex-shrink: 0; font-style: normal; line-height: 1;
+  letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+}
+.sidebar-search-text {
+  font-size: 11px; color: var(--text-faint); flex: 1; letter-spacing: 0.03em;
+}
+.sidebar-search-shortcut {
+  font-family: var(--ff-mono); font-size: 8.5px; color: var(--text-faint);
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 4px; padding: 2px 6px; letter-spacing: 0.05em;
+}
+
+/* ── NAV SECTION LABEL (standalone, outside groups) ─────────────────────── */
+.nav-section-label {
+  font-size: 7.5px;
+  letter-spacing: 0.30em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 700;
+  display: block;
+  line-height: 1;
+  opacity: 0.65;
+}
+
+/* ── NAV GROUP CONTAINER ────────────────────────────────────────────────── */
+.nav-group {
+  overflow: hidden;
+  position: relative;
+}
+
+/* Group toggle — the clickable section header */
 .nav-group-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px 4px;
+  padding: 18px 18px 5px 20px;
   cursor: pointer;
   transition: opacity var(--tr);
   background: none;
@@ -3145,100 +3727,278 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   width: 100%;
   font-family: var(--ff-ui);
 }
-.nav-group-toggle:hover { opacity: 0.75; }
-.nav-group-toggle .nav-section-label { padding: 0; margin: 0; pointer-events: none; }
+.nav-group-toggle:hover { opacity: 0.8; }
+.nav-group-toggle:hover .nav-section-label { opacity: 0.9; }
+.nav-group-toggle .nav-section-label { pointer-events: none; }
 
 .nav-group-chevron {
   font-family: 'Material Symbols Outlined';
   font-size: 13px;
   color: var(--text-faint);
-  transition: transform var(--tr), color var(--tr);
+  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), color var(--tr);
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+  opacity: 0.5;
 }
 .nav-group.collapsed .nav-group-chevron { transform: rotate(-90deg); }
-.nav-group-toggle:hover .nav-group-chevron { color: var(--text-muted); }
+.nav-group-toggle:hover .nav-group-chevron { color: var(--text-muted); opacity: 0.8; }
 
+/* Group body — animated collapse */
 .nav-group-body {
   overflow: hidden;
-  max-height: 500px;
-  transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease;
+  max-height: 600px;
+  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.25s ease;
   opacity: 1;
 }
 .nav-group.collapsed .nav-group-body { max-height: 0; opacity: 0; }
 
-/* ── CONTEXTUAL SUBNAV ──────────────────────────────────────────────────── */
+/* ── PRIMARY NAV ITEM ───────────────────────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 20px;
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.16s ease;
+  user-select: none;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+
+.nav-item::after {
+  content: '';
+  position: absolute;
+  inset: 0; right: auto;
+  width: 0;
+  background: linear-gradient(90deg, rgba(184,146,74,0.08), transparent);
+  transition: width 0.2s ease;
+  pointer-events: none;
+}
+
+.nav-item:hover {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.02);
+  border-left-color: rgba(255,255,255,0.07);
+}
+.nav-item:hover::after { width: 100%; }
+
+/* Premium active state — gold glow bar + background wash */
+.nav-item.active {
+  color: var(--gold-lt);
+  border-left-color: var(--gold);
+  background: linear-gradient(90deg, rgba(184,146,74,0.10) 0%, rgba(184,146,74,0.03) 60%, transparent 100%);
+  font-weight: 400;
+}
+.nav-item.active::after { width: 100%; }
+.nav-item.active .nav-icon {
+  opacity: 1;
+  color: var(--gold);
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+}
+.nav-item.active .nav-label {
+  letter-spacing: 0.025em;
+}
+
+/* ── NAV ICON ───────────────────────────────────────────────────────────── */
+.nav-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 15px;
+  width: 18px; min-width: 18px;
+  text-align: center;
+  flex-shrink: 0;
+  opacity: 0.45;
+  transition: all 0.16s ease;
+  font-weight: 300;
+  font-style: normal;
+  line-height: 1; letter-spacing: 0; text-transform: none;
+  white-space: nowrap; direction: ltr;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+}
+.nav-item:hover .nav-icon { opacity: 0.7; }
+
+/* ── SUBNAV CHEVRON ON PARENT ITEMS ─────────────────────────────────────── */
+.nav-item.has-subnav .nav-chevron {
+  font-family: 'Material Symbols Outlined';
+  font-size: 12px; color: var(--text-faint); margin-left: auto; flex-shrink: 0;
+  transition: transform 0.22s ease, color var(--tr), opacity var(--tr);
+  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
+  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+  opacity: 0.4;
+}
+.nav-item.has-subnav:hover .nav-chevron { opacity: 0.7; color: var(--text-muted); }
+.nav-item.has-subnav.subnav-open .nav-chevron {
+  transform: rotate(180deg);
+  color: var(--gold); opacity: 0.8;
+}
+
+/* ── CONTEXTUAL SUBNAV PANEL ────────────────────────────────────────────── */
 .nav-subnav {
   overflow: hidden;
   max-height: 0;
-  transition: max-height 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease;
+  transition: max-height 0.30s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease;
   opacity: 0;
-  background: rgba(0,0,0,0.12);
-  border-left: 1px solid var(--bdr);
-  margin-left: 20px;
-  margin-right: 12px;
-  border-radius: 0 0 6px 6px;
 }
-.nav-item.has-subnav.subnav-open + .nav-subnav,
-.nav-item.has-subnav.subnav-open ~ .nav-subnav { /* fallback, JS handles this */ }
-.nav-subnav.open { max-height: 400px; opacity: 1; }
+.nav-subnav.open { max-height: 500px; opacity: 1; }
+
+/* Sub-item track line */
+.nav-subnav-inner {
+  margin: 0 0 4px 36px;
+  border-left: 1px solid rgba(255,255,255,0.06);
+  padding: 2px 0;
+}
+
 .nav-sub-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 14px;
-  font-size: 11px;
+  padding: 6px 16px 6px 12px;
+  font-size: 11.5px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--tr);
+  transition: all 0.15s ease;
   border-left: 2px solid transparent;
+  margin-left: -1px;
   letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
+  font-weight: 300;
 }
-.nav-sub-item:hover { color: var(--text-secondary); background: rgba(255,255,255,0.025); }
-.nav-sub-item.active { color: var(--gold-lt); border-left-color: var(--gold); background: rgba(184,146,74,0.06); }
+.nav-sub-item:hover {
+  color: var(--text-secondary);
+  background: rgba(255,255,255,0.02);
+  border-left-color: rgba(255,255,255,0.08);
+}
+.nav-sub-item.active {
+  color: var(--gold-lt);
+  border-left-color: var(--gold);
+  background: rgba(184,146,74,0.07);
+  font-weight: 400;
+}
+
 .nav-sub-icon {
   font-family: 'Material Symbols Outlined';
-  font-size: 13px; width: 14px; min-width: 14px; text-align: center; flex-shrink: 0;
-  opacity: 0.55; transition: opacity var(--tr);
+  font-size: 12px; width: 13px; min-width: 13px; text-align: center; flex-shrink: 0;
+  opacity: 0.45; transition: opacity 0.15s ease;
   font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
 }
-.nav-sub-item.active .nav-sub-icon { opacity: 0.9; color: var(--gold); font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; }
+.nav-sub-item:hover .nav-sub-icon { opacity: 0.7; }
+.nav-sub-item.active .nav-sub-icon {
+  opacity: 1; color: var(--gold);
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+}
 
-/* ── NAV ITEM SUBNAV INDICATOR ──────────────────────────────────────────── */
-.nav-item.has-subnav .nav-chevron {
-  font-family: 'Material Symbols Outlined';
-  font-size: 12px; color: var(--text-faint); margin-left: auto;
-  transition: transform var(--tr), color var(--tr);
-  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
+/* ── SIDEBAR FOOTER ─────────────────────────────────────────────────────── */
+.sidebar-footer {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255,255,255,0.045);
+  margin-top: auto;
+  flex-shrink: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 100%);
 }
-.nav-item.has-subnav.subnav-open .nav-chevron { transform: rotate(180deg); color: var(--gold); }
+.sf-user {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px; min-width: 0;
+  padding: 8px 10px; border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: background var(--tr);
+}
+.sf-user:hover { background: rgba(255,255,255,0.04); }
+.sf-avatar {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, rgba(184,146,74,0.25), rgba(184,146,74,0.08));
+  border: 1px solid var(--gold-border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; color: var(--gold-lt);
+  flex-shrink: 0; letter-spacing: 0.04em;
+}
+.sf-text { min-width: 0; flex: 1; }
+.sf-name {
+  font-size: 12px; font-weight: 400; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sf-role {
+  font-size: 8.5px; color: var(--gold); text-transform: uppercase;
+  letter-spacing: 0.18em; margin-top: 1px; white-space: nowrap;
+}
+.logout-btn {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--text-faint); white-space: nowrap;
+  background: none; border: none; font-family: var(--ff-ui);
+  padding: 6px 10px; cursor: pointer; border-radius: 6px;
+  transition: all var(--tr); width: 100%; letter-spacing: 0.02em;
+}
+.logout-btn:hover { color: var(--error-txt); background: var(--error-bg); }
+
+/* ── ACTIVE STATE PULSE DOT ─────────────────────────────────────────────── */
+.nav-item.active .nav-icon::before {
+  content: '';
+  position: absolute;
+  left: 6px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 3px;
+  background: var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--gold);
+}
+
+/* ── LOCKED NAV ITEMS ───────────────────────────────────────────────────── */
+.nav-item.nav-locked {
+  opacity: 0.32; cursor: not-allowed; position: relative;
+}
+.nav-item.nav-locked:hover { opacity: 0.45; background: transparent; border-left-color: transparent; }
+.nav-item.nav-locked::after {
+  content: attr(data-lock-tip);
+  position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
+  background: var(--s3); border: 1px solid var(--bdr-hv); border-radius: 7px;
+  padding: 7px 12px; font-size: 11px; color: var(--text-secondary);
+  white-space: normal; pointer-events: none; opacity: 0;
+  transition: opacity 0.15s ease; z-index: 200; box-shadow: var(--sh-md); max-width: 220px;
+  width: auto; height: auto; background-image: none;
+}
+.nav-item.nav-locked:hover::after { opacity: 1; }
 
 /* ── COMMAND PALETTE ────────────────────────────────────────────────────── */
 #cmd-palette-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 9000;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 9000;
   display: none; align-items: flex-start; justify-content: center;
-  padding-top: 15vh; backdrop-filter: blur(8px); animation: fadeIn 0.15s ease;
+  padding-top: 14vh; backdrop-filter: blur(12px);
 }
-#cmd-palette-overlay.open { display: flex; }
+#cmd-palette-overlay.open { display: flex; animation: scaleIn 0.18s var(--tr-spr) both; }
 #cmd-palette {
-  background: var(--s2); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 14px; width: min(560px, 92vw);
-  box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(184,146,74,0.08);
-  overflow: hidden; animation: scaleIn 0.18s var(--tr-spr) both;
+  background: var(--s2);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 16px;
+  width: min(580px, 94vw);
+  box-shadow:
+    0 48px 96px rgba(0,0,0,0.75),
+    0 0 0 1px rgba(184,146,74,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow: hidden;
 }
 .cmd-header {
   display: flex; align-items: center; gap: 12px;
-  padding: 14px 18px; border-bottom: 1px solid var(--bdr);
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.055);
+  background: rgba(255,255,255,0.015);
 }
 .cmd-search-icon {
-  font-family: 'Material Symbols Outlined'; font-size: 18px;
+  font-family: 'Material Symbols Outlined'; font-size: 19px;
   color: var(--text-muted); flex-shrink: 0; font-style: normal; line-height: 1;
   letter-spacing: 0; text-transform: none;
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
@@ -3247,28 +4007,30 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 #cmd-input {
   flex: 1; background: none; border: none; outline: none;
   color: var(--text-primary); font-family: var(--ff-ui);
-  font-size: 15px; font-weight: 300; letter-spacing: 0.01em;
+  font-size: 15px; font-weight: 300; letter-spacing: 0.015em;
+  caret-color: var(--gold);
 }
 #cmd-input::placeholder { color: var(--text-faint); }
 .cmd-kbd {
   font-family: var(--ff-mono); font-size: 10px; color: var(--text-faint);
-  background: var(--s3); border: 1px solid var(--bdr); border-radius: 4px;
-  padding: 2px 6px; flex-shrink: 0;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px; padding: 3px 7px; flex-shrink: 0;
 }
-#cmd-results { max-height: 380px; overflow-y: auto; padding: 6px 0; }
+#cmd-results { max-height: 400px; overflow-y: auto; padding: 8px 0; }
+#cmd-results::-webkit-scrollbar { width: 4px; }
+#cmd-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
 .cmd-section-label {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 0.22em;
-  color: var(--text-faint); padding: 10px 18px 4px; font-weight: 600;
+  font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.26em;
+  color: var(--text-faint); padding: 12px 20px 5px; font-weight: 700;
+  opacity: 0.65;
 }
 .cmd-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 18px; cursor: pointer; transition: background var(--tr-fast);
-  border-radius: 0;
+  display: flex; align-items: center; gap: 13px;
+  padding: 10px 20px; cursor: pointer;
+  transition: background 0.12s ease;
 }
-.cmd-item:hover, .cmd-item.selected {
-  background: rgba(255,255,255,0.04);
-}
-.cmd-item.selected { background: rgba(184,146,74,0.08); }
+.cmd-item:hover { background: rgba(255,255,255,0.035); }
+.cmd-item.selected { background: rgba(184,146,74,0.09); }
 .cmd-item-icon {
   font-family: 'Material Symbols Outlined'; font-size: 16px;
   color: var(--text-muted); width: 20px; text-align: center; flex-shrink: 0;
@@ -3276,40 +4038,52 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
 }
-.cmd-item-label { font-size: 13px; color: var(--text-primary); flex: 1; }
-.cmd-item-group { font-size: 10px; color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; }
-.cmd-footer {
-  padding: 10px 18px; border-top: 1px solid var(--bdr);
-  display: flex; gap: 16px; align-items: center;
+.cmd-item.selected .cmd-item-icon { color: var(--gold); font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; }
+.cmd-item-label { font-size: 13px; color: var(--text-primary); flex: 1; letter-spacing: 0.01em; }
+.cmd-item-group {
+  font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(255,255,255,0.04); padding: 2px 7px; border-radius: 4px;
 }
-.cmd-hint { font-size: 10px; color: var(--text-faint); display: flex; align-items: center; gap: 5px; }
+.cmd-footer {
+  padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.05);
+  display: flex; gap: 18px; align-items: center;
+  background: rgba(0,0,0,0.15);
+}
+.cmd-hint { font-size: 10px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
 
 /* ── QUICK CREATE FAB ───────────────────────────────────────────────────── */
 #fab-btn {
   position: fixed; bottom: 28px; right: 28px; z-index: 200;
-  width: 48px; height: 48px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--gold), var(--gold-dk));
-  color: var(--bg); border: none; cursor: pointer;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: linear-gradient(145deg, var(--gold-lt), var(--gold-dk));
+  color: #0d0e10; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 4px 20px rgba(184,146,74,0.45), 0 2px 8px rgba(0,0,0,0.3);
-  transition: all var(--tr-spr); font-family: 'Material Symbols Outlined';
+  box-shadow:
+    0 4px 20px rgba(184,146,74,0.50),
+    0 2px 6px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform 0.22s var(--tr-spr), box-shadow 0.22s ease;
+  font-family: 'Material Symbols Outlined';
   font-size: 20px; font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
   font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
 }
-#fab-btn:hover { transform: scale(1.1) rotate(90deg); box-shadow: 0 8px 32px rgba(184,146,74,0.55); }
+#fab-btn:hover {
+  transform: scale(1.08) rotate(45deg);
+  box-shadow: 0 8px 32px rgba(184,146,74,0.6), 0 4px 10px rgba(0,0,0,0.4);
+}
 #fab-menu {
-  position: fixed; bottom: 84px; right: 28px; z-index: 200;
-  background: var(--s2); border: 1px solid var(--bdr); border-radius: 10px;
-  padding: 6px 0; box-shadow: var(--sh-lg); min-width: 200px;
-  display: none; animation: fadeUp 0.18s ease;
+  position: fixed; bottom: 82px; right: 28px; z-index: 200;
+  background: var(--s2); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 6px 0;
+  box-shadow: 0 24px 56px rgba(0,0,0,0.65), 0 0 0 1px rgba(184,146,74,0.06);
+  min-width: 210px; display: none; animation: fadeUp 0.18s ease;
 }
 #fab-menu.open { display: block; }
 .fab-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px 16px; cursor: pointer; font-size: 12.5px;
-  color: var(--text-secondary); transition: all var(--tr-fast);
-  font-weight: 300;
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 18px; cursor: pointer; font-size: 12.5px;
+  color: var(--text-secondary); transition: all 0.13s ease; font-weight: 300;
 }
 .fab-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
 .fab-item-icon {
@@ -3317,30 +4091,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   color: var(--gold); font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
   font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-
-/* ── SIDEBAR SEARCH BAR ─────────────────────────────────────────────────── */
-.sidebar-search {
-  padding: 10px 14px; border-bottom: 1px solid var(--bdr);
-}
-.sidebar-search-inner {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--s3); border: 1px solid var(--bdr); border-radius: 7px;
-  padding: 7px 10px; cursor: pointer; transition: all var(--tr);
-}
-.sidebar-search-inner:hover { border-color: var(--bdr-hv); background: var(--s4); }
-.sidebar-search-icon {
-  font-family: 'Material Symbols Outlined'; font-size: 13px;
-  color: var(--text-faint); flex-shrink: 0; font-style: normal; line-height: 1;
-  letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-.sidebar-search-text { font-size: 11px; color: var(--text-faint); flex: 1; letter-spacing: 0.02em; }
-.sidebar-search-shortcut {
-  font-family: var(--ff-mono); font-size: 9px; color: var(--text-faint);
-  background: var(--s4); border: 1px solid var(--bdr); border-radius: 3px;
-  padding: 1px 5px;
+  width: 16px; text-align: center;
 }
 
 /* ── Locked nav items — dimmed, show tooltip on hover ──────────────────── */
@@ -3729,6 +4480,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   align-items: center;
   gap: 8px;
 }
+#app.erp-mode #erp-mode-strip { display: flex; }
 #app.erp-mode .erp-mode-strip { display: flex; }
 .erp-mode-back {
   margin-left: auto;
@@ -3788,114 +4540,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   height: 100%;
   overflow: hidden;
   padding: 0 !important;
-}
-
-/* ── SIDEBAR CLEAN ENTERPRISE OVERRIDES ──────────────────────────────────── */
-
-.sidebar-logo {
-  padding: 20px 18px 16px;
-  display: flex; align-items: center; gap: 10px;
-}
-.logo-mark {
-  font-size: 15px;
-  letter-spacing: 0.16em;
-  gap: 9px;
-}
-.logo-sub {
-  padding-left: 0;
-  margin-top: 5px;
-  font-size: 8.5px;
-  letter-spacing: 0.20em;
-}
-
-/* Section labels inside group toggles */
-.nav-section-label {
-  padding: 0;
-  font-size: 8px;
-  letter-spacing: 0.26em;
-  color: var(--text-faint);
-  font-weight: 600;
-  text-transform: uppercase;
-  display: block;
-  line-height: 1;
-}
-
-/* Nav items */
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 18px;
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: all var(--tr);
-  user-select: none;
-  letter-spacing: 0.02em;
-  line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-}
-.nav-item:hover {
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.025);
-  border-left-color: rgba(255,255,255,0.06);
-}
-.nav-item.active {
-  color: var(--gold-lt);
-  border-left-color: var(--gold);
-  background: rgba(184,146,74,0.06);
-  font-weight: 400;
-}
-
-/* Icon */
-.nav-icon {
-  font-size: 16px;
-  width: 18px;
-  min-width: 18px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-/* Sidebar footer */
-.sidebar-footer {
-  padding: 14px 18px;
-  border-top: 1px solid var(--bdr);
-  margin-top: auto;
-  flex-shrink: 0;
-}
-.sf-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  min-width: 0;
-}
-.sf-name {
-  font-size: 12px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.sf-role {
-  font-size: 9px;
-  color: var(--gold);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  margin-top: 1px;
-  white-space: nowrap;
-}
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 11px;
-  color: var(--text-faint);
-  white-space: nowrap;
 }
 
 /* ── MOBILE RESPONSIVE OVERHAUL ──────────────────────────────────────────── */
@@ -4539,204 +5183,167 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
 
 <div id="app" class="hidden">
-  <div id="sidebar">
-    <!-- LOGO -->
-    <div class="sidebar-logo">
-      <button class="sidebar-pin-btn" onclick="toggleSidebarPin()" title="Pin sidebar open">push_pin</button>
-      <div class="sidebar-logo-text">
-        <div class="logo-mark">MYFARM</div>
-        <div class="logo-sub">Estate Intelligence</div>
+  <aside id="sidebar" class="">
+
+    <!-- TOP SECTION -->
+    <div class="sb-top">
+
+      <!-- BRAND -->
+      <div class="sb-brand">
+        <div class="sb-brand-mark"></div>
+        <div class="sb-brand-text">
+          <div class="sb-brand-name">MYFARM</div>
+          <div class="sb-brand-sub">Thornfield Estate Intelligence</div>
+        </div>
+        <button class="sb-collapse-btn" id="sb-collapse-btn" title="Toggle sidebar" style="font-family:'Material Symbols Outlined'">left_panel_close</button>
       </div>
+
+      <!-- SEARCH -->
+      <div class="sb-search">
+        <div class="sb-search-inner" onclick="openCmdPalette()" role="button" tabindex="0" aria-label="Search — Ctrl K">
+          <span class="sb-search-icon">search</span>
+          <span class="sb-search-text">Search modules, records…</span>
+          <span class="sb-search-kbd">⌘K</span>
+        </div>
+      </div>
+
     </div>
 
-    <!-- ERP MODE INDICATOR STRIP -->
-    <div class="erp-mode-strip">
-      <span style="font-family:'Material Symbols Outlined';font-size:12px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">insights</span>
+    <!-- ERP MODE STRIP -->
+    <div class="erp-mode-strip" id="erp-mode-strip">
+      <span style="font-family:'Material Symbols Outlined';font-size:13px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">insights</span>
       Farm Intelligence
       <button class="erp-mode-back" onclick="toggleErpMode()">← Back</button>
     </div>
 
-    <!-- SIDEBAR SEARCH -->
-    <div class="sidebar-search">
-      <div class="sidebar-search-inner" onclick="openCommandPalette()" role="button" tabindex="0" aria-label="Search — Ctrl K">
-        <span class="sidebar-search-icon">search</span>
-        <span class="sidebar-search-text">Search or jump to…</span>
-        <span class="sidebar-search-shortcut">⌘K</span>
-      </div>
-    </div>
-
-    <!-- MAIN NAV — grouped, collapsible sections -->
-    <div id="main-sidebar-nav" style="flex:1;overflow-y:auto;overflow-x:hidden;">
+    <!-- NAV -->
+    <nav class="sb-nav" id="sb-nav">
 
       <!-- OVERVIEW -->
-      <div class="nav-group" id="navg-overview">
-        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-overview')" aria-expanded="true">
-          <span class="nav-section-label">Overview</span>
-          <span class="nav-group-chevron">expand_more</span>
-        </button>
-        <div class="nav-group-body">
-          <div class="nav-item active" data-page="dashboard" tabindex="0" role="button" aria-label="Dashboard">
-            <span class="nav-icon">grid_view</span><span class="nav-label">Dashboard</span>
-          </div>
-        </div>
+      <div class="sb-section-label">Overview</div>
+      <div class="sb-item active" data-page="dashboard" tabindex="0" role="button" title="Dashboard">
+        <span class="sb-icon">grid_view</span><span class="sb-label">Dashboard</span>
       </div>
 
       <!-- OPERATIONS -->
-      <div class="nav-group" id="navg-operations">
-        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-operations')" aria-expanded="true">
-          <span class="nav-section-label">Operations</span>
-          <span class="nav-group-chevron">expand_more</span>
-        </button>
-        <div class="nav-group-body">
-          <!-- Livestock with subnav -->
-          <div class="nav-item has-subnav" data-page="livestock" tabindex="0" role="button" aria-label="Livestock" data-subnav="subnav-livestock">
-            <span class="nav-icon">pets</span><span class="nav-label">Livestock</span><span class="nav-chevron">expand_more</span>
-          </div>
-          <div class="nav-subnav" id="subnav-livestock">
-            <div class="nav-sub-item" data-page="livestock" data-sub="herds" tabindex="0"><span class="nav-sub-icon">diversity_3</span>Herds</div>
-            <div class="nav-sub-item" data-page="livestock" data-sub="health" tabindex="0"><span class="nav-sub-icon">health_and_safety</span>Health</div>
-            <div class="nav-sub-item" data-page="livestock" data-sub="breeding" tabindex="0"><span class="nav-sub-icon">favorite</span>Breeding</div>
-            <div class="nav-sub-item" data-page="livestock" data-sub="feed" tabindex="0"><span class="nav-sub-icon">grass</span>Feed</div>
-            <div class="nav-sub-item" data-page="livestock" data-sub="production" tabindex="0"><span class="nav-sub-icon">egg_alt</span>Production</div>
-          </div>
-
-          <!-- Crops with subnav -->
-          <div class="nav-item has-subnav" data-page="crops" tabindex="0" role="button" aria-label="Crops" data-subnav="subnav-crops">
-            <span class="nav-icon">eco</span><span class="nav-label">Crops</span><span class="nav-chevron">expand_more</span>
-          </div>
-          <div class="nav-subnav" id="subnav-crops">
-            <div class="nav-sub-item" data-page="crops" data-sub="fields" tabindex="0"><span class="nav-sub-icon">landscape</span>Fields</div>
-            <div class="nav-sub-item" data-page="crops" data-sub="planting" tabindex="0"><span class="nav-sub-icon">energy_savings_leaf</span>Planting</div>
-            <div class="nav-sub-item" data-page="crops" data-sub="irrigation" tabindex="0"><span class="nav-sub-icon">water_drop</span>Irrigation</div>
-            <div class="nav-sub-item" data-page="crops" data-sub="harvests" tabindex="0"><span class="nav-sub-icon">agriculture</span>Harvests</div>
-            <div class="nav-sub-item" data-page="crops" data-sub="yield" tabindex="0"><span class="nav-sub-icon">bar_chart</span>Yield Analysis</div>
-          </div>
-
-          <div class="nav-item" data-page="assets" tabindex="0" role="button" aria-label="Equipment">
-            <span class="nav-icon">precision_manufacturing</span><span class="nav-label">Equipment</span>
-          </div>
-          <div class="nav-item" data-page="inventory" tabindex="0" role="button" aria-label="Inventory">
-            <span class="nav-icon">inventory_2</span><span class="nav-label">Inventory</span>
-          </div>
-          <div class="nav-item" data-page="workers" tabindex="0" role="button" aria-label="Workers">
-            <span class="nav-icon">groups</span><span class="nav-label">Workers</span>
-          </div>
-        </div>
+      <div class="sb-section-label">Operations</div>
+      <div class="sb-item" data-page="livestock" tabindex="0" role="button" title="Livestock">
+        <span class="sb-icon">pets</span><span class="sb-label">Livestock</span>
+      </div>
+      <div class="sb-item" data-page="crops" tabindex="0" role="button" title="Crops">
+        <span class="sb-icon">eco</span><span class="sb-label">Crops</span>
+      </div>
+      <div class="sb-item" data-page="assets" tabindex="0" role="button" title="Equipment">
+        <span class="sb-icon">precision_manufacturing</span><span class="sb-label">Equipment</span>
+      </div>
+      <div class="sb-item" data-page="inventory" tabindex="0" role="button" title="Inventory">
+        <span class="sb-icon">inventory_2</span><span class="sb-label">Inventory</span>
+      </div>
+      <div class="sb-item" data-page="workers" tabindex="0" role="button" title="Workers">
+        <span class="sb-icon">groups</span><span class="sb-label">Workers</span>
       </div>
 
       <!-- FINANCE -->
-      <div class="nav-group" id="navg-finance">
-        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-finance')" aria-expanded="true">
-          <span class="nav-section-label">Finance</span>
-          <span class="nav-group-chevron">expand_more</span>
-        </button>
-        <div class="nav-group-body">
-          <div class="nav-item" data-page="finance" tabindex="0" role="button" aria-label="Finance">
-            <span class="nav-icon">account_balance</span><span class="nav-label">Accounting</span>
-          </div>
-        </div>
+      <div class="sb-section-label">Finance</div>
+      <div class="sb-item" data-page="finance" tabindex="0" role="button" title="Finance">
+        <span class="sb-icon">account_balance</span><span class="sb-label">Finance</span>
+      </div>
+      <div class="sb-item" data-page="reports" tabindex="0" role="button" title="Reports">
+        <span class="sb-icon">summarize</span><span class="sb-label">Reports</span>
       </div>
 
       <!-- INTELLIGENCE (ERP) -->
-      <div class="nav-group" id="navg-intelligence">
-        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-intelligence')" aria-expanded="true">
-          <span class="nav-section-label">Intelligence</span>
-          <span class="nav-group-chevron">expand_more</span>
-        </button>
-        <div class="nav-group-body">
-          <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button">
-            <span class="nav-icon">insights</span><span class="nav-label">Farm Overview</span>
-          </div>
-          <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button">
-            <span class="nav-icon">trending_up</span><span class="nav-label">Profit &amp; Loss</span>
-          </div>
-          <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button">
-            <span class="nav-icon">savings</span><span class="nav-label">Season Budget</span>
-          </div>
-          <div class="nav-item" data-page="erp-activities" tabindex="0" role="button">
-            <span class="nav-icon">agriculture</span><span class="nav-label">Farm Activities</span>
-          </div>
-          <div class="nav-item" data-page="erp-production" tabindex="0" role="button">
-            <span class="nav-icon">factory</span><span class="nav-label">Harvest &amp; Sales</span>
-          </div>
-          <div class="nav-item" data-page="erp-costing" tabindex="0" role="button">
-            <span class="nav-icon">calculate</span><span class="nav-label">Cost Breakdown</span>
-          </div>
-          <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button">
-            <span class="nav-icon">waterfall_chart</span><span class="nav-label">Asset Values</span>
-          </div>
-          <div class="nav-item" data-page="reports" tabindex="0" role="button" aria-label="Reports">
-            <span class="nav-icon">summarize</span><span class="nav-label">Reports</span>
-          </div>
+      <div class="sb-section-label">Intelligence</div>
+      <div class="sb-item" data-page="erp-dashboard" tabindex="0" role="button" title="Farm Overview">
+        <span class="sb-icon">insights</span><span class="sb-label">Farm Overview</span>
+      </div>
+      <div class="sb-item" data-page="erp-profitability" tabindex="0" role="button" title="Profit & Loss">
+        <span class="sb-icon">trending_up</span><span class="sb-label">Profit &amp; Loss</span>
+      </div>
+      <div class="sb-item" data-page="erp-budgets" tabindex="0" role="button" title="Season Budget">
+        <span class="sb-icon">savings</span><span class="sb-label">Season Budget</span>
+      </div>
+      <div class="sb-item" data-page="erp-activities" tabindex="0" role="button" title="Farm Activities">
+        <span class="sb-icon">agriculture</span><span class="sb-label">Farm Activities</span>
+      </div>
+      <div class="sb-item" data-page="erp-production" tabindex="0" role="button" title="Harvest & Sales">
+        <span class="sb-icon">factory</span><span class="sb-label">Harvest &amp; Sales</span>
+      </div>
+      <div class="sb-item" data-page="erp-costing" tabindex="0" role="button" title="Cost Breakdown">
+        <span class="sb-icon">calculate</span><span class="sb-label">Cost Breakdown</span>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="sb-section-label">Administration</div>
+      <div class="sb-item" data-page="compliance" tabindex="0" role="button" title="Compliance">
+        <span class="sb-icon">verified_user</span><span class="sb-label">Compliance</span>
+      </div>
+      <div class="sb-item" data-page="users" tabindex="0" role="button" title="Users">
+        <span class="sb-icon">manage_accounts</span><span class="sb-label">Users</span>
+      </div>
+      <div class="sb-item" data-page="settings" tabindex="0" role="button" title="Settings">
+        <span class="sb-icon">settings</span><span class="sb-label">Settings</span>
+      </div>
+
+    </nav>
+
+    <!-- FOOTER -->
+    <div class="sb-footer">
+      <div class="sb-user" onclick="document.querySelector('[data-page=settings]')?.click()">
+        <div class="sb-avatar" id="sf-avatar">—</div>
+        <div class="sb-user-meta">
+          <div class="sb-user-name" id="sf-name">—</div>
+          <div class="sb-user-role" id="sf-role">—</div>
         </div>
       </div>
-
-      <!-- ADMINISTRATION -->
-      <div class="nav-group" id="navg-admin">
-        <button class="nav-group-toggle" onclick="toggleNavGroup('navg-admin')" aria-expanded="false">
-          <span class="nav-section-label">Administration</span>
-          <span class="nav-group-chevron">expand_more</span>
-        </button>
-        <div class="nav-group-body" style="max-height:0;opacity:0;">
-          <div class="nav-item" data-page="compliance" tabindex="0" role="button" aria-label="Compliance">
-            <span class="nav-icon">verified_user</span><span class="nav-label">Compliance</span>
-          </div>
-          <div class="nav-item" data-page="users" tabindex="0" role="button" aria-label="Users">
-            <span class="nav-icon">manage_accounts</span><span class="nav-label">Users</span>
-          </div>
-          <div class="nav-item" data-page="settings" tabindex="0" role="button" aria-label="Settings">
-            <span class="nav-icon">settings</span><span class="nav-label">Settings</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- ERP NAV (hidden unless erp-mode) -->
-      <div id="erp-sidebar-nav">
-        <div class="nav-section-label" style="color:var(--gold)">Overview</div>
-        <div class="nav-item" data-page="erp-dashboard" tabindex="0" role="button"><span class="nav-icon">insights</span><span class="nav-label"> Farm Overview</span></div>
-        <div class="nav-item" data-page="erp-profitability" tabindex="0" role="button"><span class="nav-icon">trending_up</span><span class="nav-label"> Profit &amp; Loss</span></div>
-        <div class="nav-section-label">Planning</div>
-        <div class="nav-item" data-page="erp-budgets" tabindex="0" role="button"><span class="nav-icon">savings</span><span class="nav-label"> Season Budget</span></div>
-        <div class="nav-item" data-page="erp-seasons" tabindex="0" role="button"><span class="nav-icon">calendar_month</span><span class="nav-label"> Seasons &amp; Planning</span></div>
-        <div class="nav-section-label">Operations</div>
-        <div class="nav-item" data-page="erp-activities" tabindex="0" role="button"><span class="nav-icon">agriculture</span><span class="nav-label"> Farm Activities</span></div>
-        <div class="nav-item" data-page="erp-production" tabindex="0" role="button"><span class="nav-icon">factory</span><span class="nav-label"> Harvest &amp; Sales</span></div>
-        <div class="nav-item" data-page="erp-units" tabindex="0" role="button"><span class="nav-icon">domain</span><span class="nav-label"> Farm Blocks &amp; Herds</span></div>
-        <div class="nav-section-label">Analysis</div>
-        <div class="nav-item" data-page="erp-costing" tabindex="0" role="button"><span class="nav-icon">calculate</span><span class="nav-label"> Cost Breakdown</span></div>
-        <div class="nav-item" data-page="erp-depreciation" tabindex="0" role="button"><span class="nav-icon">waterfall_chart</span><span class="nav-label"> Asset Values</span></div>
-      </div>
-    </div><!-- end #main-sidebar-nav -->
-
-    <!-- SIDEBAR FOOTER -->
-    <div class="sidebar-footer">
-      <div class="sf-user">
-        <div class="sf-avatar" id="sf-avatar">—</div>
-        <div class="sf-text"><div class="sf-name" id="sf-name">—</div><div class="sf-role" id="sf-role">—</div></div>
-      </div>
-      <button class="logout-btn" onclick="confirmLogout()">
-        <span class="nav-icon" style="font-size:15px;opacity:0.6">logout</span>
-        <span class="logout-text">Sign out</span>
+      <button class="sb-logout" onclick="confirmLogout()">
+        <span class="sb-logout-icon">logout</span>
+        <span class="sb-logout-text">Sign out</span>
       </button>
     </div>
-  </div>
+
+  </aside>
 
   <!-- COMMAND PALETTE -->
-  <div id="cmd-palette-overlay" onclick="closeCmdPalette(event)">
-    <div id="cmd-palette" role="dialog" aria-label="Command palette">
-      <div class="cmd-header">
+  <div class="cmd-palette-overlay" id="cmd-palette-overlay" onclick="closeCmdPaletteIfBg(event)">
+    <div class="cmd-palette-box" id="cmd-palette-box">
+      <div class="cmd-input-row">
         <span class="cmd-search-icon">search</span>
-        <input id="cmd-input" type="text" placeholder="Search pages, actions…" autocomplete="off" spellcheck="false">
-        <span class="cmd-kbd">ESC</span>
+        <input id="cmd-input" type="text" placeholder="Search modules, records, actions…" autocomplete="off" spellcheck="false">
+        <span class="cmd-esc-hint">ESC</span>
       </div>
-      <div id="cmd-results"></div>
-      <div class="cmd-footer">
+      <div class="cmd-results" id="cmd-results"></div>
+      <div class="cmd-footer-bar">
         <span class="cmd-hint"><kbd class="cmd-kbd">↑↓</kbd> navigate</span>
         <span class="cmd-hint"><kbd class="cmd-kbd">↵</kbd> open</span>
         <span class="cmd-hint"><kbd class="cmd-kbd">ESC</kbd> close</span>
       </div>
     </div>
   </div>
+
+  <!-- MOBILE BOTTOM NAV BAR -->
+  <nav class="mobile-nav-bar" id="mobile-nav-bar">
+    <button class="mobile-nav-item active" data-page="dashboard" onclick="mobileNavTo('dashboard')">
+      <span class="mobile-nav-icon">grid_view</span>
+      <span class="mobile-nav-label">Home</span>
+    </button>
+    <button class="mobile-nav-item" data-page="livestock" onclick="mobileNavTo('livestock')">
+      <span class="mobile-nav-icon">pets</span>
+      <span class="mobile-nav-label">Livestock</span>
+    </button>
+    <button class="mobile-nav-item" data-page="crops" onclick="mobileNavTo('crops')">
+      <span class="mobile-nav-icon">eco</span>
+      <span class="mobile-nav-label">Crops</span>
+    </button>
+    <button class="mobile-nav-item" data-page="finance" onclick="mobileNavTo('finance')">
+      <span class="mobile-nav-icon">account_balance</span>
+      <span class="mobile-nav-label">Finance</span>
+    </button>
+    <button class="mobile-nav-item" onclick="openCmdPalette()">
+      <span class="mobile-nav-icon">search</span>
+      <span class="mobile-nav-label">Search</span>
+    </button>
+  </nav>
 
   <!-- QUICK CREATE FAB -->
   <button id="fab-btn" onclick="toggleFabMenu()" title="Quick create" aria-label="Quick create">add</button>
@@ -4748,7 +5355,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <div class="fab-item" onclick="fabAction('workers')"><span class="fab-item-icon">person_add</span>Add Worker</div>
   </div>
 
-  <div id="main">
+    <div id="main">
     <div id="topbar">
       <button id="mob-toggle" aria-label="Toggle navigation" onclick="toggleMobileNav()">
         <span></span><span></span><span></span>
@@ -5388,18 +5995,19 @@ function initNavGroups() {
   const u = typeof currentUser !== 'undefined' ? currentUser : null;
   if (!u) return;
 
-  // Start Admin group collapsed
-  const adminGroup = document.getElementById('navg-admin');
-  if (adminGroup) {
-    adminGroup.classList.add('collapsed');
-    const body = adminGroup.querySelector('.nav-group-body');
+  // Collapse Admin and Compliance groups by default
+  ['navg-admin', 'navg-compliance'].forEach(id => {
+    const group = document.getElementById(id);
+    if (!group) return;
+    group.classList.add('collapsed');
+    const body = group.querySelector('.nav-group-body');
     if (body) { body.style.maxHeight = '0'; body.style.opacity = '0'; }
-    const toggle = adminGroup.querySelector('.nav-group-toggle');
+    const toggle = group.querySelector('.nav-group-toggle');
     if (toggle) toggle.setAttribute('aria-expanded', 'false');
-  }
+  });
 
-  // Mark module visits when nav items are clicked
-  document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+  // Track module visits
+  document.querySelectorAll('.nav-item[data-page],.sb-item[data-page]').forEach(item => {
     item.addEventListener('click', () => {
       const page = item.dataset.page;
       if (['crops','livestock','finance','workers','assets','inventory'].includes(page)) {
@@ -5408,44 +6016,50 @@ function initNavGroups() {
     });
   });
 
-  // Init subnav toggles
-  document.querySelectorAll('.nav-item.has-subnav').forEach(item => {
-    item.addEventListener('click', (e) => {
-      const subnavId = item.dataset.subnav;
-      if (!subnavId) return;
-      const subnav = document.getElementById(subnavId);
-      if (!subnav) return;
-      const isOpen = item.classList.toggle('subnav-open');
-      subnav.classList.toggle('open', isOpen);
-      // Prevent the page navigation when just toggling subnav
-      e.stopImmediatePropagation();
-    });
-  });
+  // Subnav toggles removed — flat nav
 }
 
 // ── COMMAND PALETTE ────────────────────────────────────────────────────────────
 const CMD_PAGES = [
-  { label: 'Dashboard',       page: 'dashboard',         icon: 'grid_view',          group: 'Overview' },
-  { label: 'Livestock',       page: 'livestock',         icon: 'pets',               group: 'Operations' },
-  { label: 'Crops',           page: 'crops',             icon: 'eco',                group: 'Operations' },
-  { label: 'Equipment',       page: 'assets',            icon: 'precision_manufacturing', group: 'Operations' },
-  { label: 'Inventory',       page: 'inventory',         icon: 'inventory_2',        group: 'Operations' },
-  { label: 'Workers',         page: 'workers',           icon: 'groups',             group: 'Operations' },
-  { label: 'Finance',         page: 'finance',           icon: 'account_balance',    group: 'Finance' },
-  { label: 'Farm Overview',   page: 'erp-dashboard',     icon: 'insights',           group: 'Intelligence' },
-  { label: 'Profit & Loss',   page: 'erp-profitability', icon: 'trending_up',        group: 'Intelligence' },
-  { label: 'Season Budget',   page: 'erp-budgets',       icon: 'savings',            group: 'Intelligence' },
-  { label: 'Farm Activities', page: 'erp-activities',    icon: 'agriculture',        group: 'Intelligence' },
-  { label: 'Harvest & Sales', page: 'erp-production',    icon: 'factory',            group: 'Intelligence' },
-  { label: 'Cost Breakdown',  page: 'erp-costing',       icon: 'calculate',          group: 'Intelligence' },
-  { label: 'Asset Values',    page: 'erp-depreciation',  icon: 'waterfall_chart',    group: 'Intelligence' },
-  { label: 'Reports',         page: 'reports',           icon: 'summarize',          group: 'Intelligence' },
-  { label: 'Compliance',      page: 'compliance',        icon: 'verified_user',      group: 'Administration' },
-  { label: 'Users',           page: 'users',             icon: 'manage_accounts',    group: 'Administration' },
-  { label: 'Settings',        page: 'settings',          icon: 'settings',           group: 'Administration' },
+  { label: 'Dashboard',         page: 'dashboard',         icon: 'grid_view',               group: 'Overview' },
+  { label: 'Livestock',         page: 'livestock',         icon: 'pets',                    group: 'Operations' },
+  { label: 'Livestock — Herds', page: 'livestock',         icon: 'diversity_3',             group: 'Operations' },
+  { label: 'Livestock — Health',page: 'livestock',         icon: 'health_and_safety',       group: 'Operations' },
+  { label: 'Livestock — Breeding',page:'livestock',        icon: 'favorite',                group: 'Operations' },
+  { label: 'Livestock — Feed',  page: 'livestock',         icon: 'grass',                   group: 'Operations' },
+  { label: 'Crops',             page: 'crops',             icon: 'eco',                     group: 'Operations' },
+  { label: 'Crops — Field Map', page: 'crops',             icon: 'landscape',               group: 'Operations' },
+  { label: 'Crops — Irrigation',page: 'crops',             icon: 'water_drop',              group: 'Operations' },
+  { label: 'Crops — Harvests',  page: 'crops',             icon: 'agriculture',             group: 'Operations' },
+  { label: 'Crops — Yield',     page: 'crops',             icon: 'bar_chart',               group: 'Operations' },
+  { label: 'Equipment',         page: 'assets',            icon: 'precision_manufacturing', group: 'Operations' },
+  { label: 'Inventory',         page: 'inventory',         icon: 'inventory_2',             group: 'Operations' },
+  { label: 'Workers',           page: 'workers',           icon: 'groups',                  group: 'Operations' },
+  { label: 'Accounting',        page: 'finance',           icon: 'account_balance',         group: 'Finance' },
+  { label: 'Revenue',           page: 'finance',           icon: 'trending_up',             group: 'Finance' },
+  { label: 'Expenses',          page: 'finance',           icon: 'receipt_long',            group: 'Finance' },
+  { label: 'Profitability',     page: 'finance',           icon: 'show_chart',              group: 'Finance' },
+  { label: 'Farm Overview',     page: 'erp-dashboard',     icon: 'insights',                group: 'Intelligence' },
+  { label: 'Profit & Loss',     page: 'erp-profitability', icon: 'trending_up',             group: 'Intelligence' },
+  { label: 'Season Budget',     page: 'erp-budgets',       icon: 'savings',                 group: 'Intelligence' },
+  { label: 'Farm Activities',   page: 'erp-activities',    icon: 'agriculture',             group: 'Intelligence' },
+  { label: 'Harvest & Sales',   page: 'erp-production',    icon: 'factory',                 group: 'Intelligence' },
+  { label: 'Cost Breakdown',    page: 'erp-costing',       icon: 'calculate',               group: 'Intelligence' },
+  { label: 'Asset Values',      page: 'erp-depreciation',  icon: 'waterfall_chart',         group: 'Intelligence' },
+  { label: 'Reports',           page: 'reports',           icon: 'summarize',               group: 'Intelligence' },
+  { label: 'Regulatory',        page: 'compliance',        icon: 'verified_user',           group: 'Compliance' },
+  { label: 'Safety',            page: 'compliance',        icon: 'security',                group: 'Compliance' },
+  { label: 'Audits',            page: 'compliance',        icon: 'fact_check',              group: 'Compliance' },
+  { label: 'Certifications',    page: 'compliance',        icon: 'workspace_premium',       group: 'Compliance' },
+  { label: 'Users',             page: 'users',             icon: 'manage_accounts',         group: 'Administration' },
+  { label: 'Settings',          page: 'settings',          icon: 'settings',                group: 'Administration' },
 ];
 let _cmdIdx = 0;
 
+function openCmdPalette() { openCommandPalette(); }
+function closeCmdPaletteIfBg(e) {
+  if (e.target === document.getElementById('cmd-palette-overlay')) closeCmdPalette();
+}
 function openCommandPalette() {
   const overlay = document.getElementById('cmd-palette-overlay');
   if (!overlay) return;
@@ -6311,9 +6925,11 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
   const activate=()=>{
     const pg=item.dataset.page;
     if(!(ROLE_PAGES[currentUser?.role]||[]).includes(pg))return;
-    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    document.querySelectorAll('.nav-item,.sb-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     item.classList.add('active');
+    // Also sync mobile nav bar
+    document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n=>n.classList.toggle('active', n.dataset.page===pg));
     // Hide ERP container when switching to standard pages
     const erpContainer=document.getElementById('erp-page-container');
     if(erpContainer) erpContainer.style.display='none';
@@ -6329,7 +6945,15 @@ document.querySelectorAll('.nav-item[data-page]').forEach(item=>{
   item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}});
 });
 
-function loadPage(pg){const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons};loaders[pg]?.();}
+function loadPage(pg){
+  // Always scroll content to top on page change — smooth reset
+  const contentEl = document.getElementById('content');
+  if (contentEl) {
+    contentEl.style.scrollBehavior = 'auto';
+    contentEl.scrollTop = 0;
+    contentEl.style.scrollBehavior = '';
+  }
+  const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons};loaders[pg]?.();}
 
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
 function rpill(r){const m={owner:'gold',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
