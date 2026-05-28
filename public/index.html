@@ -6276,7 +6276,8 @@ async function doForgot(){
   if(!email){errEl.textContent='Please enter your email address.';errEl.classList.add('show');return;}
   const btn=document.getElementById('forgot-btn');btn.textContent='Sending…';btn.disabled=true;
   try{
-    const r=await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()},body:JSON.stringify({email})});
+    // No X-CSRF-Token on forgot-password — also a pre-auth public endpoint.
+    const r=await fetch(API+'/auth/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
     // Always show success message — never confirm whether email exists (prevents enumeration)
     okEl.textContent='If an account with that email exists, a reset link has been sent. Check your inbox and spam folder.';
     okEl.style.display='block';
@@ -6385,7 +6386,9 @@ async function doLogin(){
   const btn=document.getElementById('login-btn');
   btn.textContent='Signing in…';btn.disabled=true;
   try{
-    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()},credentials:'include',body:JSON.stringify({email,password})});
+    // No X-CSRF-Token on login — there is no session yet so the server has no
+    // stored token to validate against. The httpOnly cookie is set by this response.
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email,password})});
     const d=await r.json();
     if(!r.ok){
       _onLoginFail();

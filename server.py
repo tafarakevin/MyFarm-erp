@@ -184,6 +184,9 @@ def require_write_access(f):
             return jsonify({"error": "Forbidden — read-only role"}), 403
         return f(*args, **kwargs)
     return decorated
+
+
+def query(sql, args=(), one=False):
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(sql, args)
@@ -225,6 +228,12 @@ ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5000")
 # Session cookie name
 SESSION_COOKIE = "tf_session"
 SESSION_DAYS   = 7
+
+# Pre-computed dummy hash used in login() to prevent user-enumeration timing oracles.
+# Generated once at startup so the ~0.3s bcrypt cost is paid here, not per-request.
+# bcrypt.checkpw against this hash will always return False (wrong password), which
+# is the desired outcome — we just need the call to not throw.
+_DUMMY_HASH = bcrypt.hashpw(b"dummy-timing-protection-placeholder", bcrypt.gensalt(rounds=12)).decode("utf-8")
 
 # ─── SECURITY LOGGING ──────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -694,9 +703,10 @@ def login():
 
         user = query("SELECT * FROM users WHERE email=%s AND active=1", (email,), one=True)
 
-        # Always run password verification even on miss (prevents timing oracle)
-        dummy_hash = "$2b$12$invalidhashfortimingprotectiononly000000000000000000000"
-        stored = user["password"] if user else dummy_hash
+        # Always run password verification even on miss (prevents timing oracle).
+        # _DUMMY_HASH is a valid bcrypt hash pre-computed at startup — guaranteed
+        # not to throw, and always returns False (wrong password by design).
+        stored = user["password"] if user else _DUMMY_HASH
         pw_ok  = verify_password(password, stored)
 
         if not user or not pw_ok:
