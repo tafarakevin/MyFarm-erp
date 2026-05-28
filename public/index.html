@@ -205,7 +205,6 @@ body {
 .ob-skip:hover { color: var(--text-muted); }
 .ob-next { background: rgba(184,146,74,0.12); color: var(--gold-lt); border: 1px solid var(--gold-border); border-radius: 8px; padding: 10px 28px; font-family: var(--ff-ui); font-size: 12.5px; font-weight: 500; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all var(--tr); }
 .ob-next:hover { background: rgba(184,146,74,0.22); border-color: rgba(212,170,96,0.45); transform: translateY(-1px); }
-.ob-demo-notice { margin: 0 32px 20px; padding: 10px 14px; background: var(--info-bg); border: 1px solid var(--info-bdr); border-radius: 8px; font-size: 11.5px; color: var(--info-txt); line-height: 1.55; text-align: center; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    AUTH SCREEN — TWO STATES: LANDING PAGE & AUTH FORM
@@ -4564,7 +4563,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <button class="lp-nav-link" onclick="document.getElementById('lp-cta-bottom').scrollIntoView({behavior:'smooth'})">Pricing</button>
       </div>
       <div class="lp-nav-ctas">
-        <button class="lp-signin-btn" onclick="enterDemoMode()">▶ Demo</button>
         <button class="lp-signin-btn" onclick="goToAuth('login')">Sign In</button>
         <button class="lp-getstarted-btn" onclick="goToAuth('register')">Get Started →</button>
       </div>
@@ -4808,7 +4806,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div class="lp-cta-btns">
         <button class="lp-cta-primary" onclick="goToAuth('register')">Start free trial — no card needed</button>
         <button class="lp-cta-secondary" onclick="goToAuth('login')">Sign in to existing account</button>
-        <button class="lp-cta-secondary" onclick="enterDemoMode()" style="border-color:var(--gold-border);color:var(--gold-lt);background:var(--gold-dim)">▶ Preview demo</button>
       </div>
     </section>
 
@@ -4861,9 +4858,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         </div>
         <button class="auth-btn" id="login-btn" onclick="doLogin()">Sign In</button>
         <div class="auth-switch">Need access? <a onclick="showRegister()">Create account</a></div>
-        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--bdr);text-align:center">
-          <button onclick="enterDemoMode()" style="background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold-lt);border-radius:7px;padding:9px 20px;font-family:var(--ff-ui);font-size:12px;cursor:pointer;width:100%;transition:all var(--tr)" onmouseover="this.style.background='rgba(184,146,74,0.22)'" onmouseout="this.style.background='var(--gold-dim)'">▶ Enter Demo Mode (no login required)</button>
-        </div>
       </div>
       <!-- FORGOT PASSWORD -->
       <div id="forgot-box" class="auth-box" style="display:none" role="region" aria-label="Reset password">
@@ -5579,10 +5573,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-step-label">Team</div>
       </div>
     </div>
-    <!-- Demo notice -->
-    <div class="ob-demo-notice">
-      <span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">info</span> Sample data has been loaded so every module looks populated. Your real data will replace it as you add records.
-    </div>
+
     <!-- Panels -->
     <div class="ob-panels">
       <!-- Step 0: Fields -->
@@ -5989,10 +5980,7 @@ function saveUser(u){localStorage.setItem('tf_user',JSON.stringify(u));}
 function loadUser(){try{return JSON.parse(localStorage.getItem('tf_user'));}catch{return null;}}
 function canWrite(){return(CAN_WRITE_PAGES[currentUser?.role]||[]).includes(currentPage);}
 
-// ─── DEMO DATA SEED ───────────────────────────────────────────────────────────
-// NOTE: All seed/demo data has been removed. The application now expects real data from the backend API.
-// Empty arrays will show empty states, and API calls that return empty data will not fall back to demo content.
-
+// seed data removed
 async function api(path,method='GET',body=null){
   const opts={method,headers:{'Content-Type':'application/json'}};
   const token=getToken();if(token)opts.headers['Authorization']='Bearer '+token;
@@ -6008,7 +5996,6 @@ async function api(path,method='GET',body=null){
     const data=await r.json();
     return data;
   }catch(e){
-    // On any network / server error, re-throw so the caller can handle empty state
     toast('Error: '+e.message,'error');throw e;
   }
 }
@@ -6508,7 +6495,7 @@ async function doLogout(){
   as.scrollTop=0;
 }
 
-const pageLabels={dashboard:'Dashboard',assets:'Assets',livestock:'Livestock',crops:'Crops',workers:'Workers',inventory:'Inventory',finance:'Finance',reports:'Reports',compliance:'Compliance',users:'Users',settings:'Settings', 'erp-dashboard':'Farm Overview', 'erp-profitability':'Profit & Loss', 'erp-budgets':'Budgets', 'erp-activities':'Activities', 'erp-production':'Production', 'erp-costing':'Cost Analytics', 'erp-units':'Units', 'erp-seasons':'Seasons'};
+const pageLabels={dashboard:'Dashboard',assets:'Assets',livestock:'Livestock',crops:'Crops',workers:'Workers',inventory:'Inventory',finance:'Finance',reports:'Reports',compliance:'Compliance',users:'Users',settings:'Settings'};
 // ── MOBILE NAV ────────────────────────────────────────────────────────────────
 function mobileNavTo(pg) {
   // Validate access
@@ -6802,7 +6789,7 @@ async function loadDashboard(){
 
   // ── Fetch with timeout ────────────────────────────────────────────────────
   const TIMEOUT_MS=10000;
-  let d = {};
+  let d;
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),TIMEOUT_MS);
@@ -6812,29 +6799,24 @@ async function loadDashboard(){
     if(!res.ok)throw new Error('Server returned '+res.status);
     d=await res.json();
   }catch(e){
-    // If no data, leave dashboard with empty states
-    d = {};
+    const {title,sub,code}=classifyError(e);
+    errInline('dash-stats',{title,sub,code,retryLabel:'↻ Reload dashboard',onRetry:loadDashboard});
+    return;
   }
 
   // ── Populate Estate Status Bar with live data ────────────────────────────
   _populateESB(d);
   _populatePulse(d.recent_events||[]);
 
-  // ── Render stat cards (or empty states if no data) ─────────────────────────────────────────────────────
-  const rev = d.revenue_ytd || 0;
-  const net = d.net_profit || 0;
-  const liveCount = d.livestock_count || 0;
-  const cropHa = d.crop_hectares || 0;
-  const workersOn = d.workers_on_site || 0;
-  const workersTotal = d.workers_total || 0;
+  // ── Render stat cards ─────────────────────────────────────────────────────
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(rev)}</div><div class="stat-delta delta-up">▲ Net ${fmt(net)}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(liveCount).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${cropHa} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${workersOn}</div><div class="stat-delta" style="color:var(--text-faint)">${workersTotal - workersOn} on leave today</div></div></div></div>`;
+    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
 
   // ── Summary strip ─────────────────────────────────────────────────────────
-  const profitPct=rev>0?Math.round(net/rev*100):0;
+  const profitPct=d.revenue_ytd>0?Math.round(d.net_profit/d.revenue_ytd*100):0;
   const compOk=d.compliance_overdue===0;
   const stockOk=d.low_stock_items===0;
   document.getElementById('dash-summary').innerHTML=`
@@ -6843,7 +6825,7 @@ async function loadDashboard(){
     <div class="summary-card"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
 
   // ── Alert Feed — cross-module exception summary ────────────────────────────
-  document.getElementById('dash-ytd').textContent=fmt(rev)+' YTD';
+  document.getElementById('dash-ytd').textContent=fmt(d.revenue_ytd||0)+' YTD';
 
   const _af=[];
   const _msi=(icon,color)=>`<span class="af-icon" style="color:${color}">${icon}</span>`;
@@ -6871,16 +6853,16 @@ async function loadDashboard(){
       action:'View compliance calendar',page:'compliance'});
   }
   // Workers below target attendance
-  const _atPct=Math.round((workersOn)/(workersTotal||1)*100)||0;
-  if(workersTotal>0&&_atPct<70){
+  const _atPct=Math.round((d.workers_on_site||0)/(d.workers_total||1)*100)||0;
+  if(d.workers_total>0&&_atPct<70){
     _af.push({cls:'af-warning',icon:'groups',
       label:'Low workforce attendance',
-      msg:`Only <strong>${workersOn} of ${workersTotal} workers are on-site</strong> today (${_atPct}%). This may affect operational capacity.`,
+      msg:`Only <strong>${d.workers_on_site||0} of ${d.workers_total||0} workers are on-site</strong> today (${_atPct}%). This may affect operational capacity.`,
       action:'View workforce',page:'workers'});
   }
   // Below-target profit margin
-  const _profPct=rev>0?Math.round(((rev-(d.expenses_ytd||0))/rev)*100):0;
-  if(rev>0&&_profPct<10&&_profPct>=0){
+  const _profPct=d.revenue_ytd>0?Math.round(((d.revenue_ytd-(d.expenses_ytd||0))/d.revenue_ytd)*100):0;
+  if(d.revenue_ytd>0&&_profPct<10&&_profPct>=0){
     _af.push({cls:'af-warning',icon:'trending_down',
       label:'Thin profit margin',
       msg:`YTD profit margin is <strong>${_profPct}%</strong> — below the 20% target. Review expense categories for cost reduction opportunities.`,
@@ -6925,7 +6907,7 @@ async function loadDashboard(){
   _feedEl.innerHTML=_feedHtml;
 
   // ── Operational health bars ───────────────────────────────────────────────
-  const atPct=Math.round((workersOn)/(workersTotal||1)*100)||0;
+  const atPct=Math.round((d.workers_on_site||0)/(d.workers_total||1)*100)||0;
   const cpPct=d.compliance_overdue===0?100:Math.max(10,100-d.compliance_overdue*15);
   document.getElementById('op-health').innerHTML=[
     {l:'Livestock Health',p:94,c:'moss'},
@@ -6995,23 +6977,7 @@ async function loadDashboard(){
       const _cardTitle=_wr.closest('.card')?.querySelector('.card-title');
       if(_cardTitle)_cardTitle.innerHTML='7-Day Forecast <span style="font-size:9px;color:var(--success-txt);font-family:var(--ff-mono);text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px">● live</span>';
     }catch(err){
-      // Graceful fallback — static data, no trust-destroying error message
-      const _fallback=[
-        {date:'',code:0,max:28,min:18},{date:'',code:1,max:24,min:16},
-        {date:'',code:61,max:19,min:15},{date:'',code:61,max:21,min:16},
-        {date:'',code:0,max:26,min:17},{date:'',code:0,max:29,min:19},
-        {date:'',code:2,max:25,min:17}
-      ];
-      const _days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-      _wr.innerHTML=_fallback.map((d,i)=>{
-        const[icon]=_wmoIcon(d.code);
-        return`<div class="weather-day">
-          <div class="weather-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">${icon}</span></div>
-          <div class="weather-temp">${d.max}°</div>
-          <div class="weather-temp" style="font-size:10px;color:var(--text-muted);margin-top:1px">${d.min}°</div>
-          <div class="weather-label">${_days[i]}</div>
-        </div>`;
-      }).join('');
+      _wr.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:72px;gap:8px;flex-direction:column"><span style="font-size:11px;color:var(--text-faint)">Weather unavailable</span><button class="page-error-btn" style="padding:4px 12px;font-size:10px" onclick="loadDashboard()">↻ Retry</button></div>`;
     }
   })();
 
@@ -7027,7 +6993,7 @@ async function loadDashboard(){
   // Try to get real monthly breakdown from finance API
   let monthlyRaw=[];
   try{monthlyRaw=await api('/finance/monthly').catch(()=>null)||[];}catch{}
-  // Build YYYY-MM keyed map from live data
+  // Build YYYY-MM keyed map from live data, or use demo
   const mMap={};
   if(Array.isArray(monthlyRaw)&&monthlyRaw.length){
     monthlyRaw.forEach(r=>{
@@ -7039,10 +7005,8 @@ async function loadDashboard(){
       mMap[key].label=new Date(key+'-01').toLocaleDateString('en-GB',{month:'short'});
     });
   }
-  // Fallback to empty state if no real data
-  const hasChartData=Object.keys(mMap).length>0;
-  if(!hasChartData){
-    chart.innerHTML = `<div class="empty-row" style="padding:40px;text-align:center"><span class="empty-title">No financial data yet</span><span style="font-size:12px;color:var(--text-muted);display:block;margin-top:8px">Add income and expense records to see your revenue trend.</span><button class="empty-cta" style="margin-top:16px" onclick="document.querySelector('[data-page=finance]').click()">+ Add Transaction</button></div>`;
+  if(Object.keys(mMap).length===0){
+    chart.innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:140px;gap:10px"><span style="font-family:'Material Symbols Outlined';font-size:28px;color:var(--text-faint);opacity:0.4;font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 40;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">bar_chart</span><span style="font-size:12px;color:var(--text-faint);text-align:center;line-height:1.5">No financial data yet.<br>Add income or expense records to see your revenue trend.</span></div>`;
     return;
   }
   const chartKeys=Object.keys(mMap).sort().slice(-9);
@@ -7123,7 +7087,7 @@ async function loadAssets(){
       <button class="btn btn-secondary btn-sm" onclick="loadErpDepreciation()" style="margin-left:8px" title="Track asset depreciation"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">waterfall_chart</span> Asset Values</button>`
     :'';
   document.getElementById('assets-tbody').innerHTML=rows.length
-    ?rows.map(r=>`<tr onclick="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}<td>${r.description}<td>${r.category}<td>${r.location}<td>${spill(r.status)}<td>${r.last_service||'—'}<td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
+    ?rows.map(r=>`<tr onclick="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}</td><td>${r.description}</td><td>${r.category}</td><td>${r.location}</td><td>${spill(r.status)}</td><td>${r.last_service||'—'}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
     :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;construction</div><span class="empty-title">No assets on the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Add your equipment, vehicles, irrigation systems and infrastructure to start tracking maintenance schedules and asset values.</span>${cw?`<button class="empty-cta" onclick="openModal('asset')">+ Register first asset</button>`:''}</td></tr>`;
 }
 
@@ -7311,18 +7275,15 @@ async function loadFinance(){
   document.getElementById('fin-trend-chart').innerHTML=`<div class="skel skel-bar"></div>`;
   document.getElementById('fin-mom-table').innerHTML=skelFin;
 
-  // ── Fetch with individual fallbacks + 12-second global timeout ────────────
+  // ── Fetch finance data — fail loudly on error ──────────────────────────────
   const TIMEOUT_MS=12000;
-  const withTimeout=(p,ms,fb)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(fb),ms))]);
   let records=[],summary={};
   try{
-    const [rec,sum]=await withTimeout(
-      Promise.all([
-        api('/finance').catch(()=>[]),
-        api('/finance/summary').catch(()=>({}))
-      ]),
-      TIMEOUT_MS,[[],[]]
-    );
+    const timeoutErr=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out — server may be starting up')),TIMEOUT_MS));
+    const [rec,sum]=await Promise.race([
+      Promise.all([api('/finance'),api('/finance/summary').catch(()=>({}))]),
+      timeoutErr
+    ]);
     records=Array.isArray(rec)?rec:[];
     summary=(sum&&typeof sum==='object')?sum:{};
   }catch(e){
@@ -7503,11 +7464,9 @@ async function loadFinance(){
     if(r.type==='income')byMonth[key].inc+=parseFloat(r.amount)||0;
     else byMonth[key].exp+=parseFloat(r.amount)||0;
   });
-  const hasRealMonths=Object.keys(byMonth).length>0;
-  // If no real data, show empty state
-  if(!hasRealMonths){
-    document.getElementById('fin-trend-chart').innerHTML = `<div class="empty-row" style="padding:40px;text-align:center"><span class="empty-title">No monthly data yet</span><span style="font-size:12px;color:var(--text-muted);display:block;margin-top:8px">Add income and expense records to see your trend.</span><button class="empty-cta" style="margin-top:16px" onclick="document.querySelector('[data-page=finance]').click()">+ Add Transaction</button></div>`;
-    document.getElementById('fin-mom-table').innerHTML = `<div class="empty-row" style="padding:40px;text-align:center"><span class="empty-title">No monthly data yet</span></div>`;
+  if(Object.keys(byMonth).length===0){
+    const trendEl=document.getElementById('fin-trend-chart');
+    if(trendEl)trendEl.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:130px;font-size:12px;color:var(--text-faint)">No transactions recorded yet</div>`;
     return;
   }
   const sortedKeys=Object.keys(byMonth).sort();
@@ -7547,7 +7506,7 @@ async function loadFinance(){
   trendWrap.appendChild(trendTip);
   document.getElementById('fin-trend-chart').replaceWith(trendWrap);
   trendWrap.id='fin-trend-chart';trendWrap.className='';
-  document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`;
+  document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`+(hasRealMonths?'':'&nbsp;&nbsp;<span style="font-size:10px;color:var(--text-faint)">(sample data)</span>');
 
   // ── MONTH-ON-MONTH TABLE — all months, newest first ───────────────────────
   const momKeys=[...sortedKeys].reverse(); // all months, newest first
@@ -7693,40 +7652,26 @@ Rules:
 4. End with a disclaimer noting AI-assisted generation.
 5. Output ONLY the HTML content — no markdown, no code fences, no explanation.`;
 
-    // 3. Try backend proxy first (/api/reports/generate), fall back to local generation
-    let clean = '';
-    let usedFallback = false;
+    // 3. Call backend report generation endpoint (required — no local fallback)
+    const token = getToken();
+    const proxyRes = await fetch(API + '/reports/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? {'Authorization': 'Bearer ' + token} : {}),
+        'X-CSRF-Token': getCSRF(),
+      },
+      body: JSON.stringify({ prompt, type: _repState.type, period, estate })
+    });
 
-    try {
-      // Backend proxy: POST /api/reports/generate
-      // Your server should forward { prompt } to Anthropic and return { html }
-      const token = getToken();
-      const proxyRes = await fetch(API + '/reports/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? {'Authorization': 'Bearer ' + token} : {}),
-          'X-CSRF-Token': getCSRF(),
-        },
-        body: JSON.stringify({ prompt, type: _repState.type, period, estate })
-      });
-
-      if(proxyRes.ok){
-        const d = await proxyRes.json();
-        clean = (d.html || d.content || '').replace(/^```[\w]*\n?/gm,'').replace(/```$/gm,'').trim();
-      } else if(proxyRes.status === 404 || proxyRes.status === 501){
-        // Endpoint not yet implemented — use local generation
-        usedFallback = true;
-        clean = _buildLocalReport(typeName, period, estate, farmData, notes);
-      } else {
-        throw new Error('Server error ' + proxyRes.status);
-      }
-    } catch(fetchErr){
-      // Network error or endpoint missing — fall back to local generation
-      usedFallback = true;
-      clean = _buildLocalReport(typeName, period, estate, farmData, notes);
+    if(!proxyRes.ok){
+      if(proxyRes.status === 404 || proxyRes.status === 501)
+        throw new Error('Report generation endpoint not yet configured on the server (/api/reports/generate).');
+      throw new Error('Server error ' + proxyRes.status);
     }
 
+    const repData = await proxyRes.json();
+    const clean = (repData.html || repData.content || '').replace(/^```[\w]*\n?/gm,'').replace(/```$/gm,'').trim();
     if(!clean) throw new Error('Report content was empty — please try again.');
 
     _repState.lastHtml  = clean;
@@ -7744,7 +7689,7 @@ Rules:
       html:   clean,
     });
     renderReportHistory();
-    toast(usedFallback ? 'Report generated (local mode — add /api/reports/generate for AI)' : 'Report generated successfully', 'success');
+    toast('Report generated successfully', 'success');
 
   } catch(err) {
     previewBody.innerHTML = `<div class="page-error">
@@ -7760,195 +7705,6 @@ Rules:
   }
 }
 
-// ─── LOCAL REPORT BUILDER (fallback when /api/reports/generate not available) ─
-function _buildLocalReport(typeName, period, estate, farmData, notes){
-  const now = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  const dash = farmData['/dashboard'] || {};
-  const fin  = farmData['/finance']   || {};
-  const live = farmData['/livestock'] || {};
-  const crop = farmData['/crops']     || {};
-  const wrkr = farmData['/workers']   || {};
-  const comp = farmData['/compliance']|| {};
-
-  // Helper: safe number formatting
-  const n  = (v,d=0) => (v!=null&&!isNaN(v)) ? Number(v).toLocaleString('en-GB',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
-  const $  = (v) => v!=null&&!isNaN(v) ? 'USD '+Number(v).toLocaleString('en-GB',{minimumFractionDigits:0,maximumFractionDigits:0}) : '—';
-  const pct= (v) => v!=null&&!isNaN(v) ? Math.round(v)+'%' : '—';
-
-  // Pull common KPIs
-  const revenue  = dash.revenue_mtd   || fin.total_income   || null;
-  const expenses = dash.expenses_mtd  || fin.total_expenses  || null;
-  const netProfit= (revenue!=null&&expenses!=null) ? revenue-expenses : null;
-  const margin   = (revenue&&netProfit!=null) ? Math.round(netProfit/revenue*100) : null;
-  const animals  = Array.isArray(live) ? live.reduce((s,h)=>s+(h.count||h.head_count||0),0) : (dash.livestock_total||'—');
-  const fields   = Array.isArray(crop) ? crop.length : (dash.fields_total||'—');
-  const workers  = Array.isArray(wrkr) ? wrkr.length : (dash.workers_total||'—');
-  const compItems= Array.isArray(comp) ? comp.length : null;
-  const overdue  = dash.compliance_overdue || 0;
-
-  // Build sections based on report type
-  let sections = '';
-  const type = _repState.type;
-
-  // ── EXECUTIVE SUMMARY / common metrics ──
-  if(type==='executive_summary'||type==='financial'){
-    sections += `<div class="rep-preview-section">
-      <div class="rep-preview-h2">Financial Performance</div>
-      <div class="rep-preview-kpi-grid">
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Revenue MTD</div><div class="rep-preview-kpi-val">${$(revenue)}</div><div class="rep-preview-kpi-sub">Month to date</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Expenses MTD</div><div class="rep-preview-kpi-val">${$(expenses)}</div><div class="rep-preview-kpi-sub">Operating costs</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Net Profit</div><div class="rep-preview-kpi-val">${$(netProfit)}</div><div class="rep-preview-kpi-sub">${margin!=null?margin+'% margin':'—'}</div></div>
-      </div>
-      ${Array.isArray(fin)&&fin.length ? `<table class="rep-preview-table"><thead><tr><th>Description</th><th>Type</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead><tbody>${fin.slice(0,8).map(r=>`<tr><td>${r.description||'—'}</td><td>${r.type||'—'}</td><td>${r.category||'—'}</td><td>${$(r.amount)}</td><td>${r.date||'—'}</td></tr>`).join('')}</tbody></tr>` : '<p class="rep-preview-p">Detailed transaction records will appear here once finance data is available.</p>'}
-    </div>`;
-  }
-
-  if(type==='executive_summary'||type==='livestock'){
-    const herds = Array.isArray(live) ? live : [];
-    sections += `<div class="rep-preview-section">
-      <div class="rep-preview-h2">Livestock Overview</div>
-      <div class="rep-preview-kpi-grid">
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Total Animals</div><div class="rep-preview-kpi-val">${n(animals)}</div><div class="rep-preview-kpi-sub">Across all herds</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Active Herds</div><div class="rep-preview-kpi-val">${herds.length||dash.herds_total||'—'}</div><div class="rep-preview-kpi-sub">Herd groups</div></div>
-      </div>
-      ${herds.length ? `<table class="rep-preview-table"><thead><tr><th>Herd Name</th><th>Species</th><th>Head Count</th><th>Status</th><th>Location</th></tr></thead><tbody>${herds.slice(0,8).map(h=>`<tr><td>${h.herd_name||h.name||'—'}</td><td>${h.species||h.type||'—'}</td><td>${n(h.count||h.head_count)}</td><td>${h.status||'—'}</td><td>${h.location||h.paddock||'—'}</td></tr>`).join('')}</tbody></td>` : '<p class="rep-preview-p">Connect your livestock data to see herd details.</p>'}
-    </div>`;
-  }
-
-  if(type==='executive_summary'||type==='crop'){
-    const crops = Array.isArray(crop) ? crop : [];
-    sections += `<div class="rep-preview-section">
-      <div class="rep-preview-h2">Crop &amp; Field Status</div>
-      <div class="rep-preview-kpi-grid">
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Active Fields</div><div class="rep-preview-kpi-val">${typeof fields==='number'?n(fields):fields}</div><div class="rep-preview-kpi-sub">Planted &amp; managed</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Total Area</div><div class="rep-preview-kpi-val">${dash.total_ha ? n(dash.total_ha)+' ha' : '—'}</div><div class="rep-preview-kpi-sub">Under cultivation</div></div>
-      </div>
-      ${crops.length ? `<table class="rep-preview-table"><thead><tr><th>Block</th><th>Crop</th><th>Area (ha)</th><th>Status</th><th>Expected Yield</th></tr></thead><tbody>${crops.slice(0,8).map(c=>`<tr><td>${c.block||'—'}</td><td>${c.crop||c.crop_type||'—'}</td><td>${n(c.area||c.hectares)}</td><td>${c.status||'—'}</td><td>${c.expected_yield||c.yield||'—'}</td></tr>`).join('')}</tbody></table>` : '<p class="rep-preview-p">Field and crop data will populate once connected.</p>'}
-    </div>`;
-  }
-
-  if(type==='workforce'){
-    const staff = Array.isArray(wrkr) ? wrkr : [];
-    const onSite = dash.workers_on_site || staff.filter(w=>w.status==='Present'||w.status==='Active').length;
-    sections += `<div class="rep-preview-section">
-      <div class="rep-preview-h2">Workforce Summary</div>
-      <div class="rep-preview-kpi-grid">
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Total Staff</div><div class="rep-preview-kpi-val">${typeof workers==='number'?n(workers):workers}</div><div class="rep-preview-kpi-sub">On payroll</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">On Site Today</div><div class="rep-preview-kpi-val">${n(onSite)}</div><div class="rep-preview-kpi-sub">Present &amp; active</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Attendance</div><div class="rep-preview-kpi-val">${(typeof workers==='number'&&workers>0)?pct(onSite/workers*100):'—'}</div><div class="rep-preview-kpi-sub">Rate today</div></div>
-      </div>
-      ${staff.length ? `<table class="rep-preview-table"><thead><tr><th>Name</th><th>Role</th><th>Department</th><th>Status</th></tr></thead><tbody>${staff.slice(0,10).map(w=>`<tr><td>${w.name||'—'}</td><td>${w.role||w.position||'—'}</td><td>${w.department||w.section||'—'}</td><td>${w.status||'—'}</td></tr>`).join('')}</tbody></table>` : '<p class="rep-preview-p">Worker data will appear here once connected.</p>'}
-    </div>`;
-  }
-
-  if(type==='compliance'){
-    const items = Array.isArray(comp) ? comp : [];
-    sections += `<div class="rep-preview-section">
-      <div class="rep-preview-h2">Compliance Register</div>
-      <div class="rep-preview-kpi-grid">
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Total Items</div><div class="rep-preview-kpi-val">${compItems!=null?n(compItems):'—'}</div><div class="rep-preview-kpi-sub">Tracked requirements</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Overdue</div><div class="rep-preview-kpi-val" style="color:${overdue>0?'var(--error-txt)':'var(--success-txt)'}">${n(overdue)}</div><div class="rep-preview-kpi-sub">Action required</div></div>
-        <div class="rep-preview-kpi"><div class="rep-preview-kpi-label">Due Soon</div><div class="rep-preview-kpi-val">${n(dash.compliance_due_soon||0)}</div><div class="rep-preview-kpi-sub">Within 30 days</div></div>
-      </div>
-      ${items.length ? `<table class="rep-preview-table"><thead><tr><th>Requirement</th><th>Category</th><th>Status</th><th>Due Date</th><th>Responsible</th></tr></thead><tbody>${items.slice(0,10).map(c=>`<tr><td>${c.title||c.name||'—'}</td><td>${c.category||'—'}</td><td>${c.status||'—'}</td><td>${c.due_date||c.expiry||'—'}</td><td>${c.responsible||c.owner||'—'}</td></tr>`).join('')}</tbody></table>` : '<p class="rep-preview-p">Compliance items will appear once the register is populated.</p>'}
-    </div>`;
-  }
-
-  // ── RECOMMENDATIONS ──
-  const recs = [];
-  if(overdue>0)            recs.push(`Address <strong>${overdue} overdue compliance item${overdue>1?'s':''}</strong> before the next regulatory inspection.`);
-  if(margin!=null&&margin<20) recs.push(`Net margin of <strong>${margin}%</strong> is below the recommended 20% threshold — review input costs and pricing.`);
-  if(notes)                recs.push(`Per manager notes: <em>${notes}</em>`);
-  if(!recs.length)         recs.push('Continue current operational practices. Review data completeness to improve future report accuracy.');
-
-  sections += `<div class="rep-preview-section">
-    <div class="rep-preview-h2">Recommendations</div>
-    ${recs.map(r=>`<p class="rep-preview-p">▸ ${r}</p>`).join('')}
-  </div>`;
-
-  return `
-    <div class="rep-preview-estate">Thornfield Estate — ${estate}</div>
-    <div class="rep-preview-h1">${typeName}</div>
-    <div class="rep-preview-meta">Period: ${period} &nbsp;·&nbsp; Generated: ${now} &nbsp;·&nbsp; Prepared by MyFarm Intelligence</div>
-    ${sections}
-    <div class="rep-preview-disclaimer">This report was auto-generated from live estate data. For AI-enhanced narrative analysis, configure the <code>/api/reports/generate</code> proxy endpoint on your backend to forward requests to the Anthropic API.</div>
-  `;
-}
-
-// ─── PRINT / DOWNLOAD ────────────────────────────────────────────────────────
-function printReport(){
-  if(!_repState.lastHtml){ toast('No report to print','error'); return; }
-  const w = window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
-  <title>${_repState.lastTitle}</title>
-  <style>
-    body{font-family:Georgia,serif;font-size:13px;color:#1a1a1a;max-width:800px;margin:40px auto;padding:0 24px;line-height:1.7}
-    .rep-preview-estate{font-size:9px;text-transform:uppercase;letter-spacing:0.22em;color:#8a6c30;margin-bottom:4px}
-    .rep-preview-h1{font-size:26px;font-weight:600;margin-bottom:4px}
-    .rep-preview-meta{font-size:10px;color:#777;margin-bottom:24px;font-family:monospace}
-    .rep-preview-section{margin-bottom:24px}
-    .rep-preview-h2{font-size:17px;font-weight:600;color:#5a3e10;border-bottom:1px solid #ddd;padding-bottom:5px;margin-bottom:10px}
-    .rep-preview-p{margin-bottom:10px;color:#333}
-    .rep-preview-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-    .rep-preview-kpi{border:1px solid #e0e0e0;border-radius:6px;padding:12px 14px}
-    .rep-preview-kpi-label{font-size:8px;text-transform:uppercase;letter-spacing:0.16em;color:#777;margin-bottom:4px}
-    .rep-preview-kpi-val{font-size:20px;font-family:monospace;color:#1a1a1a}
-    .rep-preview-kpi-sub{font-size:9px;color:#999;margin-top:2px}
-    .rep-preview-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}
-    .rep-preview-table th{text-align:left;font-size:8px;text-transform:uppercase;color:#999;padding:6px 8px;border-bottom:1px solid #ddd}
-    .rep-preview-table td{padding:7px 8px;border-bottom:1px solid #f0f0f0;color:#333}
-    .rep-preview-disclaimer{font-size:9.5px;color:#aaa;border-top:1px solid #eee;padding-top:12px;margin-top:8px;font-style:italic}
-    @media print{body{margin:0}}
-  </style></head><body>${_repState.lastHtml}</body></html>`);
-  w.document.close();
-  setTimeout(()=>w.print(), 400);
-}
-
-function downloadReport(){
-  if(!_repState.lastHtml){ toast('No report to download','error'); return; }
-  const fmt = _repState.fmt;
-  const name = (_repState.lastTitle||'report').replace(/[^a-z0-9\-_]/gi,'_').toLowerCase();
-
-  if(fmt === 'csv'){
-    // Extract text tables as CSV
-    const tmp = document.createElement('div');
-    tmp.innerHTML = _repState.lastHtml;
-    let csv = '';
-    tmp.querySelectorAll('table').forEach(tbl => {
-      tbl.querySelectorAll('tr').forEach(row => {
-        csv += Array.from(row.querySelectorAll('th,td')).map(c => '"'+c.textContent.replace(/"/g,'""')+'"').join(',') + '\n';
-      });
-      csv += '\n';
-    });
-    if(!csv.trim()) csv = 'Report: ' + _repState.lastTitle + '\nNo tabular data available.\n';
-    _triggerDownload(csv, name+'.csv', 'text/csv');
-
-  } else if(fmt === 'html'){
-    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${_repState.lastTitle}</title>
-    <style>body{font-family:Georgia,serif;font-size:13px;color:#1a1a1a;max-width:800px;margin:40px auto;padding:0 24px;line-height:1.7}.rep-preview-estate{font-size:9px;text-transform:uppercase;letter-spacing:.22em;color:#8a6c30;margin-bottom:4px}.rep-preview-h1{font-size:26px;font-weight:600;margin-bottom:4px}.rep-preview-meta{font-size:10px;color:#777;margin-bottom:24px;font-family:monospace}.rep-preview-section{margin-bottom:24px}.rep-preview-h2{font-size:17px;font-weight:600;color:#5a3e10;border-bottom:1px solid #ddd;padding-bottom:5px;margin-bottom:10px}.rep-preview-p{margin-bottom:10px;color:#333}.rep-preview-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}.rep-preview-kpi{border:1px solid #e0e0e0;border-radius:6px;padding:12px 14px}.rep-preview-kpi-label{font-size:8px;text-transform:uppercase;letter-spacing:.16em;color:#777;margin-bottom:4px}.rep-preview-kpi-val{font-size:20px;font-family:monospace;color:#1a1a1a}.rep-preview-kpi-sub{font-size:9px;color:#999;margin-top:2px}.rep-preview-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:14px}.rep-preview-table th{text-align:left;font-size:8px;text-transform:uppercase;color:#999;padding:6px 8px;border-bottom:1px solid #ddd}.rep-preview-table td{padding:7px 8px;border-bottom:1px solid #f0f0f0;color:#333}.rep-preview-disclaimer{font-size:9.5px;color:#aaa;border-top:1px solid #eee;padding-top:12px;margin-top:8px;font-style:italic}</style>
-    </head><body>${_repState.lastHtml}</body></html>`;
-    _triggerDownload(fullHtml, name+'.html', 'text/html');
-
-  } else {
-    // PDF: open print dialog in new window — browser-native PDF save
-    printReport();
-    toast('Use "Save as PDF" in the print dialog', 'success');
-    return;
-  }
-  toast('Downloaded as ' + fmt.toUpperCase(), 'success');
-}
-
-function _triggerDownload(content, filename, mime){
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content],{type:mime}));
-  a.download = filename;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
-}
-
-function closeReportPreview(){
-  document.getElementById('report-preview-card').classList.add('hidden');
-}
 
 // ─── REPORT HISTORY ──────────────────────────────────────────────────────────
 const REP_HISTORY_KEY = 'tf_report_history';
@@ -8424,7 +8180,7 @@ async function generateDigestNow() {
       api('/inventory').catch(()=>[]),
       api('/compliance').catch(()=>[]),
       api('/finance').catch(()=>[]),
-      api('/finance/monthly').catch(()=>[])
+      api('/finance/monthly').catch(()=>[]),
     ]);
 
     const today = new Date();
@@ -8913,80 +8669,134 @@ function copyInviteCode(){
 })();
 
 // ─── DEMO MODE — enter app without a backend ──────────────────────────────────
-function enterDemoMode(){
-  currentUser={id:0,name:'Demo User',role:'owner',email:'demo@thornfield.co.zw'};
-  saveUser(currentUser);
-  enterApp();
-}
 </script>
-<!-- ═══════════════════════════════════════════════════════════════════════════
-     ERP MODULE (Full restored, no seed data)
-     ═══════════════════════════════════════════════════════════════════════════ -->
+</body>
+</html>
+
+<!-- ═══════════════════════════════════════════════════════════════════════
+     THORNFIELD ERP — EXTENSION MODULE
+     Styles + JavaScript for all ERP Intelligence pages
+     ═══════════════════════════════════════════════════════════════════════ -->
 <style>
+/* ── ERP SPECIFIC STYLES ─────────────────────────────────────────────────── */
 .erp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .erp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+.erp-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
 @media(max-width:900px){ .erp-grid-2,.erp-grid-3{ grid-template-columns:1fr; } }
+
 .kpi-card { background: var(--s2); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
 .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--gold-dk), var(--gold)); }
 .kpi-card .kpi-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
 .kpi-card .kpi-value { font-size: 26px; font-weight: 600; color: var(--text-primary); line-height: 1; }
+.kpi-card .kpi-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
+.kpi-card .kpi-icon { position:absolute; top:16px; right:16px; font-size:22px; opacity:.22; color: var(--gold); }
+.kpi-positive { color: var(--success-txt) !important; }
+.kpi-negative { color: var(--error-txt) !important; }
+.kpi-warn { color: var(--warn-txt) !important; }
+
 .erp-panel { background: var(--s2); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
 .erp-panel-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing:.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.erp-panel-title .nav-icon { font-size: 16px; color: var(--gold); }
+
 .erp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.erp-table th { background: var(--s3); color: var(--text-muted); font-weight: 500; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid var(--bdr); }
+.erp-table th { background: var(--s3); color: var(--text-muted); font-weight: 500; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--bdr); }
 .erp-table td { padding: 12px 14px; border-bottom: 1px solid var(--bdr2); color: var(--text-primary); vertical-align: middle; font-size: 13px; }
+.erp-table tr:hover td { background: var(--s3); }
+.erp-table .amount { font-family: var(--ff-mono); text-align: right; }
+.erp-table .positive { color: var(--success-txt); }
+.erp-table .negative { color: var(--error-txt); }
+
+.profit-block { background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px 24px; }
+.profit-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--bdr2); font-size: 14px; }
+.profit-row:last-child { border-bottom: none; }
+.profit-row.total { font-weight: 700; font-size: 16px; padding-top: 12px; margin-top: 4px; border-top: 2px solid var(--bdr); }
+.profit-row .label { color: var(--text-secondary); }
+.profit-row .value { font-family: var(--ff-mono); font-weight: 500; }
+.profit-row.contingency-row { background: rgba(184,146,74,0.04); border-radius: 6px; padding: 8px 10px; margin: 4px 0; }
+
+.activity-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.activity-badge.fertilizer_application { background: rgba(94,170,80,0.12); color: var(--success-txt); }
+.activity-badge.feeding { background: rgba(58,120,152,0.12); color: var(--info-txt); }
+.activity-badge.fuel_usage { background: rgba(196,134,42,0.12); color: var(--warn-txt); }
+.activity-badge.planting { background: rgba(94,170,80,0.12); color: var(--success-txt); }
+.activity-badge.harvesting { background: rgba(184,146,74,0.12); color: var(--gold-lt); }
+.activity-badge.spraying { background: rgba(176,64,64,0.12); color: var(--error-txt); }
+.activity-badge.vaccination { background: rgba(58,120,152,0.12); color: var(--info-txt); }
+
+.variance-bar { display: flex; align-items: center; gap: 10px; }
+.variance-track { flex: 1; height: 6px; background: var(--s4); border-radius: 3px; overflow: hidden; }
+.variance-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.variance-fill.under { background: var(--success-txt); }
+.variance-fill.over { background: var(--error-txt); }
+
 .erp-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--bdr); background: var(--s3); color: var(--text-primary); font-size: 13px; cursor: pointer; transition: var(--tr); }
 .erp-btn:hover { background: var(--s4); border-color: var(--bdr-hv); }
 .erp-btn.primary { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold-lt); }
 .erp-btn.primary:hover { background: rgba(184,146,74,0.2); }
-.kpi-positive { color: var(--success-txt) !important; }
-.kpi-negative { color: var(--error-txt) !important; }
+
+.erp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.erp-form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+@media(max-width:600px){ .erp-form-row,.erp-form-row.triple { grid-template-columns: 1fr; } }
+.erp-label { font-size: 13px; text-transform: uppercase; letter-spacing:.05em; color: var(--text-muted); margin-bottom: 5px; display: block; }
+.erp-input { width: 100%; padding: 11px 14px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
+.erp-input:focus { outline: none; border-color: var(--gold-border); }
+.erp-select { width: 100%; padding: 11px 14px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
+
+.mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
+.mini-bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 6px; transition: height 0.3s; }
+.mini-bar.income { background: var(--gold); opacity: 0.7; }
+.mini-bar.expense { background: var(--error-lt); opacity: 0.5; }
+
+.season-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.season-badge.Active { background: var(--success-bg); color: var(--success-txt); border: 1px solid var(--success-bdr); }
+.season-badge.Planning { background: var(--info-bg); color: var(--info-txt); border: 1px solid var(--info-bdr); }
+.season-badge.Closed { background: var(--s4); color: var(--text-muted); border: 1px solid var(--bdr); }
+
+.donut-ring { display: inline-block; width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(var(--gold) 0% var(--pct, 0%), var(--s4) var(--pct, 0%) 100%); position: relative; }
+.donut-ring::after { content: attr(data-pct) '%'; position:absolute; inset:8px; background: var(--s2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: inline-block; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Larger touch targets for older users */
+.erp-btn { min-height: 42px; }
+.erp-input, .erp-select { min-height: 44px; font-size: 14px !important; }
+.kpi-value { font-size: 28px !important; }
+.profit-row { font-size: 15px; padding: 10px 0; }
+.erp-table td { font-size: 14px !important; }
+.erp-table th { font-size: 12px !important; }
+.notif-count { background: var(--gold); color: var(--bg); font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 5px; display: inline-block; }
 </style>
+
 <script>
-// ERP Module - Full functionality restored, no seed data. All data comes from live API endpoints.
-// All ERP functions expect real data from /erp/* endpoints and show empty states when no data exists.
+/* ═══════════════════════════════════════════════════════════════════════════
+   THORNFIELD ERP MODULE — erp.js (inlined)
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-let _erpModeActive = false;
-function toggleErpMode(forceOn) {
-  const app = document.getElementById('app');
-  const btn = document.getElementById('erp-mode-btn');
-  const label = document.getElementById('erp-btn-label');
-  _erpModeActive = forceOn !== undefined ? forceOn : !_erpModeActive;
-  app.classList.toggle('erp-mode', _erpModeActive);
-  if(btn) btn.classList.toggle('erp-active', _erpModeActive);
-  if(label) label.textContent = _erpModeActive ? 'Operations' : 'Intelligence';
-  if(_erpModeActive) {
-    const erpDash = document.querySelector('[data-page="erp-dashboard"]');
-    if(erpDash) erpDash.click();
-  } else {
-    const dash = document.querySelector('[data-page="dashboard"]');
-    if(dash) dash.click();
-  }
-}
-
-function checkErpModeForPage(pg) {
-  const isErpPage = pg && pg.startsWith('erp-');
-  if (isErpPage && !_erpModeActive) {
-    toggleErpMode(true);
-    setTimeout(() => loadPage(pg), 50);
-  } else if (!isErpPage && _erpModeActive && pg !== 'erp-dashboard') {
-    const app = document.getElementById('app');
-    const btn = document.getElementById('erp-mode-btn');
-    const label = document.getElementById('erp-btn-label');
-    _erpModeActive = false;
-    if(app) app.classList.remove('erp-mode');
-    if(btn) btn.classList.remove('erp-active');
-    if(label) label.textContent = 'Intelligence';
-  }
-}
-
-const erpFmt = {
-  usd: v => '$' + Number(v||0).toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:0}),
-  num: v => Number(v||0).toLocaleString('en'),
-  date: s => s ? new Date(s).toLocaleDateString('en-GB') : '—'
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const ERP = {
+  farms: [], units: [], seasons: [], activeSeason: null,
+  costCenters: [], budgets: [], projections: [],
+  activities: [], production: [], notifications: [],
+  profitability: null
 };
 
-function erpContent(html) {
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+const erpFmt = {
+  usd: v => '$' + Number(v||0).toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:0}),
+  pct: v => Number(v||0).toFixed(1) + '%',
+  num: v => Number(v||0).toLocaleString('en', {minimumFractionDigits:0}),
+  date: s => s ? new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'
+};
+
+function erpContent(html){
+  // Hide all standard page divs
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // Get or create the ERP container
   let erp = document.getElementById('erp-page-container');
   if(!erp){
     erp = document.createElement('div');
@@ -8998,137 +8808,1359 @@ function erpContent(html) {
   erp.innerHTML = html;
 }
 
-function erpFetch(path, method='GET', body=null) { return api(path, method, body); }
 
-async function loadErpDashboard() {
+async function erpFetch(path, method='GET', body=null){
+  return api(path, method, body);
+}
+
+// ── SHARED ERP MODAL ─────────────────────────────────────────────────────────
+// Replaces all prompt() and confirm() dialogs with a proper styled modal
+function erpModal(title, subtitle, fields, onSave){
+  const existing = document.getElementById('erp-shared-modal');
+  if(existing) existing.remove();
+
+  const fieldsHtml = fields.map(f => {
+    let input = '';
+    if(f.type === 'select'){
+      input = `<select id="${f.id}" class="erp-input" style="font-size:14px;cursor:pointer">
+        ${(f.options||[]).map(o=>`<option value="${o}">${o}</option>`).join('')}
+      </select>`;
+    } else {
+      input = `<input id="${f.id}" type="${f.type||'text'}" class="erp-input" 
+        placeholder="${f.placeholder||''}" 
+        style="font-size:14px" 
+        ${f.type==='number' ? 'min="0" step="0.01"' : ''}>`;
+    }
+    return `<div style="margin-bottom:16px">
+      <label class="erp-label" style="font-size:13px;margin-bottom:6px">${f.label}</label>
+      ${input}
+    </div>`;
+  }).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'erp-shared-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:500px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6);animation:slideUp 0.2s ease">
+      <div style="margin-bottom:20px">
+        <div style="font-size:19px;font-weight:600;color:var(--text-primary);margin-bottom:5px">${title}</div>
+        ${subtitle ? `<div style="font-size:13px;color:var(--text-muted);line-height:1.5">${subtitle}</div>` : ''}
+      </div>
+      ${fieldsHtml}
+      <div id="erp-modal-err" style="display:none;padding:10px 14px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:8px;color:var(--error-txt);font-size:13px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button id="erp-modal-save" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
+          <span class="material-symbols-outlined" style="font-size:16px">check</span> Save
+        </button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">
+          Cancel
+        </button>
+      </div>
+    </div>`;
+
+  document.body.appendChild(modal);
+
+  // Focus first input
+  setTimeout(()=>{
+    const first = modal.querySelector('input, select');
+    if(first) first.focus();
+  }, 120);
+
+  // Close on backdrop click
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+
+  // Close on Escape
+  const escHandler = e => { if(e.key === 'Escape'){ modal.remove(); document.removeEventListener('keydown', escHandler); } };
+  document.addEventListener('keydown', escHandler);
+
+  // Save button
+  document.getElementById('erp-modal-save').addEventListener('click', async () => {
+    const btn = document.getElementById('erp-modal-save');
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    const vals = {};
+    fields.forEach(f => { vals[f.id] = document.getElementById(f.id)?.value || ''; });
+    try {
+      const ok = await onSave(vals);
+      if(ok !== false) modal.remove();
+    } catch(e) {
+      erpModalError('Something went wrong. Please try again.');
+    } finally {
+      if(document.getElementById('erp-modal-save')){
+        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">check</span> Save';
+        btn.disabled = false;
+      }
+    }
+  });
+}
+
+function erpModalError(msg){
+  const el = document.getElementById('erp-modal-err');
+  if(el){ el.style.display='block'; el.textContent = msg; }
+}
+
+// ── SHARED ERP CONFIRM DIALOG ─────────────────────────────────────────────────
+function erpConfirm(title, message, onConfirm){
+  const existing = document.getElementById('erp-confirm-modal');
+  if(existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'erp-confirm-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:420px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
+      <div style="font-size:18px;font-weight:600;color:var(--text-primary);margin-bottom:10px">${title}</div>
+      <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px">${message}</div>
+      <div style="display:flex;gap:10px">
+        <button id="erp-confirm-yes" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">Confirm</button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-confirm-modal').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+  document.getElementById('erp-confirm-yes').addEventListener('click', async () => {
+    modal.remove();
+    await onConfirm();
+  });
+}
+
+// ── LOAD ERP DASHBOARD ────────────────────────────────────────────────────────
+async function loadErpDashboard(){
   currentPage = 'erp-dashboard';
-  erpContent(`<div class="page-header"><h1>Farm Overview</h1></div><div class="loading">Loading ERP dashboard...</div>`);
-  try {
-    const dash = await erpFetch('/erp/dashboard');
-    erpContent(`
-      <div class="page-header"><h1>Farm Overview</h1></div>
-      <div class="erp-grid">
-        <div class="kpi-card"><div class="kpi-label">Revenue YTD</div><div class="kpi-value">${erpFmt.usd(dash.revenue_ytd)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Original Profit</div><div class="kpi-value ${dash.original_profit>=0?'kpi-positive':'kpi-negative'}">${erpFmt.usd(dash.original_profit)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Adjusted Profit</div><div class="kpi-value ${dash.adjusted_profit>=0?'kpi-positive':'kpi-negative'}">${erpFmt.usd(dash.adjusted_profit)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Inventory Value</div><div class="kpi-value">${erpFmt.usd(dash.inventory_value)}</div></div>
+  erpContent(`<div class="page-header"><h1>Farm Overview</h1></div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <div style="width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <span style="color:var(--text-muted);font-size:14px">Loading your farm data…</span>
+  </div>`);
+
+  const [dash, prof] = await Promise.all([
+    erpFetch('/erp/dashboard'),
+    erpFetch('/erp/profitability')
+  ]);
+
+  const profitColor = dash.original_profit >= 0 ? 'kpi-positive' : 'kpi-negative';
+  const adjProfitColor = dash.adjusted_profit >= 0 ? 'kpi-positive' : 'kpi-negative';
+
+  erpContent(`
+<div class="page-header">
+  <h1>Farm Overview</h1>
+  <p class="page-sub">Your farm's financial and operational summary — updated live</p>
+</div>
+
+<!-- KPI ROW 1: Revenue & Profit -->
+<div class="erp-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+  <div class="kpi-card">
+    <div class="kpi-label">Revenue YTD</div>
+    <div class="kpi-value">${erpFmt.usd(dash.revenue_ytd)}</div>
+    <div class="kpi-sub">${erpFmt.pct(dash.revenue_vs_projection_pct)} of projection (${erpFmt.usd(dash.projected_revenue)})</div>
+    <span class="material-symbols-outlined kpi-icon">payments</span>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Original Profit</div>
+    <div class="kpi-value ${profitColor}">${erpFmt.usd(dash.original_profit)}</div>
+    <div class="kpi-sub">Margin: ${erpFmt.pct(dash.margin_pct)}</div>
+    <span class="material-symbols-outlined kpi-icon">trending_up</span>
+  </div>
+  <div class="kpi-card" style="border-top-color:var(--gold-lt)">
+    <div class="kpi-label">Adjusted Profit <span style="font-size:10px;color:var(--gold)">(+contingency)</span></div>
+    <div class="kpi-value ${adjProfitColor}">${erpFmt.usd(dash.adjusted_profit)}</div>
+    <div class="kpi-sub">Contingency: ${erpFmt.usd(dash.contingency_value)} | Margin: ${erpFmt.pct(dash.adjusted_margin_pct)}</div>
+    <span class="material-symbols-outlined kpi-icon">shield</span>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Expenditure YTD</div>
+    <div class="kpi-value">${erpFmt.usd(dash.expenditure_ytd)}</div>
+    <div class="kpi-sub">Budget: ${erpFmt.usd(dash.budget_total)} (${erpFmt.pct(dash.budget_utilization_pct)} used)</div>
+    <span class="material-symbols-outlined kpi-icon">account_balance_wallet</span>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Inventory Value</div>
+    <div class="kpi-value">${erpFmt.usd(dash.inventory_value)}</div>
+    <div class="kpi-sub ${dash.low_stock_items > 0 ? 'kpi-warn' : ''}">${dash.low_stock_items} item${dash.low_stock_items===1?'':'s'} below par level</div>
+    <span class="material-symbols-outlined kpi-icon">inventory_2</span>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Operational KPIs</div>
+    <div class="kpi-value" style="font-size:20px;display:flex;gap:16px;margin-top:4px">
+      <span title="Livestock">${erpFmt.num(dash.livestock_count)} <span style="font-size:12px;color:var(--text-muted)">head</span></span>
+      <span title="Crop hectares">${erpFmt.num(dash.crop_hectares)} <span style="font-size:12px;color:var(--text-muted)">ha</span></span>
+    </div>
+    <div class="kpi-sub">${dash.workers_present}/${dash.workers_total} workers present</div>
+    <span class="material-symbols-outlined kpi-icon">agriculture</span>
+  </div>
+</div>
+
+<!-- PROFITABILITY WATERFALL + MONTHLY TREND -->
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">waterfall_chart</span> Profitability Waterfall</div>
+    <div class="profit-block">
+      <div class="profit-row">
+        <span class="label">Total Revenue</span>
+        <span class="value positive">${erpFmt.usd(dash.revenue_ytd)}</span>
       </div>
-      <div class="erp-panel"><div class="erp-panel-title">KPI Summary</div><div class="loading">Detailed KPIs will appear here</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load ERP data</div><div class="page-error-sub">${e.message}</div><button class="page-error-btn" onclick="loadErpDashboard()">Retry</button></div>`); }
+      <div class="profit-row">
+        <span class="label">Total Expenses</span>
+        <span class="value negative">− ${erpFmt.usd(dash.expenditure_ytd)}</span>
+      </div>
+      <div class="profit-row total">
+        <span class="label">Original Profit</span>
+        <span class="value ${profitColor}">${erpFmt.usd(dash.original_profit)}</span>
+      </div>
+      <div class="profit-row contingency-row" style="margin-top:12px">
+        <span class="label" style="color:var(--gold)">+ Contingency Allowance</span>
+        <span class="value" style="color:var(--gold)">+ ${erpFmt.usd(dash.contingency_value)}</span>
+      </div>
+      <div class="profit-row">
+        <span class="label">Adjusted Expenses</span>
+        <span class="value negative">− ${erpFmt.usd(dash.adjusted_expenses)}</span>
+      </div>
+      <div class="profit-row total">
+        <span class="label">Adjusted Profit</span>
+        <span class="value ${adjProfitColor}">${erpFmt.usd(dash.adjusted_profit)}</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="erp-btn primary" onclick="loadErpProfitability()"><span class="material-symbols-outlined" style="font-size:15px">open_in_new</span> Full Analysis</button>
+      <button class="erp-btn" onclick="loadErpBudgets()"><span class="material-symbols-outlined" style="font-size:15px">savings</span> Budget Variance</button>
+    </div>
+  </div>
+
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">bar_chart</span> Revenue vs Expense — 6 Month Trend</div>
+    <div id="erp-monthly-chart" style="min-height:160px;display:flex;align-items:flex-end;gap:6px;padding:10px 0"></div>
+    <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text-muted)">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--gold);margin-right:4px"></span>Revenue</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--error-lt);margin-right:4px"></span>Expense</span>
+    </div>
+  </div>
+</div>
+
+<!-- RECENT ACTIVITIES + COMPLIANCE ALERTS -->
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title" style="justify-content:space-between">
+      <span><span class="material-symbols-outlined nav-icon">agriculture</span> Recent Operations</span>
+      <button class="erp-btn" onclick="loadErpActivities()" style="padding:4px 10px;font-size:11px">View All</button>
+    </div>
+    <table class="erp-table">
+      <thead><tr><th>Activity</th><th>Unit</th><th>Date</th><th class="amount">Cost</th></tr></thead>
+      <tbody>
+        ${(dash.recent_activities||[]).map(a=>`
+        <tr>
+          <td>
+            <span class="activity-badge ${a.activity_type}">${a.activity_type.replace(/_/g,' ')}</span>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${a.description.substring(0,40)}${a.description.length>40?'…':''}</div>
+          </td>
+          <td style="color:var(--text-secondary)">${a.unit_name||'—'}</td>
+          <td style="color:var(--text-muted);font-size:12px">${erpFmt.date(a.activity_date)}</td>
+          <td class="amount">${erpFmt.usd(a.total_cost)}</td>
+        </tr>`).join('') || '<tr><td colspan="4" style="color:var(--text-muted);padding:20px;text-align:center">No activities recorded yet</td></tr>'}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">warning</span> Operational Alerts</div>
+    ${dash.low_stock_items > 0 ? `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--warn-bg);border:1px solid var(--warn-bdr);border-radius:var(--radius-sm);margin-bottom:8px"><span class="material-symbols-outlined" style="color:var(--warn-txt)">inventory_2</span><div><div style="font-size:13px;color:var(--warn-txt);font-weight:500">${dash.low_stock_items} Inventory Items Below Par</div><div style="font-size:11px;color:var(--text-muted)">Reorder required to avoid operational disruption</div></div></div>` : ''}
+    ${dash.compliance_overdue > 0 ? `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:var(--radius-sm);margin-bottom:8px"><span class="material-symbols-outlined" style="color:var(--error-txt)">gpp_bad</span><div><div style="font-size:13px;color:var(--error-txt);font-weight:500">${dash.compliance_overdue} Compliance Items Overdue</div><div style="font-size:11px;color:var(--text-muted)">Immediate attention required</div></div></div>` : ''}
+    ${dash.compliance_due_soon > 0 ? `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--info-bg);border:1px solid var(--info-bdr);border-radius:var(--radius-sm);margin-bottom:8px"><span class="material-symbols-outlined" style="color:var(--info-txt)">schedule</span><div><div style="font-size:13px;color:var(--info-txt);font-weight:500">${dash.compliance_due_soon} Items Due Soon</div></div></div>` : ''}
+    ${dash.budget_utilization_pct > 90 ? `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:var(--radius-sm);margin-bottom:8px"><span class="material-symbols-outlined" style="color:var(--error-txt)">savings</span><div><div style="font-size:13px;color:var(--error-txt);font-weight:500">Budget Utilization at ${erpFmt.pct(dash.budget_utilization_pct)}</div><div style="font-size:11px;color:var(--text-muted)">Approaching or exceeding planned budget</div></div></div>` : ''}
+    ${!dash.low_stock_items && !dash.compliance_overdue && !dash.compliance_due_soon && dash.budget_utilization_pct <= 90 ? `<div style="color:var(--text-muted);text-align:center;padding:20px;font-size:13px">✓ No active alerts</div>` : ''}
+  </div>
+</div>
+  `);
+
+  // Render mini monthly chart
+  const monthly = dash.monthly_trend || [];
+  if(monthly.length > 0){
+    const maxVal = Math.max(...monthly.flatMap(m=>[parseFloat(m.income||0),parseFloat(m.expense||0)]), 1);
+    const chartEl = document.getElementById('erp-monthly-chart');
+    if(chartEl){
+      chartEl.innerHTML = monthly.map(m => {
+        const inH = Math.round((parseFloat(m.income||0)/maxVal)*120);
+        const exH = Math.round((parseFloat(m.expense||0)/maxVal)*120);
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0">
+          <div style="display:flex;align-items:flex-end;gap:2px;height:120px">
+            <div class="mini-bar income" style="height:${inH}px" title="${erpFmt.usd(m.income)} revenue"></div>
+            <div class="mini-bar expense" style="height:${exH}px" title="${erpFmt.usd(m.expense)} expense"></div>
+          </div>
+          <div style="font-size:9px;color:var(--text-muted);white-space:nowrap;overflow:hidden;max-width:32px;text-align:center">${m.month||''}</div>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
-async function loadErpProfitability() {
+// ── PROFITABILITY ─────────────────────────────────────────────────────────────
+async function loadErpProfitability(){
   currentPage = 'erp-profitability';
-  erpContent(`<div class="page-header"><h1>Profit & Loss</h1></div><div class="loading">Loading P&L data...</div>`);
-  try {
-    const prof = await erpFetch('/erp/profitability');
-    erpContent(`
-      <div class="page-header"><h1>Profit & Loss</h1></div>
-      <div class="erp-grid">
-        <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value kpi-positive">${erpFmt.usd(prof.total_revenue)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Base Expenses</div><div class="kpi-value kpi-negative">${erpFmt.usd(prof.base_expenses)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Original Profit</div><div class="kpi-value ${prof.original_profit>=0?'kpi-positive':'kpi-negative'}">${erpFmt.usd(prof.original_profit)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Adjusted Profit</div><div class="kpi-value ${prof.adjusted_profit>=0?'kpi-positive':'kpi-negative'}">${erpFmt.usd(prof.adjusted_profit)}</div></div>
+  erpContent(`<div class="page-header"><h1>Profitability Analysis</h1></div><div style="color:var(--text-muted);padding:20px;font-size:13px">Loading…</div>`);
+
+  const [prof, plData, cont] = await Promise.all([
+    erpFetch('/erp/profitability'),
+    erpFetch('/erp/analytics/pl-summary'),
+    erpFetch('/erp/contingency')
+  ]);
+
+  const seasons = await erpFetch('/erp/seasons');
+  ERP.seasons = seasons || [];
+  ERP.profitability = prof;
+
+  const activeSeason = seasons.find(s=>s.status==='Active') || seasons[0];
+  const seasonId = activeSeason?.id;
+
+  const [projections, budgets] = await Promise.all([
+    erpFetch('/erp/revenue-projections' + (seasonId ? `?season_id=${seasonId}` : '')),
+    erpFetch('/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
+  ]);
+
+  const profColor = prof.original_profit >= 0 ? '#7ecc74' : '#e06060';
+  const adjColor = prof.adjusted_profit >= 0 ? '#7ecc74' : '#e06060';
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div>
+    <h1>Profitability Analysis</h1>
+    <p class="page-sub">Original profit, contingency, adjusted figures</p>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="erp-btn primary" onclick="openContingencyEditor(${seasonId||'null'}, ${cont?.contingency_pct||10}, '${cont?.contingency_type||'percentage'}', ${cont?.contingency_fixed||0})"><span class="material-symbols-outlined" style="font-size:15px">tune</span> Set Contingency</button>
+  </div>
+</div>
+
+<!-- SUMMARY KPIs -->
+<div class="erp-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Revenue</div>
+    <div class="kpi-value kpi-positive">${erpFmt.usd(prof.total_revenue)}</div>
+    <div class="kpi-sub">Projected: ${erpFmt.usd(prof.projected_revenue)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Base Expenses</div>
+    <div class="kpi-value kpi-negative">${erpFmt.usd(prof.base_expenses)}</div>
+    <div class="kpi-sub">Budget: ${erpFmt.usd(prof.budget_total)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Original Profit</div>
+    <div class="kpi-value" style="color:${profColor}">${erpFmt.usd(prof.original_profit)}</div>
+    <div class="kpi-sub">Margin: ${erpFmt.pct(prof.margin_pct)}</div>
+  </div>
+  <div class="kpi-card" style="border-top-color:var(--gold)">
+    <div class="kpi-label">Contingency</div>
+    <div class="kpi-value" style="color:var(--gold-lt)">${erpFmt.usd(prof.contingency_value)}</div>
+    <div class="kpi-sub">${cont?.contingency_type==='percentage' ? erpFmt.pct(cont.contingency_pct)+' of expenses' : 'Fixed amount'}</div>
+  </div>
+  <div class="kpi-card" style="border-top-color:var(--gold-lt)">
+    <div class="kpi-label">Adjusted Profit</div>
+    <div class="kpi-value" style="color:${adjColor}">${erpFmt.usd(prof.adjusted_profit)}</div>
+    <div class="kpi-sub">Margin: ${erpFmt.pct(prof.adjusted_margin_pct)}</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Inventory Value</div>
+    <div class="kpi-value">${erpFmt.usd(prof.inventory_value)}</div>
+    <div class="kpi-sub">Current stock asset value</div>
+  </div>
+</div>
+
+<!-- PROFITABILITY DETAIL + P&L -->
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">waterfall_chart</span> P&L Statement</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px">Income</div>
+      ${(plData.income||[]).map(r=>`
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr2);font-size:13px">
+        <span style="color:var(--text-secondary)">${r.category}</span>
+        <span style="font-family:var(--ff-mono);color:var(--success-txt)">${erpFmt.usd(r.total)}</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;font-size:14px;margin-top:4px">
+        <span>Total Income</span>
+        <span style="font-family:var(--ff-mono);color:var(--success-txt)">${erpFmt.usd(plData.total_income)}</span>
       </div>
-      <div class="erp-panel"><div class="erp-panel-title">P&L Details</div><div class="loading">Detailed breakdown will appear here</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load P&L</div><button class="page-error-btn" onclick="loadErpProfitability()">Retry</button></div>`); }
+    </div>
+    <div>
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:8px">Expenses</div>
+      ${(plData.expenses||[]).map(r=>`
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bdr2);font-size:13px">
+        <span style="color:var(--text-secondary)">${r.category}</span>
+        <span style="font-family:var(--ff-mono);color:var(--error-txt)">${erpFmt.usd(r.total)}</span>
+      </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:600;font-size:14px;margin-top:4px">
+        <span>Total Expenses</span>
+        <span style="font-family:var(--ff-mono);color:var(--error-txt)">${erpFmt.usd(plData.total_expense)}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:10px 0;font-weight:700;font-size:15px;border-top:2px solid var(--bdr);margin-top:4px">
+        <span>Gross Profit</span>
+        <span style="font-family:var(--ff-mono);color:${profColor}">${erpFmt.usd(plData.gross_profit)}</span>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <!-- Revenue Projections -->
+    <div class="erp-panel">
+      <div class="erp-panel-title" style="justify-content:space-between">
+        <span><span class="material-symbols-outlined nav-icon">timeline</span> Revenue Projections</span>
+        <button class="erp-btn" onclick="openRevProjectionForm(${seasonId||'null'})" style="padding:4px 10px;font-size:11px">+ Add</button>
+      </div>
+      <table class="erp-table">
+        <thead><tr><th>Description</th><th class="amount">Projected</th><th class="amount">Actual</th></tr></thead>
+        <tbody id="proj-tbody">
+          ${(projections||[]).map(p=>`
+          <tr>
+            <td>${p.description}</td>
+            <td class="amount" style="color:var(--gold-lt)">${erpFmt.usd(p.projected_amount)}</td>
+            <td class="amount" style="color:var(--success-txt)">${erpFmt.usd(p.actual_amount)}</td>
+          </tr>`).join('') || '<tr><td colspan="3" style="color:var(--text-muted);padding:12px;text-align:center">No projections added</td></tr>'}
+          ${projections?.length ? `<tr style="font-weight:600"><td>Total</td><td class="amount" style="color:var(--gold-lt)">${erpFmt.usd(projections.reduce((s,p)=>s+parseFloat(p.projected_amount||0),0))}</td><td class="amount" style="color:var(--success-txt)">${erpFmt.usd(projections.reduce((s,p)=>s+parseFloat(p.actual_amount||0),0))}</td></tr>` : ''}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Contingency Summary -->
+    <div class="erp-panel" style="background:linear-gradient(135deg,var(--s2),rgba(184,146,74,0.05));border-color:var(--gold-border)">
+      <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">shield</span> Contingency Engine</div>
+      <div class="profit-block">
+        <div class="profit-row"><span class="label">Original Expenses</span><span class="value">${erpFmt.usd(prof.base_expenses)}</span></div>
+        <div class="profit-row contingency-row"><span class="label" style="color:var(--gold)">Contingency (${cont?.contingency_type==='percentage'?erpFmt.pct(cont?.contingency_pct||0):erpFmt.usd(cont?.contingency_fixed||0)})</span><span class="value" style="color:var(--gold)">+ ${erpFmt.usd(prof.contingency_value)}</span></div>
+        <div class="profit-row"><span class="label">Adjusted Expenses</span><span class="value">${erpFmt.usd(prof.adjusted_expenses)}</span></div>
+        <div class="profit-row total"><span class="label">Adjusted Profit</span><span class="value" style="color:${adjColor}">${erpFmt.usd(prof.adjusted_profit)}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTINGENCY EDITOR MODAL (hidden) -->
+<div id="cont-editor" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center">
+  <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:var(--radius-lg);padding:28px;width:420px;max-width:90vw">
+    <h3 style="margin-bottom:20px;font-size:16px">Set Contingency Allowance</h3>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <label style="flex:1;cursor:pointer"><input type="radio" name="cont-type" value="percentage" id="cont-pct-radio" style="margin-right:6px">Percentage of Expenses</label>
+      <label style="flex:1;cursor:pointer"><input type="radio" name="cont-type" value="fixed" id="cont-fixed-radio" style="margin-right:6px">Fixed Amount</label>
+    </div>
+    <div class="erp-form-row">
+      <div><label class="erp-label">Percentage (%)</label><input id="cont-pct-val" type="number" class="erp-input" min="0" max="100" step="0.5"></div>
+      <div><label class="erp-label">Fixed Amount ($)</label><input id="cont-fixed-val" type="number" class="erp-input" min="0" step="100"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="erp-btn primary" onclick="saveContingency()">Save</button>
+      <button class="erp-btn" onclick="closeContEditor()">Cancel</button>
+    </div>
+  </div>
+</div>
+  `);
 }
 
-async function loadErpBudgets() {
+let _contSeasonId = null;
+function openContingencyEditor(seasonId, pct, type, fixed){
+  _contSeasonId = seasonId;
+  const ed = document.getElementById('cont-editor');
+  if(!ed) return;
+  ed.style.display = 'flex';
+  document.getElementById('cont-pct-val').value = pct || 10;
+  document.getElementById('cont-fixed-val').value = fixed || 0;
+  document.querySelector(`input[name="cont-type"][value="${type||'percentage'}"]`).checked = true;
+}
+function closeContEditor(){ const ed=document.getElementById('cont-editor'); if(ed) ed.style.display='none'; }
+async function saveContingency(){
+  const type = document.querySelector('input[name="cont-type"]:checked')?.value || 'percentage';
+  const pct = parseFloat(document.getElementById('cont-pct-val').value)||0;
+  const fixed = parseFloat(document.getElementById('cont-fixed-val').value)||0;
+  await erpFetch('/erp/contingency','POST',{season_id:_contSeasonId, contingency_type:type, contingency_pct:pct, contingency_fixed:fixed});
+  closeContEditor();
+  toast('Contingency updated');
+  loadErpProfitability();
+}
+
+let _projSeasonId = null;
+function openRevProjectionForm(seasonId){
+  _projSeasonId = seasonId;
+  erpModal('Add Revenue Projection',
+    'Enter the expected income for a crop, herd, or product this season',
+    [
+      {id:'rp-desc', label:'What are you projecting income from?', type:'text', placeholder:'e.g. Maize — Block N1 (60 tonnes @ $220 per tonne)'},
+      {id:'rp-amt',  label:'Expected Amount (USD $)',              type:'number', placeholder:'0.00'}
+    ],
+    async (vals) => {
+      if(!vals['rp-desc']){ erpModalError('Please enter a description'); return false; }
+      if(!vals['rp-amt'] || parseFloat(vals['rp-amt']) <= 0){ erpModalError('Please enter an amount greater than zero'); return false; }
+      await erpFetch('/erp/revenue-projections','POST',{season_id:_projSeasonId, description:vals['rp-desc'], projected_amount:parseFloat(vals['rp-amt'])});
+      toast('Revenue projection saved');
+      loadErpProfitability();
+      return true;
+    }
+  );
+}
+
+// ── BUDGETS & FORECASTS ───────────────────────────────────────────────────────
+async function loadErpBudgets(){
   currentPage = 'erp-budgets';
-  erpContent(`<div class="page-header"><h1>Budgets</h1></div><div class="loading">Loading budget data...</div>`);
-  try {
-    const budgets = await erpFetch('/erp/budgets');
-    const totalPlanned = budgets.reduce((s,b)=>s+(b.planned_amount||0),0);
-    const totalActual = budgets.reduce((s,b)=>s+(b.actual_amount||0),0);
-    erpContent(`
-      <div class="page-header"><h1>Budgets & Variance</h1></div>
-      <div class="erp-grid">
-        <div class="kpi-card"><div class="kpi-label">Total Budget</div><div class="kpi-value">${erpFmt.usd(totalPlanned)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Actual Spend</div><div class="kpi-value">${erpFmt.usd(totalActual)}</div></div>
-        <div class="kpi-card"><div class="kpi-label">Remaining</div><div class="kpi-value">${erpFmt.usd(totalPlanned-totalActual)}</div></div>
-      </div>
-      <div class="erp-panel"><div class="erp-panel-title">Budget Lines</div><div class="${budgets.length ? '' : 'empty-row'}">${budgets.length ? `<table class="erp-table"><thead><tr><th>Category</th><th>Planned</th><th>Actual</th><th>Variance</th></tr></thead><tbody>${budgets.map(b=>`<tr><td>${b.category}</td><td>${erpFmt.usd(b.planned_amount)}</td><td>${erpFmt.usd(b.actual_amount)}</td><td>${erpFmt.usd((b.actual_amount||0)-(b.planned_amount||0))}</td></tr>`).join('')}</tbody></table>` : '<span class="empty-title">No budget lines yet</span><button class="empty-cta" onclick="toast(\'Add budget line\')">+ Add Budget Line</button>'}</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load budgets</div><button class="page-error-btn" onclick="loadErpBudgets()">Retry</button></div>`); }
+  erpContent(`<div class="page-header"><h1>Budgets &amp; Forecasts</h1></div><div style="color:var(--text-muted);padding:20px;font-size:13px">Loading…</div>`);
+
+  const [seasons, cashFlow] = await Promise.all([
+    erpFetch('/erp/seasons'),
+    erpFetch('/erp/analytics/cash-flow')
+  ]);
+
+  const activeSeason = seasons.find(s=>s.status==='Active') || seasons[0];
+  const seasonId = activeSeason?.id;
+
+  const [variance, budgets] = await Promise.all([
+    erpFetch('/erp/analytics/budget-variance' + (seasonId ? `?season_id=${seasonId}` : '')),
+    erpFetch('/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
+  ]);
+
+  const totalPlanned = budgets.reduce((s,b)=>s+parseFloat(b.planned_amount||0),0);
+  const totalActual = budgets.reduce((s,b)=>s+parseFloat(b.actual_amount||0),0);
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div><h1>Budgets &amp; Variance</h1><p class="page-sub">${activeSeason?.name||'All Seasons'}</p></div>
+  <button class="erp-btn primary" onclick="openAddBudgetForm(${seasonId||'null'})">+ Add Budget Line</button>
+</div>
+
+<div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="kpi-card">
+    <div class="kpi-label">Total Budget</div>
+    <div class="kpi-value">${erpFmt.usd(totalPlanned)}</div>
+    <div class="kpi-sub">${budgets.length} budget lines</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Actual Spend</div>
+    <div class="kpi-value">${erpFmt.usd(totalActual)}</div>
+    <div class="kpi-sub">${erpFmt.pct(totalPlanned > 0 ? totalActual/totalPlanned*100 : 0)} utilized</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Budget Remaining</div>
+    <div class="kpi-value ${(totalPlanned-totalActual)<0?'kpi-negative':'kpi-positive'}">${erpFmt.usd(totalPlanned-totalActual)}</div>
+    <div class="kpi-sub">${totalActual > totalPlanned ? 'OVER BUDGET' : 'Available to spend'}</div>
+  </div>
+</div>
+
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">bar_chart</span> Budget Variance by Category</div>
+    <table class="erp-table">
+      <thead><tr><th>Category</th><th class="amount">Planned</th><th class="amount">Actual</th><th class="amount">Variance</th><th>Progress</th></tr></thead>
+      <tbody>
+        ${variance.map(v => {
+          const pct = v.planned > 0 ? Math.min(100, v.actual/v.planned*100) : 0;
+          const over = v.actual > v.planned;
+          return `<tr>
+            <td>
+              <div style="font-weight:500">${v.category}</div>
+              <div style="font-size:11px;margin-top:2px"><span class="pill pill-${over?'error':'success'}">${v.status}</span></div>
+            </td>
+            <td class="amount">${erpFmt.usd(v.planned)}</td>
+            <td class="amount">${erpFmt.usd(v.actual)}</td>
+            <td class="amount ${over?'negative':'positive'}">${over?'':'+'}${erpFmt.usd(v.variance)}</td>
+            <td style="min-width:80px">
+              <div class="variance-bar">
+                <div class="variance-track"><div class="variance-fill ${over?'over':'under'}" style="width:${Math.min(100,pct)}%"></div></div>
+                <span style="font-size:11px;color:var(--text-muted)">${pct.toFixed(0)}%</span>
+              </div>
+            </td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">No budget lines found</td></tr>'}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">show_chart</span> Cash Flow — 18 Months</div>
+    <div style="overflow-x:auto">
+      <table class="erp-table">
+        <thead><tr><th>Month</th><th class="amount">In</th><th class="amount">Out</th><th class="amount">Net</th><th class="amount">Cumulative</th></tr></thead>
+        <tbody>
+          ${(cashFlow||[]).slice(-12).map(m=>`
+          <tr>
+            <td style="color:var(--text-secondary)">${m.month}</td>
+            <td class="amount positive">${erpFmt.usd(m.inflows)}</td>
+            <td class="amount negative">${erpFmt.usd(m.outflows)}</td>
+            <td class="amount ${parseFloat(m.net)>=0?'positive':'negative'}">${erpFmt.usd(m.net)}</td>
+            <td class="amount" style="color:${parseFloat(m.cumulative)>=0?'var(--success-txt)':'var(--error-txt)'}">${erpFmt.usd(m.cumulative)}</td>
+          </tr>`).join('') || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">No cash flow data</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+  `);
 }
 
-async function loadErpActivities() {
+async function openAddBudgetForm(seasonId){
+  erpModal('Add Budget Line',
+    'Set a spending target for a category this season',
+    [
+      {id:'bg-cat', label:'Spending Category', type:'select', options:['Labour','Crop Inputs','Fuel & Energy','Equipment Maintenance','Livestock Feed & Vet','Irrigation','Seeds','Chemicals','Administration','Other']},
+      {id:'bg-amt', label:'Planned Budget Amount (USD $)', type:'number', placeholder:'0.00'}
+    ],
+    async (vals) => {
+      if(!vals['bg-amt'] || parseFloat(vals['bg-amt']) <= 0){ erpModalError('Please enter an amount'); return false; }
+      await erpFetch('/erp/budgets','POST',{season_id:seasonId, category:vals['bg-cat'], planned_amount:parseFloat(vals['bg-amt'])});
+      toast('Budget line added');
+      loadErpBudgets();
+      return true;
+    }
+  );
+}
+
+// ── OPERATIONAL ACTIVITIES ────────────────────────────────────────────────────
+async function loadErpActivities(){
   currentPage = 'erp-activities';
-  erpContent(`<div class="page-header"><h1>Farm Activities</h1></div><div class="loading">Loading activities...</div>`);
-  try {
-    const activities = await erpFetch('/erp/activities');
-    erpContent(`
-      <div class="page-header"><h1>Farm Activities</h1><button class="erp-btn primary" onclick="toast('Add activity form ready')" style="float:right">+ Log Activity</button><div style="clear:both"></div></div>
-      <div class="erp-panel"><div class="erp-panel-title">Activity Log</div><div class="${activities.length ? '' : 'empty-row'}">${activities.length ? `<table class="erp-table"><thead><tr><th>Type</th><th>Description</th><th>Date</th><th>Cost</th></tr></thead><tbody>${activities.map(a=>`<tr><td>${a.activity_type||'—'}</td><td>${a.description||'—'}</td><td>${erpFmt.date(a.activity_date)}</td><td>${erpFmt.usd(a.total_cost)}</td></tr>`).join('')}</tbody></table>` : '<span class="empty-title">No activities logged</span><button class="empty-cta" onclick="toast(\'Add activity\')">+ Log First Activity</button>'}</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load activities</div><button class="page-error-btn" onclick="loadErpActivities()">Retry</button></div>`); }
+  erpContent(`<div class="page-header"><h1>Operational Log</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
+
+  const [activities, units, inventory, seasons, workers] = await Promise.all([
+    erpFetch('/erp/activities?limit=100'),
+    erpFetch('/erp/units'),
+    erpFetch('/inventory'),
+    erpFetch('/erp/seasons'),
+    erpFetch('/workers')
+  ]);
+  window._erpWorkers = workers || [];
+
+  ERP.units = units || [];
+  ERP.seasons = seasons || [];
+
+  const totalCost = activities.reduce((s,a)=>s+parseFloat(a.total_cost||0),0);
+  const byType = activities.reduce((acc,a)=>{ acc[a.activity_type]=(acc[a.activity_type]||0)+1; return acc; },{});
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div><h1>Farm Activities</h1><p class="page-sub">Record what happened on the farm — stock is deducted and costs updated automatically</p></div>
+  <button class="erp-btn primary" onclick="openActivityForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Log Activity</button>
+</div>
+
+<div class="erp-grid" style="grid-template-columns:repeat(4,1fr)">
+  <div class="kpi-card"><div class="kpi-label">Total Activities</div><div class="kpi-value">${activities.length}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Total Op Costs</div><div class="kpi-value">${erpFmt.usd(totalCost)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Activity Types</div><div class="kpi-value">${Object.keys(byType).length}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Avg Cost / Activity</div><div class="kpi-value">${erpFmt.usd(activities.length?totalCost/activities.length:0)}</div></div>
+</div>
+
+<!-- Activity Form Modal -->
+<div id="act-form-panel" style="display:none" class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">add_task</span> Log New Activity</div>
+  <div class="erp-form-row">
+    <div>
+      <label class="erp-label">Activity Type</label>
+      <select id="act-type" class="erp-select">
+        <option value="fertilizer_application">Fertilizer Application</option>
+        <option value="feeding">Livestock Feeding</option>
+        <option value="fuel_usage">Fuel Usage</option>
+        <option value="planting">Planting</option>
+        <option value="harvesting">Harvesting</option>
+        <option value="spraying">Chemical Spraying</option>
+        <option value="vaccination">Vaccination</option>
+        <option value="irrigation">Irrigation</option>
+        <option value="land_preparation">Land Preparation</option>
+        <option value="scouting">Scouting</option>
+        <option value="weigh_in">Livestock Weigh-in</option>
+        <option value="maintenance">Equipment Maintenance</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div>
+      <label class="erp-label">Operational Unit</label>
+      <select id="act-unit" class="erp-select">
+        <option value="">— Select Unit —</option>
+        ${(units||[]).map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}
+      </select>
+    </div>
+  </div>
+  <div class="erp-form-row">
+    <div>
+      <label class="erp-label">Description</label>
+      <input id="act-desc" class="erp-input" placeholder="e.g. NPK application at 200kg/ha on Block N2">
+    </div>
+    <div>
+      <label class="erp-label">Activity Date</label>
+      <input id="act-date" type="date" class="erp-input" value="${new Date().toISOString().split('T')[0]}">
+    </div>
+  </div>
+  <div class="erp-form-row">
+    <div>
+      <label class="erp-label">Assigned Worker (optional)</label>
+      <select id="act-worker" class="erp-select">
+        <option value="">— No specific worker —</option>
+        ${(window._erpWorkers||[]).map(w=>`<option value="${w.id}">${w.name} (${w.role})</option>`).join('')}
+      </select>
+    </div>
+    <div>
+      <label class="erp-label">Labour Hours (if applicable)</label>
+      <input id="act-hours" type="number" class="erp-input" placeholder="0" min="0" step="0.5">
+    </div>
+  </div>
+
+  <!-- Inventory Consumption -->
+  <div style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <label class="erp-label" style="margin:0">Inventory Consumed (auto-deducts stock)</label>
+      <button class="erp-btn" onclick="addInventoryLine()" style="padding:4px 10px;font-size:11px">+ Add Item</button>
+    </div>
+    <div id="inv-lines"></div>
+  </div>
+
+  <div style="display:flex;gap:8px">
+    <button class="erp-btn primary" onclick="saveActivity()">Save Activity</button>
+    <button class="erp-btn" onclick="document.getElementById('act-form-panel').style.display='none'">Cancel</button>
+  </div>
+  <div id="act-form-msg" style="margin-top:10px;font-size:13px;color:var(--success-txt);display:none"></div>
+</div>
+
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">list_alt</span> Activity Log (${activities.length})</div>
+  <table class="erp-table">
+    <thead><tr><th>Type</th><th>Description</th><th>Unit</th><th>Date</th><th class="amount">Total Cost</th><th>Status</th></tr></thead>
+    <tbody>
+      ${activities.map(a=>`
+      <tr>
+        <td><span class="activity-badge ${a.activity_type}">${(a.activity_type||'').replace(/_/g,' ')}</span></td>
+        <td><div style="max-width:260px">${a.description}</div>${a.performed_by_name?`<div style="font-size:11px;color:var(--text-muted)">${a.performed_by_name}</div>`:''}
+        </td>
+        <td style="color:var(--text-secondary)">${a.unit_name||'—'}</td>
+        <td style="color:var(--text-muted);font-size:12px">${erpFmt.date(a.activity_date)}</td>
+        <td class="amount">${erpFmt.usd(a.total_cost)}</td>
+        <td>${spill(a.status)}</td>
+      </tr>`).join('') || '<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--text-muted)">No activities logged yet</td></tr>'}
+    </tbody>
+  </table>
+</div>
+  `);
+
+  // Store inventory for form
+  window._erpInventory = inventory || [];
+  window._invLineCount = 0;
 }
 
-async function loadErpProduction() {
-  currentPage = 'erp-production';
-  erpContent(`<div class="page-header"><h1>Production</h1></div><div class="loading">Loading production data...</div>`);
-  try {
-    const batches = await erpFetch('/erp/production');
-    erpContent(`
-      <div class="page-header"><h1>Production Records</h1><button class="erp-btn primary" onclick="toast('Add production batch')" style="float:right">+ Log Production</button><div style="clear:both"></div></div>
-      <div class="erp-panel"><div class="erp-panel-title">Production Batches</div><div class="${batches.length ? '' : 'empty-row'}">${batches.length ? `<table class="erp-table"><thead><tr><th>Product</th><th>Quantity</th><th>Date</th><th>Revenue</th></tr></thead><tbody>${batches.map(b=>`<tr><td>${b.product_type||'—'}</td><td>${erpFmt.num(b.quantity)} ${b.unit_of_measure||''}</td><td>${erpFmt.date(b.batch_date)}</td><td>${erpFmt.usd(b.actual_revenue)}</td></tr>`).join('')}</tbody></table>` : '<span class="empty-title">No production batches</span><button class="empty-cta" onclick="toast(\'Add production\')">+ Add First Batch</button>'}</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load production</div><button class="page-error-btn" onclick="loadErpProduction()">Retry</button></div>`); }
+function openActivityForm(){
+  document.getElementById('act-form-panel').style.display='block';
+  document.getElementById('act-form-panel').scrollIntoView({behavior:'smooth'});
 }
 
-async function loadErpCosting() {
+function addInventoryLine(){
+  const c = ++window._invLineCount;
+  const invOptions = (window._erpInventory||[]).map(i=>`<option value="${i.id}" data-unit="${i.unit}">${i.name} (${i.on_hand} ${i.unit} avail.)</option>`).join('');
+  const el = document.createElement('div');
+  el.id = `inv-line-${c}`;
+  el.style.cssText = 'display:grid;grid-template-columns:1fr 120px 1fr 32px;gap:8px;margin-bottom:6px;align-items:end';
+  el.innerHTML = `
+    <div><label class="erp-label">Inventory Item</label><select id="inv-item-${c}" class="erp-select">${invOptions}</select></div>
+    <div><label class="erp-label">Quantity</label><input id="inv-qty-${c}" type="number" class="erp-input" min="0.01" step="0.01" value="1"></div>
+    <div><label class="erp-label">Notes</label><input id="inv-note-${c}" class="erp-input" placeholder="optional"></div>
+    <button onclick="document.getElementById('inv-line-${c}').remove()" style="height:38px;background:var(--error-bg);border:1px solid var(--error-bdr);color:var(--error-txt);border-radius:var(--radius-sm);cursor:pointer;font-size:16px">×</button>
+  `;
+  document.getElementById('inv-lines').appendChild(el);
+}
+
+async function saveActivity(){
+  const type = document.getElementById('act-type').value;
+  const desc = document.getElementById('act-desc').value.trim();
+  const unitId = document.getElementById('act-unit').value;
+  const date = document.getElementById('act-date').value;
+  if(!desc){ toast('Description required','error'); return; }
+
+  // Collect inventory lines
+  const invItems = [];
+  document.querySelectorAll('[id^="inv-item-"]').forEach(sel => {
+    const n = sel.id.replace('inv-item-','');
+    const qty = parseFloat(document.getElementById('inv-qty-'+n)?.value||0);
+    if(qty > 0) invItems.push({inventory_id: parseInt(sel.value), quantity: qty});
+  });
+
+  const seasonId = ERP.seasons.find(s=>s.status==='Active')?.id || null;
+  const workerId = document.getElementById('act-worker')?.value || null;
+  const hours = parseFloat(document.getElementById('act-hours')?.value || '0');
+
+  const btn = document.querySelector('#act-form-panel .erp-btn.primary');
+  btn.textContent = 'Saving…';
+  btn.disabled = true;
+
+  try {
+    const result = await erpFetch('/erp/activities','POST',{
+      activity_type: type,
+      unit_id: unitId || null,
+      season_id: seasonId,
+      description: desc,
+      activity_date: date,
+      inventory_items: invItems
+    });
+    // Save labour allocation if worker + hours specified
+    if(workerId && hours > 0 && result?.id){
+      const worker = (window._erpWorkers||[]).find(w=>w.id==workerId);
+      const hourlyRate = worker?.salary ? parseFloat(worker.salary)/176 : 0; // 176 working hours/month
+      await erpFetch('/erp/labor','POST',{
+        activity_id: result.id,
+        worker_id: parseInt(workerId),
+        unit_id: unitId || null,
+        hours: hours,
+        hourly_rate: Math.round(hourlyRate * 100) / 100,
+        allocation_date: date
+      });
+    }
+    const msg = document.getElementById('act-form-msg');
+    msg.style.display='block';
+    let confirmMsg = '✓ Activity logged';
+    if(invItems.length) confirmMsg += ` — ${invItems.length} stock item(s) deducted`;
+    if(workerId && hours > 0) confirmMsg += ` — labour recorded`;
+    msg.textContent = confirmMsg;
+    setTimeout(()=>{ msg.style.display='none'; document.getElementById('act-form-panel').style.display='none'; loadErpActivities(); },2000);
+  } catch(e) {
+    toast('Error saving activity — please try again','error');
+  } finally {
+    if(document.querySelector('#act-form-panel .erp-btn.primary')){
+      btn.textContent = 'Save Activity';
+      btn.disabled = false;
+    }
+  }
+}
+
+// ── COST ANALYTICS ────────────────────────────────────────────────────────────
+async function loadErpCosting(){
   currentPage = 'erp-costing';
-  erpContent(`<div class="page-header"><h1>Cost Analytics</h1></div><div class="loading">Loading cost data...</div>`);
-  try {
-    const unitCosts = await erpFetch('/erp/analytics/unit-costs');
-    erpContent(`
-      <div class="page-header"><h1>Cost Analytics</h1></div>
-      <div class="erp-panel"><div class="erp-panel-title">Unit Cost Analysis</div><div class="${unitCosts.length ? '' : 'empty-row'}">${unitCosts.length ? `<table class="erp-table"><thead><tr><th>Unit</th><th>Cost/ha</th><th>Total Cost</th></tr></thead><tbody>${unitCosts.map(u=>`<tr><td>${u.name||'—'}</td><td>${erpFmt.usd(u.cost_per_ha)}</td><td>${erpFmt.usd(u.total_activity_cost)}</td></tr>`).join('')}</tbody></table>` : '<span class="empty-title">No cost data available</span>'}</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load cost data</div><button class="page-error-btn" onclick="loadErpCosting()">Retry</button></div>`); }
+  erpContent(`<div class="page-header"><h1>Cost Analytics</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
+
+  const [unitCosts, laborCosts, invVal] = await Promise.all([
+    erpFetch('/erp/analytics/unit-costs'),
+    erpFetch('/erp/analytics/labor-costs'),
+    erpFetch('/erp/analytics/inventory-valuation')
+  ]);
+
+  erpContent(`
+<div class="page-header"><h1>Cost Analytics</h1><p class="page-sub">Per-unit, labor, and inventory cost analysis</p></div>
+
+<!-- UNIT COST ANALYSIS -->
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">domain</span> Per-Unit Cost &amp; Profitability</div>
+  <table class="erp-table">
+    <thead><tr><th>Unit</th><th>Type</th><th>Area (ha)</th><th class="amount">Op. Cost</th><th class="amount">Revenue</th><th class="amount">Profit</th><th class="amount">Cost/ha</th></tr></thead>
+    <tbody>
+      ${(unitCosts||[]).map(u=>`
+      <tr>
+        <td><div style="font-weight:500">${u.name}</div></td>
+        <td><span class="pill pill-info">${u.unit_type}</span></td>
+        <td>${u.area_ha||0}</td>
+        <td class="amount negative">${erpFmt.usd(u.total_activity_cost)}</td>
+        <td class="amount positive">${erpFmt.usd(u.total_production_revenue)}</td>
+        <td class="amount ${parseFloat(u.unit_profit)>=0?'positive':'negative'}">${erpFmt.usd(u.unit_profit)}</td>
+        <td class="amount">${erpFmt.usd(u.cost_per_ha)}</td>
+      </tr>`).join('') || '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">No unit cost data yet</td></tr>'}
+    </tbody>
+  </table>
+</div>
+
+<!-- LABOR COST ANALYSIS -->
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">groups</span> Labour Cost Analysis</div>
+  <table class="erp-table">
+    <thead><tr><th>Worker</th><th>Role</th><th>Department</th><th class="amount">Hours Logged</th><th class="amount">Allocated Cost</th><th class="amount">Monthly Salary</th></tr></thead>
+    <tbody>
+      ${(laborCosts||[]).map(w=>`
+      <tr>
+        <td><div style="font-weight:500">${w.name}</div></td>
+        <td style="color:var(--text-secondary)">${w.role}</td>
+        <td style="color:var(--text-muted)">${w.department||'—'}</td>
+        <td class="amount">${erpFmt.num(w.total_hours)}</td>
+        <td class="amount">${erpFmt.usd(w.total_allocated_cost)}</td>
+        <td class="amount">${erpFmt.usd(w.monthly_salary)}</td>
+      </tr>`).join('') || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">No labour data yet</td></tr>'}
+    </tbody>
+  </table>
+</div>
+
+<!-- INVENTORY VALUATION -->
+<div class="erp-panel">
+  <div class="erp-panel-title" style="justify-content:space-between">
+    <span><span class="material-symbols-outlined nav-icon">inventory_2</span> Inventory Valuation</span>
+    <span style="font-size:13px;color:var(--gold)">Total: ${erpFmt.usd(invVal.total_value)}</span>
+  </div>
+  <table class="erp-table">
+    <thead><tr><th>Item</th><th>Category</th><th>On Hand</th><th class="amount">Unit Cost</th><th class="amount">Total Value</th><th class="amount">Consumed</th><th>Status</th></tr></thead>
+    <tbody>
+      ${(invVal.items||[]).map(i=>`
+      <tr>
+        <td><div style="font-weight:500">${i.name}</div></td>
+        <td><span class="pill pill-info">${i.category}</span></td>
+        <td>${erpFmt.num(i.on_hand)} ${i.unit}</td>
+        <td class="amount">${erpFmt.usd(i.unit_cost)}</td>
+        <td class="amount">${erpFmt.usd(i.current_value)}</td>
+        <td class="amount">${erpFmt.usd(i.total_consumed_value)}</td>
+        <td>${i.below_par?'<span class="pill pill-error">Below Par</span>':'<span class="pill pill-success">OK</span>'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+</div>
+  `);
 }
 
-async function loadErpUnits() {
+// ── PRODUCTION ────────────────────────────────────────────────────────────────
+async function loadErpProduction(){
+  currentPage = 'erp-production';
+  erpContent(`<div class="page-header"><h1>Production Records</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
+
+  const [batches, yieldData, units, seasons] = await Promise.all([
+    erpFetch('/erp/production'),
+    erpFetch('/erp/analytics/yield-analysis'),
+    erpFetch('/erp/units'),
+    erpFetch('/erp/seasons')
+  ]);
+
+  const totalRev = batches.reduce((s,b)=>s+parseFloat(b.actual_revenue||0),0);
+  const totalQty = batches.reduce((s,b)=>s+parseFloat(b.quantity||0),0);
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div><h1>Production Records</h1><p class="page-sub">Harvest, sales, and yield tracking</p></div>
+  <button class="erp-btn primary" onclick="openProductionForm()">+ Log Production</button>
+</div>
+
+<div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="kpi-card"><div class="kpi-label">Production Batches</div><div class="kpi-value">${batches.length}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Total Revenue</div><div class="kpi-value kpi-positive">${erpFmt.usd(totalRev)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Total Quantity</div><div class="kpi-value">${erpFmt.num(totalQty)} units</div></div>
+</div>
+
+<!-- Yield Analysis -->
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">grass</span> Yield Analysis — Per Unit</div>
+  <table class="erp-table">
+    <thead><tr><th>Unit</th><th>Product</th><th class="amount">Yield</th><th>UoM</th><th class="amount">Yield/ha</th><th class="amount">Revenue</th><th>Batches</th></tr></thead>
+    <tbody>
+      ${(yieldData||[]).map(y=>`
+      <tr>
+        <td>${y.unit_name||'—'}</td>
+        <td><span class="pill pill-success">${y.product_type}</span></td>
+        <td class="amount">${erpFmt.num(y.total_yield)}</td>
+        <td style="color:var(--text-muted)">${y.unit_of_measure}</td>
+        <td class="amount">${erpFmt.num(y.yield_per_ha)}</td>
+        <td class="amount positive">${erpFmt.usd(y.total_revenue)}</td>
+        <td style="color:var(--text-muted)">${y.batch_count}</td>
+      </tr>`).join('') || '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">No production data yet</td></tr>'}
+    </tbody>
+  </table>
+</div>
+
+<!-- Production Form -->
+<div id="prod-form" style="display:none" class="erp-panel">
+  <div class="erp-panel-title">Log Production Batch</div>
+  <div class="erp-form-row triple">
+    <div><label class="erp-label">Operational Unit</label><select id="prod-unit" class="erp-select"><option value="">—</option>${(units||[]).map(u=>`<option value="${u.id}">${u.name}</option>`).join('')}</select></div>
+    <div><label class="erp-label">Product Type</label><input id="prod-type" class="erp-input" placeholder="e.g. Maize, Milk, Beef"></div>
+    <div><label class="erp-label">Batch Date</label><input id="prod-date" type="date" class="erp-input" value="${new Date().toISOString().split('T')[0]}"></div>
+  </div>
+  <div class="erp-form-row">
+    <div><label class="erp-label">Quantity</label><input id="prod-qty" type="number" class="erp-input" min="0" step="0.01"></div>
+    <div><label class="erp-label">Unit of Measure</label><input id="prod-uom" class="erp-input" value="kg"></div>
+    <div><label class="erp-label">Actual Revenue ($)</label><input id="prod-rev" type="number" class="erp-input" min="0" step="0.01" value="0"></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="erp-btn primary" onclick="saveProdBatch()">Save</button>
+    <button class="erp-btn" onclick="document.getElementById('prod-form').style.display='none'">Cancel</button>
+  </div>
+</div>
+
+<!-- Production Table -->
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">list_alt</span> All Batches</div>
+  <table class="erp-table">
+    <thead><tr><th>Unit</th><th>Product</th><th class="amount">Quantity</th><th>UoM</th><th>Date</th><th class="amount">Revenue</th></tr></thead>
+    <tbody>
+      ${batches.map(b=>`
+      <tr>
+        <td>${b.unit_name||'—'}</td>
+        <td><span class="pill pill-success">${b.product_type}</span></td>
+        <td class="amount">${erpFmt.num(b.quantity)}</td>
+        <td style="color:var(--text-muted)">${b.unit_of_measure}</td>
+        <td style="color:var(--text-muted);font-size:12px">${erpFmt.date(b.batch_date)}</td>
+        <td class="amount positive">${erpFmt.usd(b.actual_revenue)}</td>
+      </tr>`).join('') || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--text-muted)">No production batches yet</td></tr>'}
+    </tbody>
+  </table>
+</div>
+  `);
+}
+function openProductionForm(){ const f=document.getElementById('prod-form'); if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth'});} }
+async function saveProdBatch(){
+  const d = {
+    unit_id: document.getElementById('prod-unit').value || null,
+    product_type: document.getElementById('prod-type').value.trim(),
+    quantity: parseFloat(document.getElementById('prod-qty').value||0),
+    unit_of_measure: document.getElementById('prod-uom').value||'kg',
+    actual_revenue: parseFloat(document.getElementById('prod-rev').value||0),
+    batch_date: document.getElementById('prod-date').value,
+    season_id: ERP.seasons.find(s=>s.status==='Active')?.id || null
+  };
+  if(!d.product_type||!d.quantity){ toast('Product type and quantity required','error'); return; }
+  await erpFetch('/erp/production','POST',d);
+  toast('Production batch logged');
+  loadErpProduction();
+}
+
+// ── DEPRECIATION ──────────────────────────────────────────────────────────────
+async function loadErpDepreciation(){
+  currentPage = 'erp-depreciation';
+  erpContent(`<div class="page-header"><h1>Asset Depreciation</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
+
+  const [assets, depr] = await Promise.all([
+    erpFetch('/assets'),
+    erpFetch('/erp/depreciation')
+  ]);
+
+  const totalAccum = depr.reduce((s,d)=>s+parseFloat(d.accumulated_depreciation||0),0);
+  const totalBook = depr.reduce((s,d)=>s+parseFloat(d.book_value||0),0);
+  const totalAnnual = depr.reduce((s,d)=>s+parseFloat(d.annual_depreciation||0),0);
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div><h1>Asset Depreciation</h1><p class="page-sub">Straight-line &amp; declining balance depreciation tracking</p></div>
+  <button class="erp-btn primary" onclick="openDepreciationForm()">+ Add Depreciation Schedule</button>
+</div>
+
+<div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
+  <div class="kpi-card"><div class="kpi-label">Annual Depreciation</div><div class="kpi-value kpi-negative">${erpFmt.usd(totalAnnual)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Accumulated</div><div class="kpi-value">${erpFmt.usd(totalAccum)}</div></div>
+  <div class="kpi-card"><div class="kpi-label">Net Book Value</div><div class="kpi-value">${erpFmt.usd(totalBook)}</div></div>
+</div>
+
+<!-- Depreciation Form -->
+<div id="depr-form" style="display:none" class="erp-panel">
+  <div class="erp-panel-title">Add Depreciation Schedule</div>
+  <div class="erp-form-row">
+    <div><label class="erp-label">Asset</label><select id="depr-asset" class="erp-select"><option value="">— Select Asset —</option>${(assets||[]).map(a=>`<option value="${a.id}">${a.asset_id} — ${a.description}</option>`).join('')}</select></div>
+    <div><label class="erp-label">Method</label><select id="depr-method" class="erp-select"><option value="straight_line">Straight Line</option><option value="declining_balance">Declining Balance</option></select></div>
+  </div>
+  <div class="erp-form-row triple">
+    <div><label class="erp-label">Useful Life (years)</label><input id="depr-life" type="number" class="erp-input" value="5" min="1"></div>
+    <div><label class="erp-label">Residual Value ($)</label><input id="depr-residual" type="number" class="erp-input" value="0" min="0"></div>
+    <div><label class="erp-label">Start Date</label><input id="depr-start" type="date" class="erp-input" value="${new Date().toISOString().split('T')[0]}"></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="erp-btn primary" onclick="saveDepreciation()">Save</button>
+    <button class="erp-btn" onclick="document.getElementById('depr-form').style.display='none'">Cancel</button>
+  </div>
+</div>
+
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">waterfall_chart</span> Depreciation Schedules</div>
+  <table class="erp-table">
+    <thead><tr><th>Asset</th><th>Method</th><th class="amount">Annual Dep.</th><th class="amount">Accumulated</th><th class="amount">Book Value</th><th class="amount">Residual</th><th></th></tr></thead>
+    <tbody>
+      ${depr.map(d=>`
+      <tr>
+        <td><div style="font-weight:500">${d.asset_code}</div><div style="font-size:11px;color:var(--text-muted)">${d.asset_desc}</div></td>
+        <td style="color:var(--text-secondary)">${(d.method||'').replace(/_/g,' ')}</td>
+        <td class="amount negative">${erpFmt.usd(d.annual_depreciation)}</td>
+        <td class="amount">${erpFmt.usd(d.accumulated_depreciation)}</td>
+        <td class="amount">${erpFmt.usd(d.book_value)}</td>
+        <td class="amount">${erpFmt.usd(d.residual_value)}</td>
+        <td><button class="erp-btn" onclick="runDepreciation(${d.id})" style="padding:4px 8px;font-size:11px">Run Period</button></td>
+      </tr>`).join('') || '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">No depreciation schedules yet</td></tr>'}
+    </tbody>
+  </table>
+</div>
+  `);
+}
+function openDepreciationForm(){ const f=document.getElementById('depr-form'); if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth'});} }
+async function saveDepreciation(){
+  const d = {
+    asset_id: parseInt(document.getElementById('depr-asset').value),
+    method: document.getElementById('depr-method').value,
+    useful_life_years: parseFloat(document.getElementById('depr-life').value||5),
+    residual_value: parseFloat(document.getElementById('depr-residual').value||0),
+    depreciation_start: document.getElementById('depr-start').value
+  };
+  if(!d.asset_id){ toast('Select an asset','error'); return; }
+  await erpFetch('/erp/depreciation','POST',d);
+  toast('Depreciation schedule created');
+  loadErpDepreciation();
+}
+async function runDepreciation(id){
+  erpConfirm(
+    'Run Depreciation Period',
+    'This will reduce the asset value by one year of depreciation and record it as an expense in your finance records. This cannot be undone.',
+    async () => {
+      await erpFetch(`/erp/depreciation/${id}/run`,'POST');
+      toast('Depreciation period recorded');
+      loadErpDepreciation();
+    }
+  );
+}
+
+// ── OPERATIONAL UNITS ─────────────────────────────────────────────────────────
+async function loadErpUnits(){
   currentPage = 'erp-units';
-  erpContent(`<div class="page-header"><h1>Operational Units</h1></div><div class="loading">Loading units...</div>`);
-  try {
-    const units = await erpFetch('/erp/units');
-    erpContent(`
-      <div class="page-header"><h1>Operational Units</h1><button class="erp-btn primary" onclick="toast('Add unit')" style="float:right">+ Add Unit</button><div style="clear:both"></div></div>
-      <div class="erp-panel"><div class="erp-panel-title">All Units</div><div class="${units.length ? '' : 'empty-row'}">${units.length ? `<table class="erp-table"><thead><tr><th>Name</th><th>Type</th><th>Area (ha)</th></tr></thead><tbody>${units.map(u=>`<tr><td>${u.name}</td><td>${u.unit_type}</td><td>${u.area_ha||0}</td></tr>`).join('')}</tbody></table>` : '<span class="empty-title">No operational units defined</span><button class="empty-cta" onclick="toast(\'Add unit\')">+ Add First Unit</button>'}</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load units</div><button class="page-error-btn" onclick="loadErpUnits()">Retry</button></div>`); }
+  erpContent(`<div class="page-header"><h1>Operational Units</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
+
+  const [units, farms] = await Promise.all([
+    erpFetch('/erp/units'),
+    erpFetch('/erp/farms')
+  ]);
+
+  const byType = units.reduce((acc,u)=>{ acc[u.unit_type]=(acc[u.unit_type]||0)+1; return acc; },{});
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div><h1>Operational Units</h1><p class="page-sub">Fields, herds, warehouses, silos, and all operational areas</p></div>
+  <button class="erp-btn primary" onclick="openUnitForm()">+ Add Unit</button>
+</div>
+
+<div class="erp-grid">
+  ${Object.entries(byType).map(([t,c])=>`<div class="kpi-card"><div class="kpi-label">${t.charAt(0).toUpperCase()+t.slice(1)}s</div><div class="kpi-value">${c}</div></div>`).join('')}
+</div>
+
+<!-- Add Unit Form -->
+<div id="unit-form" style="display:none" class="erp-panel">
+  <div class="erp-panel-title">Add Operational Unit</div>
+  <div class="erp-form-row triple">
+    <div><label class="erp-label">Farm</label><select id="uf-farm" class="erp-select"><option value="">— Select Farm —</option>${farms.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}</select></div>
+    <div><label class="erp-label">Unit Name</label><input id="uf-name" class="erp-input" placeholder="e.g. Block N3 — Groundnuts"></div>
+    <div><label class="erp-label">Type</label><select id="uf-type" class="erp-select"><option value="field">Field</option><option value="herd">Herd</option><option value="greenhouse">Greenhouse</option><option value="warehouse">Warehouse</option><option value="pen">Pen</option><option value="silo">Silo</option><option value="orchard">Orchard</option><option value="paddock">Paddock</option><option value="other">Other</option></select></div>
+  </div>
+  <div class="erp-form-row">
+    <div><label class="erp-label">Area (ha)</label><input id="uf-area" type="number" class="erp-input" min="0" step="0.1" value="0"></div>
+    <div><label class="erp-label">Notes</label><input id="uf-notes" class="erp-input" placeholder="optional"></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="erp-btn primary" onclick="saveUnit()">Save Unit</button>
+    <button class="erp-btn" onclick="document.getElementById('unit-form').style.display='none'">Cancel</button>
+  </div>
+</div>
+
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">domain</span> All Units (${units.length})</div>
+  <table class="erp-table">
+    <thead><tr><th>Name</th><th>Type</th><th>Farm</th><th>Area (ha)</th><th>Notes</th></tr></thead>
+    <tbody>
+      ${units.map(u=>`
+      <tr>
+        <td><div style="font-weight:500">${u.name}</div></td>
+        <td><span class="pill pill-info">${u.unit_type}</span></td>
+        <td style="color:var(--text-secondary)">${u.farm_name||'—'}</td>
+        <td>${u.area_ha||0}</td>
+        <td style="color:var(--text-muted);font-size:12px">${u.notes||'—'}</td>
+      </tr>`).join('') || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">No units found</td></tr>'}
+    </tbody>
+  </table>
+</div>
+  `);
+}
+function openUnitForm(){ const f=document.getElementById('unit-form'); if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth'});} }
+async function saveUnit(){
+  const d = {
+    farm_id: parseInt(document.getElementById('uf-farm').value),
+    name: document.getElementById('uf-name').value.trim(),
+    unit_type: document.getElementById('uf-type').value,
+    area_ha: parseFloat(document.getElementById('uf-area').value||0),
+    notes: document.getElementById('uf-notes').value
+  };
+  if(!d.farm_id||!d.name){ toast('Farm and name required','error'); return; }
+  await erpFetch('/erp/units','POST',d);
+  toast('Unit created');
+  loadErpUnits();
 }
 
-async function loadErpSeasons() {
+// ── SEASONS ───────────────────────────────────────────────────────────────────
+async function loadErpSeasons(){
   currentPage = 'erp-seasons';
-  erpContent(`<div class="page-header"><h1>Seasons</h1></div><div class="loading">Loading seasons...</div>`);
-  try {
-    const seasons = await erpFetch('/erp/seasons');
-    erpContent(`
-      <div class="page-header"><h1>Season Management</h1><button class="erp-btn primary" onclick="toast('Create season')" style="float:right">+ New Season</button><div style="clear:both"></div></div>
-      <div class="erp-panel"><div class="erp-panel-title">All Seasons</div><div class="${seasons.length ? '' : 'empty-row'}">${seasons.length ? seasons.map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid var(--bdr2)"><div><strong>${s.name}</strong><div style="font-size:12px;color:var(--text-muted)">${erpFmt.date(s.start_date)} - ${erpFmt.date(s.end_date)}</div></div><span class="pill pill-${s.status==='Active'?'success':s.status==='Planning'?'info':'neutral'}">${s.status}</span></div>`).join('') : '<span class="empty-title">No seasons defined</span><button class="empty-cta" onclick="toast(\'Create season\')">+ Create First Season</button>'}</div></div>
-    `);
-  } catch(e) { erpContent(`<div class="page-error"><div class="page-error-title">Could not load seasons</div><button class="page-error-btn" onclick="loadErpSeasons()">Retry</button></div>`); }
+  erpContent(`<div class="page-header"><h1>Seasons</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
+
+  const [seasons, farms] = await Promise.all([
+    erpFetch('/erp/seasons'),
+    erpFetch('/erp/farms')
+  ]);
+
+  erpContent(`
+<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div><h1>Season Management</h1><p class="page-sub">Plan, activate, and close production seasons</p></div>
+  <button class="erp-btn primary" onclick="openSeasonForm()">+ New Season</button>
+</div>
+
+<!-- Add Season Form -->
+<div id="season-form" style="display:none" class="erp-panel">
+  <div class="erp-panel-title">Create Season</div>
+  <div class="erp-form-row triple">
+    <div><label class="erp-label">Farm</label><select id="sf-farm" class="erp-select"><option value="">— Farm —</option>${farms.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}</select></div>
+    <div><label class="erp-label">Season Name</label><input id="sf-name" class="erp-input" placeholder="e.g. 2026/2027 Summer"></div>
+    <div><label class="erp-label">Status</label><select id="sf-status" class="erp-select"><option value="Planning">Planning</option><option value="Active">Active</option><option value="Closed">Closed</option></select></div>
+  </div>
+  <div class="erp-form-row">
+    <div><label class="erp-label">Start Date</label><input id="sf-start" type="date" class="erp-input"></div>
+    <div><label class="erp-label">End Date</label><input id="sf-end" type="date" class="erp-input"></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button class="erp-btn primary" onclick="saveSeason()">Create Season</button>
+    <button class="erp-btn" onclick="document.getElementById('season-form').style.display='none'">Cancel</button>
+  </div>
+</div>
+
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">calendar_month</span> All Seasons</div>
+  ${seasons.length ? seasons.map(s=>`
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--s3);border:1px solid var(--bdr);border-radius:var(--radius);margin-bottom:10px">
+    <div>
+      <div style="font-weight:600;font-size:15px;margin-bottom:4px">${s.name}</div>
+      <div style="font-size:12px;color:var(--text-muted)">${s.farm_name} &bull; ${erpFmt.date(s.start_date)}${s.end_date?' — '+erpFmt.date(s.end_date):''}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="season-badge ${s.status}">${s.status}</span>
+      <button class="erp-btn" onclick="loadErpBudgets()" style="padding:5px 10px;font-size:11px">View Budgets</button>
+    </div>
+  </div>`).join('') : `<div style="color:var(--text-muted);padding:20px;text-align:center">No seasons found</div>`}
+</div>
+  `);
+}
+function openSeasonForm(){ const f=document.getElementById('season-form'); if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth'});} }
+async function saveSeason(){
+  const d = {
+    farm_id: parseInt(document.getElementById('sf-farm').value),
+    name: document.getElementById('sf-name').value.trim(),
+    status: document.getElementById('sf-status').value,
+    start_date: document.getElementById('sf-start').value,
+    end_date: document.getElementById('sf-end').value || null
+  };
+  if(!d.farm_id||!d.name||!d.start_date){ toast('Farm, name, and start date required','error'); return; }
+  await erpFetch('/erp/seasons','POST',d);
+  toast('Season created');
+  loadErpSeasons();
 }
 
-// Override loadPage to handle ERP pages
-const originalLoadPage = loadPage;
-loadPage = function(pg) {
-  checkErpModeForPage(pg);
-  if(pg === 'erp-dashboard') loadErpDashboard();
-  else if(pg === 'erp-profitability') loadErpProfitability();
-  else if(pg === 'erp-budgets') loadErpBudgets();
-  else if(pg === 'erp-activities') loadErpActivities();
-  else if(pg === 'erp-production') loadErpProduction();
-  else if(pg === 'erp-costing') loadErpCosting();
-  else if(pg === 'erp-units') loadErpUnits();
-  else if(pg === 'erp-seasons') loadErpSeasons();
-  else originalLoadPage(pg);
-};
+// ── RECEIVE INVENTORY (ERP-enhanced) ─────────────────────────────────────────
+async function erpReceiveInventory(inventoryId, itemName){
+  erpModal('Receive Stock — ' + (itemName || 'Item'),
+    'Stock will be added to inventory and the cost recorded as an expense automatically',
+    [
+      {id:'ri-qty',  label:'Quantity Received', type:'number', placeholder:'0'},
+      {id:'ri-cost', label:'Unit Cost (USD $)',  type:'number', placeholder:'0.00'},
+      {id:'ri-supplier', label:'Supplier (optional)', type:'text', placeholder:'e.g. Agrochem Zimbabwe'}
+    ],
+    async (vals) => {
+      const qty = parseFloat(vals['ri-qty']);
+      const cost = parseFloat(vals['ri-cost']);
+      if(!qty || qty <= 0){ erpModalError('Please enter a quantity'); return false; }
+      if(!cost || cost <= 0){ erpModalError('Please enter a unit cost'); return false; }
+      await erpFetch('/erp/inventory-lots','POST',{
+        inventory_id: inventoryId,
+        quantity_received: qty,
+        unit_cost: cost,
+        supplier: vals['ri-supplier'] || null,
+        received_date: new Date().toISOString().split('T')[0]
+      });
+      toast('Stock received — inventory updated and expense recorded');
+      if(typeof loadInventory === 'function') loadInventory();
+      return true;
+    }
+  );
+}
+
+// ── RECEIVE STOCK PICKER (called from standard Inventory page) ───────────────
+async function openReceiveStockPicker(){
+  // Fetch current inventory to populate picker
+  const items = await erpFetch('/inventory').catch(()=>[]);
+  if(!items || !items.length){
+    toast('Add inventory items first before receiving stock','error');
+    return;
+  }
+  const existing = document.getElementById('erp-shared-modal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'erp-shared-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:520px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
+      <div style="font-size:19px;font-weight:600;color:var(--text-primary);margin-bottom:5px">Receive Stock</div>
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px">Stock is added to inventory and the purchase cost is recorded as an expense automatically</div>
+      <div style="margin-bottom:16px">
+        <label class="erp-label" style="font-size:13px">Which item are you receiving?</label>
+        <select id="rs-item" class="erp-input" style="font-size:14px;cursor:pointer">
+          <option value="">— Select an item —</option>
+          ${items.map(i=>`<option value="${i.id}" data-name="${i.name}">${i.name} (${i.category}) — ${i.on_hand} ${i.unit} currently in stock</option>`).join('')}
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <label class="erp-label" style="font-size:13px">Quantity Received</label>
+          <input id="rs-qty" type="number" class="erp-input" placeholder="0" min="0" step="0.01" style="font-size:14px">
+        </div>
+        <div>
+          <label class="erp-label" style="font-size:13px">Unit Cost (USD $)</label>
+          <input id="rs-cost" type="number" class="erp-input" placeholder="0.00" min="0" step="0.01" style="font-size:14px">
+        </div>
+      </div>
+      <div style="margin-bottom:20px">
+        <label class="erp-label" style="font-size:13px">Supplier (optional)</label>
+        <input id="rs-supplier" class="erp-input" placeholder="e.g. Agrochem Zimbabwe" style="font-size:14px">
+      </div>
+      <div id="erp-modal-err" style="display:none;padding:10px 14px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:8px;color:var(--error-txt);font-size:13px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px">
+        <button id="rs-save-btn" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
+          <span class="material-symbols-outlined" style="font-size:16px">inventory</span> Receive Stock
+        </button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
+  setTimeout(()=>document.getElementById('rs-item')?.focus(), 100);
+
+  document.getElementById('rs-save-btn').addEventListener('click', async () => {
+    const itemId = document.getElementById('rs-item').value;
+    const qty = parseFloat(document.getElementById('rs-qty').value || '0');
+    const cost = parseFloat(document.getElementById('rs-cost').value || '0');
+    const supplier = document.getElementById('rs-supplier').value;
+    const errEl = document.getElementById('erp-modal-err');
+
+    if(!itemId){ errEl.style.display='block'; errEl.textContent='Please select an item'; return; }
+    if(!qty || qty<=0){ errEl.style.display='block'; errEl.textContent='Please enter a quantity'; return; }
+    if(!cost || cost<=0){ errEl.style.display='block'; errEl.textContent='Please enter the unit cost'; return; }
+
+    const btn = document.getElementById('rs-save-btn');
+    btn.textContent='Saving…'; btn.disabled=true;
+
+    try {
+      await erpFetch('/erp/inventory-lots','POST',{
+        inventory_id: parseInt(itemId),
+        quantity_received: qty,
+        unit_cost: cost,
+        supplier: supplier || null,
+        received_date: new Date().toISOString().split('T')[0]
+      });
+      modal.remove();
+      toast(`Stock received — inventory updated, $${(qty*cost).toLocaleString()} recorded as expense`);
+      loadInventory();
+    } catch(e) {
+      errEl.style.display='block'; errEl.textContent='Error saving — please try again';
+      btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">inventory</span> Receive Stock';
+      btn.disabled=false;
+    }
+  });
+}
+
+// ── INIT: Load ERP data on startup ───────────────────────────────────────────
+async function initErpState(){
+  try {
+    const [farms, seasons] = await Promise.all([
+      erpFetch('/erp/farms'),
+      erpFetch('/erp/seasons')
+    ]);
+    ERP.farms = farms || [];
+    ERP.seasons = seasons || [];
+    ERP.activeSeason = seasons.find(s=>s.status==='Active') || seasons[0] || null;
+  } catch(e) {
+    console.log('ERP init skipped (not authenticated)');
+  }
+}
+
+// Initialize ERP when user logs in
+const _origLoadDashboard = typeof loadDashboard === 'function' ? loadDashboard : null;
+const _origDoLogin = typeof doLogin === 'function' ? doLogin : null;
+
+// Hook into authentication to init ERP
+document.addEventListener('DOMContentLoaded', ()=>{
+  // If already authenticated, init ERP state after main app loads
+  setTimeout(()=>{
+    if(currentUser) initErpState();
+  }, 2000);
+});
+
+console.log('[Thornfield ERP Module] Loaded — 9 ERP intelligence pages available');
 </script>
-</body>
-</html>
