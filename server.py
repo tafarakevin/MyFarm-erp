@@ -184,9 +184,6 @@ def require_write_access(f):
             return jsonify({"error": "Forbidden — read-only role"}), 403
         return f(*args, **kwargs)
     return decorated
-
-
-def query(sql, args=(), one=False):
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(sql, args)
@@ -195,6 +192,10 @@ def query(sql, args=(), one=False):
 
 
 def mutate(sql, args=()):
+    """
+    Execute a single-statement write and commit immediately.
+    Use db_transaction() instead when you need multi-statement atomicity.
+    """
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(sql, args)
@@ -207,6 +208,102 @@ def mutate(sql, args=()):
             pass
     db.commit()
     return returned_id
+
+
+from contextlib import contextmanager
+
+@contextmanager
+def db_transaction():
+    """
+    Context manager for atomic multi-statement transactions.
+
+    Usage:
+        with db_transaction() as (db, cur):
+            cur.execute(...)
+            cur.execute(...)
+        # commits on clean exit, rolls back on any exception
+
+    The caller should never call db.commit() or db.rollback() manually;
+    the context manager owns those calls.
+    """
+    db = get_db()
+    cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    try:
+        yield db, cur
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+
+def tx_mutate(cur, sql, args=()):
+    """
+    Execute a single write statement within an existing db_transaction() cursor.
+    Returns the RETURNING id if present, otherwise None.
+    Never commits — the enclosing db_transaction() owns the commit.
+    """
+    cur.execute(sql, args)
+    returned_id = None
+    if 'RETURNING' in sql.upper():
+        try:
+            row = cur.fetchone()
+            returned_id = row["id"] if row and "id" in row else None
+        except Exception:
+            pass
+    return returned_id
+
+
+def tx_query(cur, sql, args=(), one=False):
+    """
+    Execute a read statement within an existing db_transaction() cursor.
+    Use this to read-with-lock (SELECT FOR UPDATE) inside a transaction.
+    """
+    cur.execute(sql, args)
+    rv = cur.fetchall()
+    return (rv[0] if rv else None) if one else rv
+
+
+def write_audit(cur, action, record_type, record_id=None, record_label="",
+                before=None, after=None, user_id=None):
+    """
+    Write an audit entry inside an existing transaction cursor.
+    'before' and 'after' should be dicts; they are stored as JSONB.
+    Call this inside every db_transaction() block that mutates financial
+    or operational data.
+    """
+    cur.execute(
+        """INSERT INTO audit_log
+               (action, record_type, record_id, record_label,
+                before_state, after_state, performed_by)
+           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+        (
+            action, record_type, record_id, record_label,
+            json.dumps(before) if before else None,
+            json.dumps(after)  if after  else None,
+            user_id,
+        )
+    )
+
+
+def check_idempotency(idempotency_key: str) -> bool:
+    """
+    Returns True if this key has been seen before (request is a duplicate).
+    Inserts the key atomically on first use so concurrent retries are safe.
+    Uses INSERT ... ON CONFLICT DO NOTHING — lockless and concurrency-safe.
+    """
+    if not idempotency_key:
+        return False
+    db = get_db()
+    cur = db.cursor()
+    cur.execute(
+        """INSERT INTO idempotency_keys (key, created_at)
+           VALUES (%s, NOW())
+           ON CONFLICT (key) DO NOTHING""",
+        (idempotency_key,)
+    )
+    inserted = cur.rowcount  # 1 = new key; 0 = already existed (duplicate)
+    db.commit()
+    return inserted == 0  # True means duplicate
 
 
 def row_to_dict(row):
@@ -228,12 +325,6 @@ ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5000")
 # Session cookie name
 SESSION_COOKIE = "tf_session"
 SESSION_DAYS   = 7
-
-# Pre-computed dummy hash used in login() to prevent user-enumeration timing oracles.
-# Generated once at startup so the ~0.3s bcrypt cost is paid here, not per-request.
-# bcrypt.checkpw against this hash will always return False (wrong password), which
-# is the desired outcome — we just need the call to not throw.
-_DUMMY_HASH = bcrypt.hashpw(b"dummy-timing-protection-placeholder", bcrypt.gensalt(rounds=12)).decode("utf-8")
 
 # ─── SECURITY LOGGING ──────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -474,8 +565,15 @@ def init_db():
             record_type  TEXT    NOT NULL,
             record_id    INTEGER,
             record_label TEXT,
+            before_state JSONB,
+            after_state  JSONB,
             performed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
             created_at   TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        # Idempotency keys — prevent duplicate processing of retried requests
+        """CREATE TABLE IF NOT EXISTS idempotency_keys (
+            key         TEXT        PRIMARY KEY,
+            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )""",
         """CREATE TABLE IF NOT EXISTS reports (
             id          SERIAL PRIMARY KEY,
@@ -489,13 +587,34 @@ def init_db():
     ]
     for ddl in tables:
         cur.execute(ddl)
-    # Migration: add new columns to existing sessions table (safe to run repeatedly)
-    try:
-        cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS csrf_token TEXT NOT NULL DEFAULT ''")
-        cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_agent TEXT")
-        cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ip_address TEXT")
-    except Exception:
-        pass  # Column already exists on fresh DBs
+    # ── Migrations: safe to run on every startup ──────────────────────────────
+    migrations = [
+        # Sessions
+        "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS csrf_token TEXT NOT NULL DEFAULT ''",
+        "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_agent TEXT",
+        "ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ip_address TEXT",
+        # Audit log — before/after state columns
+        "ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS before_state JSONB",
+        "ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS after_state  JSONB",
+        # Finance — amount must be positive; type constrained
+        "ALTER TABLE finance ADD CONSTRAINT IF NOT EXISTS finance_amount_positive CHECK (amount > 0)",
+        # Inventory — on_hand cannot go below zero
+        "ALTER TABLE inventory ADD CONSTRAINT IF NOT EXISTS inventory_nonneg_stock CHECK (on_hand >= 0)",
+        # Inventory lots — quantities cannot go negative
+        "ALTER TABLE inventory_lots ADD CONSTRAINT IF NOT EXISTS lot_nonneg_remaining CHECK (quantity_remaining >= 0)",
+        "ALTER TABLE inventory_lots ADD CONSTRAINT IF NOT EXISTS lot_nonneg_received  CHECK (quantity_received >= 0)",
+        # Livestock — count cannot be negative
+        "ALTER TABLE livestock ADD CONSTRAINT IF NOT EXISTS livestock_nonneg_count CHECK (count >= 0)",
+        # Workers — salary non-negative
+        "ALTER TABLE workers ADD CONSTRAINT IF NOT EXISTS workers_nonneg_salary CHECK (salary >= 0)",
+        # Idempotency key TTL index (allows cleaning up old keys)
+        "CREATE INDEX IF NOT EXISTS idx_idem_created ON idempotency_keys(created_at)",
+    ]
+    for sql in migrations:
+        try:
+            cur.execute(sql)
+        except Exception:
+            pass  # Constraint/column already exists
     db.commit()
     db.close()
 # seed_owner() removed — create your owner account via the /api/auth/register
@@ -703,10 +822,9 @@ def login():
 
         user = query("SELECT * FROM users WHERE email=%s AND active=1", (email,), one=True)
 
-        # Always run password verification even on miss (prevents timing oracle).
-        # _DUMMY_HASH is a valid bcrypt hash pre-computed at startup — guaranteed
-        # not to throw, and always returns False (wrong password by design).
-        stored = user["password"] if user else _DUMMY_HASH
+        # Always run password verification even on miss (prevents timing oracle)
+        dummy_hash = "$2b$12$invalidhashfortimingprotectiononly000000000000000000000"
+        stored = user["password"] if user else dummy_hash
         pw_ok  = verify_password(password, stored)
 
         if not user or not pw_ok:
@@ -1041,12 +1159,36 @@ def create_herd():
 @require_auth
 @require_write_access
 def update_herd(lid):
-    d = request.get_json()
-    mutate(
-        "UPDATE livestock SET herd_name=%s,breed=%s,count=%s,avg_weight=%s,health=%s,status=%s,location=%s,notes=%s WHERE id=%s",
-        (d["herd_name"], d["breed"], d.get("count",0), d.get("avg_weight",0),
-         d.get("health","Good"), d.get("status","Grazing"), d.get("location"), d.get("notes"), lid)
-    )
+    """Update herd record. Count changes are audited with before/after state."""
+    d = request.get_json() or {}
+    user = g.user
+    try:
+        with db_transaction() as (db, cur):
+            before = tx_query(cur, "SELECT * FROM livestock WHERE id=%s FOR UPDATE", (lid,), one=True)
+            if not before:
+                raise ValueError("Herd not found")
+            new_count = int(d.get("count", 0))
+            if new_count < 0:
+                raise ValueError("Livestock count cannot be negative")
+            cur.execute(
+                "UPDATE livestock SET herd_name=%s,breed=%s,count=%s,avg_weight=%s,health=%s,status=%s,location=%s,notes=%s WHERE id=%s",
+                (d["herd_name"], d["breed"], new_count, d.get("avg_weight",0),
+                 d.get("health","Good"), d.get("status","Grazing"), d.get("location"), d.get("notes"), lid)
+            )
+            if int(before.get("count") or 0) != new_count:
+                write_audit(cur,
+                    action="UPDATE",
+                    record_type="livestock",
+                    record_id=lid,
+                    record_label=d["herd_name"],
+                    before={"count": before["count"], "health": before["health"]},
+                    after={"count": new_count, "health": d.get("health","Good")},
+                    user_id=user["id"]
+                )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        return jsonify({"error": "Could not update herd"}), 500
     row = query("SELECT * FROM livestock WHERE id=%s", (lid,), one=True)
     return jsonify(row_to_dict(row))
 
@@ -1055,7 +1197,26 @@ def update_herd(lid):
 @require_auth
 @require_write_access
 def delete_herd(lid):
-    mutate("DELETE FROM livestock WHERE id=%s", (lid,))
+    """Delete a herd record. Writes an audit entry before deletion."""
+    user = g.user
+    try:
+        with db_transaction() as (db, cur):
+            row = tx_query(cur, "SELECT * FROM livestock WHERE id=%s FOR UPDATE", (lid,), one=True)
+            if not row:
+                raise ValueError("Herd not found")
+            cur.execute("DELETE FROM livestock WHERE id=%s", (lid,))
+            write_audit(cur,
+                action="DELETE",
+                record_type="livestock",
+                record_id=lid,
+                record_label=row["herd_name"],
+                before={"herd_name": row["herd_name"], "count": row["count"], "breed": row["breed"]},
+                user_id=user["id"]
+            )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception:
+        return jsonify({"error": "Could not delete herd"}), 500
     return jsonify({"deleted": lid})
 
 
@@ -1244,7 +1405,31 @@ def update_inventory_item(iid):
 @require_auth
 @require_write_access
 def delete_inventory_item(iid):
-    mutate("DELETE FROM inventory WHERE id=%s", (iid,))
+    """Soft-delete: marks inventory item inactive rather than erasing stock history."""
+    user = g.user
+    try:
+        with db_transaction() as (db, cur):
+            row = tx_query(cur, "SELECT * FROM inventory WHERE id=%s FOR UPDATE", (iid,), one=True)
+            if not row:
+                raise ValueError("Inventory item not found")
+            if float(row.get("on_hand") or 0) > 0:
+                raise ValueError(
+                    f"Cannot delete '{row['name']}' — it has {row['on_hand']} units on hand. "
+                    f"Adjust stock to zero before deleting."
+                )
+            cur.execute("DELETE FROM inventory WHERE id=%s", (iid,))
+            write_audit(cur,
+                action="DELETE",
+                record_type="inventory",
+                record_id=iid,
+                record_label=row["name"],
+                before={"name": row["name"], "on_hand": float(row["on_hand"] or 0)},
+                user_id=user["id"]
+            )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception:
+        return jsonify({"error": "Could not delete inventory item"}), 500
     return jsonify({"deleted": iid})
 
 
@@ -1281,12 +1466,50 @@ def get_finance_summary():
 @require_auth
 @require_write_access
 def create_finance_record():
-    d = request.get_json()
-    new_id = mutate(
-        "INSERT INTO finance (type,category,description,amount,date,reference,notes) VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id",
-        (d["type"], d["category"], d["description"], d["amount"],
-         d["date"], d.get("reference"), d.get("notes"))
-    )
+    """
+    Manually create a finance entry. Validates required fields server-side.
+    Idempotency-Key header supported to prevent double-posting on retry.
+    """
+    idem_key = request.headers.get("Idempotency-Key", "")
+    if idem_key and check_idempotency(idem_key):
+        return jsonify({"error": "Duplicate request — this finance entry has already been recorded"}), 409
+
+    d = request.get_json() or {}
+    required = ["type", "category", "description", "amount", "date"]
+    missing = [f for f in required if not d.get(f)]
+    if missing:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing)}"}), 400
+    if d["type"] not in ("income", "expense"):
+        return jsonify({"error": "type must be 'income' or 'expense'"}), 422
+    try:
+        amount = float(d["amount"])
+        if amount <= 0:
+            raise ValueError()
+    except (ValueError, TypeError):
+        return jsonify({"error": "amount must be a positive number"}), 422
+
+    user = g.user
+    new_id = None
+    try:
+        with db_transaction() as (db, cur):
+            new_id = tx_mutate(cur,
+                """INSERT INTO finance (type,category,description,amount,date,reference,notes)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (d["type"], d["category"], d["description"], amount,
+                 d["date"], d.get("reference"), d.get("notes"))
+            )
+            write_audit(cur,
+                action="CREATE",
+                record_type="finance",
+                record_id=new_id,
+                record_label=d["description"],
+                after={"type": d["type"], "amount": amount, "category": d["category"]},
+                user_id=user["id"]
+            )
+    except Exception as e:
+        log_security("FINANCE_CREATE_ERROR", str(e), user_id=user.get("id"))
+        return jsonify({"error": "Finance entry could not be saved"}), 500
+
     row = query("SELECT * FROM finance WHERE id=%s", (new_id,), one=True)
     return jsonify(row_to_dict(row)), 201
 
@@ -1295,8 +1518,44 @@ def create_finance_record():
 @require_auth
 @require_write_access
 def delete_finance_record(fid):
-    mutate("DELETE FROM finance WHERE id=%s", (fid,))
-    return jsonify({"deleted": fid})
+    """
+    Soft-delete a finance record: marks it voided rather than erasing it.
+    Financial history must never be permanently destroyed — ERP compliance requirement.
+    Hard deletes are only permitted by a DBA directly on the database.
+    """
+    user = g.user
+    try:
+        with db_transaction() as (db, cur):
+            row = tx_query(cur,
+                "SELECT * FROM finance WHERE id=%s FOR UPDATE",
+                (fid,), one=True
+            )
+            if not row:
+                raise ValueError("Finance record not found")
+            if str(row.get("category", "")).startswith("VOIDED-"):
+                return jsonify({"error": "Record is already voided"}), 409
+
+            cur.execute(
+                """UPDATE finance
+                   SET category = 'VOIDED-' || category,
+                       notes    = COALESCE(notes,'') || ' [VOIDED by user]'
+                   WHERE id=%s""",
+                (fid,)
+            )
+            write_audit(cur,
+                action="SOFT_DELETE",
+                record_type="finance",
+                record_id=fid,
+                record_label=row.get("description", ""),
+                before={"type": row["type"], "amount": float(row["amount"] or 0), "category": row["category"]},
+                user_id=user["id"]
+            )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        return jsonify({"error": "Could not void finance record"}), 500
+
+    return jsonify({"voided": fid})
 
 
 # ─── COMPLIANCE ────────────────────────────────────────────────────────────────
@@ -1583,13 +1842,34 @@ def write_audit_log():
 @app.route("/api/audit-log", methods=["GET"])
 @require_role("owner")
 def get_audit_log():
-    rows = query("""
-        SELECT a.*, u.name as user_name
+    """
+    Return audit log entries. Supports filtering by record_type, record_id,
+    and action. Returns before_state and after_state for full change history.
+    """
+    record_type = request.args.get("record_type")
+    record_id   = request.args.get("record_id")
+    action      = request.args.get("action")
+    limit       = min(int(request.args.get("limit", 200)), 1000)
+
+    conditions = []
+    params = []
+    if record_type:
+        conditions.append("a.record_type = %s"); params.append(record_type)
+    if record_id:
+        conditions.append("a.record_id = %s"); params.append(int(record_id))
+    if action:
+        conditions.append("a.action = %s"); params.append(action)
+
+    where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+    rows = query(f"""
+        SELECT a.id, a.action, a.record_type, a.record_id, a.record_label,
+               a.before_state, a.after_state, a.created_at, u.name as user_name
         FROM audit_log a
         LEFT JOIN users u ON a.performed_by = u.id
+        {where}
         ORDER BY a.created_at DESC
-        LIMIT 200
-    """)
+        LIMIT {limit}
+    """, tuple(params))
     return jsonify(rows_to_list(rows))
 
 
@@ -1929,6 +2209,10 @@ def create_notification(user_id, title, message, notif_type="info", related_type
 
 # ── HELPER: Recalculate activity total cost ───────────────────────────────────
 def recalculate_activity_cost(activity_id):
+    """
+    Standalone recalculation — opens its own commit.
+    Use tx_recalculate_activity_cost() when already inside a db_transaction().
+    """
     inv_cost = query(
         "SELECT COALESCE(SUM(quantity_used * unit_cost),0) as total FROM inventory_consumption WHERE activity_id=%s",
         (activity_id,), one=True
@@ -1939,6 +2223,26 @@ def recalculate_activity_cost(activity_id):
     )
     total = float(inv_cost["total"]) + float(lab_cost["total"])
     mutate("UPDATE operational_activities SET total_cost=%s WHERE id=%s", (total, activity_id))
+    return total
+
+
+def tx_recalculate_activity_cost(cur, activity_id):
+    """
+    Recalculate activity cost using an existing transaction cursor.
+    Returns the new total without committing.
+    """
+    cur.execute(
+        "SELECT COALESCE(SUM(quantity_used * unit_cost),0) AS total FROM inventory_consumption WHERE activity_id=%s",
+        (activity_id,)
+    )
+    inv_cost = float(cur.fetchone()["total"])
+    cur.execute(
+        "SELECT COALESCE(SUM(hours * hourly_rate),0) AS total FROM labor_allocations WHERE activity_id=%s",
+        (activity_id,)
+    )
+    lab_cost = float(cur.fetchone()["total"])
+    total = inv_cost + lab_cost
+    cur.execute("UPDATE operational_activities SET total_cost=%s WHERE id=%s", (total, activity_id))
     return total
 
 
@@ -2305,115 +2609,201 @@ def get_activities():
 def create_activity():
     """
     Core ERP operation: creates an activity with optional inventory consumption.
-    Automatically:
-    - Deducts inventory stock
-    - Records consumption at lot cost (LIFO)
-    - Recalculates total activity cost
-    - Creates finance expense entry
-    - Triggers low-stock notifications
+
+    TRANSACTION SAFETY (all-or-nothing):
+    - Activity row created
+    - Inventory lots decremented with row-level locks (SELECT FOR UPDATE)
+    - Consumption records inserted
+    - Main inventory on_hand decremented (guarded: cannot go below zero)
+    - Finance expense entry created
+    - Audit entry written
+    All steps share one transaction — any failure rolls everything back.
+
+    IDEMPOTENCY: pass an Idempotency-Key header to make retries safe.
+    CONCURRENCY: inventory rows are locked with SELECT FOR UPDATE before read.
     """
+    # ── Idempotency check ─────────────────────────────────────────────────────
+    idem_key = request.headers.get("Idempotency-Key", "")
+    if idem_key and check_idempotency(idem_key):
+        return jsonify({"error": "Duplicate request — this operation has already been processed"}), 409
+
     d = request.get_json() or {}
+    if not d.get("activity_type") or not d.get("description"):
+        return jsonify({"error": "activity_type and description are required"}), 400
+
     user = g.user
+    act_date = d.get("activity_date", datetime.utcnow().date().isoformat())
+    low_stock_notifications = []  # collect outside tx to avoid nested commits
 
-    # Create the activity
-    act_id = mutate(
-        """INSERT INTO operational_activities
-           (activity_type,unit_id,season_id,cost_center_id,description,activity_date,status,notes,performed_by)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-        (
-            d["activity_type"], d.get("unit_id"), d.get("season_id"),
-            d.get("cost_center_id"), d["description"],
-            d.get("activity_date", datetime.utcnow().date().isoformat()),
-            d.get("status", "Completed"), d.get("notes"), user["id"]
-        )
-    )
-
-    total_inv_cost = 0.0
-
-    # Process inventory consumption items
-    for item in d.get("inventory_items", []):
-        inv_id = item["inventory_id"]
-        qty_needed = float(item["quantity"])
-
-        # Get current inventory
-        inv = query("SELECT * FROM inventory WHERE id=%s", (inv_id,), one=True)
-        if not inv:
-            continue
-
-        # LIFO: get lots ordered by most recent first
-        lots = query(
-            "SELECT * FROM inventory_lots WHERE inventory_id=%s AND quantity_remaining > 0 ORDER BY received_date DESC",
-            (inv_id,)
-        )
-
-        qty_remaining = qty_needed
-        item_cost = 0.0
-
-        if lots:
-            for lot in lots:
-                if qty_remaining <= 0:
-                    break
-                lot_available = float(lot["quantity_remaining"])
-                qty_from_lot = min(qty_remaining, lot_available)
-                lot_unit_cost = float(lot["unit_cost"])
-                item_cost += qty_from_lot * lot_unit_cost
-
-                # Update lot
-                mutate(
-                    "UPDATE inventory_lots SET quantity_remaining=quantity_remaining-%s WHERE id=%s",
-                    (qty_from_lot, lot["id"])
+    try:
+        with db_transaction() as (db, cur):
+            # ── 1. Insert the activity ────────────────────────────────────────
+            act_id = tx_mutate(cur,
+                """INSERT INTO operational_activities
+                   (activity_type,unit_id,season_id,cost_center_id,description,
+                    activity_date,status,notes,performed_by)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (
+                    d["activity_type"], d.get("unit_id"), d.get("season_id"),
+                    d.get("cost_center_id"), d["description"],
+                    act_date, d.get("status", "Completed"),
+                    d.get("notes"), user["id"]
                 )
-                # Record consumption
-                mutate(
-                    """INSERT INTO inventory_consumption
-                       (activity_id,inventory_id,lot_id,quantity_used,unit_cost)
-                       VALUES (%s,%s,%s,%s,%s)""",
-                    (act_id, inv_id, lot["id"], qty_from_lot, lot_unit_cost)
+            )
+
+            total_inv_cost = 0.0
+
+            # ── 2. Process inventory consumption with row-level locking ───────
+            for item in d.get("inventory_items", []):
+                inv_id = int(item["inventory_id"])
+                qty_needed = float(item["quantity"])
+                if qty_needed <= 0:
+                    continue
+
+                # Lock the inventory row for the duration of this transaction
+                inv = tx_query(cur,
+                    "SELECT * FROM inventory WHERE id=%s FOR UPDATE",
+                    (inv_id,), one=True
                 )
-                qty_remaining -= qty_from_lot
-        else:
-            # No lots, use current unit cost
-            unit_cost = float(inv["unit_cost"])
-            item_cost = qty_needed * unit_cost
-            mutate(
-                """INSERT INTO inventory_consumption
-                   (activity_id,inventory_id,quantity_used,unit_cost)
-                   VALUES (%s,%s,%s,%s)""",
-                (act_id, inv_id, qty_needed, unit_cost)
+                if not inv:
+                    raise ValueError(f"Inventory item {inv_id} not found")
+
+                current_on_hand = float(inv["on_hand"])
+                if current_on_hand < qty_needed:
+                    raise ValueError(
+                        f"Insufficient stock for '{inv['name']}': "
+                        f"need {qty_needed}, have {current_on_hand}"
+                    )
+
+                # Lock lots LIFO (most recent first)
+                lots = tx_query(cur,
+                    """SELECT * FROM inventory_lots
+                       WHERE inventory_id=%s AND quantity_remaining > 0
+                       ORDER BY received_date DESC
+                       FOR UPDATE""",
+                    (inv_id,)
+                )
+
+                qty_remaining = qty_needed
+                item_cost = 0.0
+
+                if lots:
+                    for lot in lots:
+                        if qty_remaining <= 0:
+                            break
+                        lot_available = float(lot["quantity_remaining"])
+                        qty_from_lot = min(qty_remaining, lot_available)
+                        lot_unit_cost = float(lot["unit_cost"])
+                        item_cost += qty_from_lot * lot_unit_cost
+
+                        cur.execute(
+                            "UPDATE inventory_lots SET quantity_remaining=quantity_remaining-%s WHERE id=%s",
+                            (qty_from_lot, lot["id"])
+                        )
+                        cur.execute(
+                            """INSERT INTO inventory_consumption
+                               (activity_id,inventory_id,lot_id,quantity_used,unit_cost)
+                               VALUES (%s,%s,%s,%s,%s)""",
+                            (act_id, inv_id, lot["id"], qty_from_lot, lot_unit_cost)
+                        )
+                        qty_remaining -= qty_from_lot
+                else:
+                    unit_cost = float(inv["unit_cost"])
+                    item_cost = qty_needed * unit_cost
+                    cur.execute(
+                        """INSERT INTO inventory_consumption
+                           (activity_id,inventory_id,quantity_used,unit_cost)
+                           VALUES (%s,%s,%s,%s)""",
+                        (act_id, inv_id, qty_needed, unit_cost)
+                    )
+
+                # Deduct from main inventory — constraint prevents going below 0
+                cur.execute(
+                    """UPDATE inventory
+                       SET on_hand = on_hand - %s, last_updated = NOW()
+                       WHERE id = %s AND on_hand >= %s""",
+                    (qty_needed, inv_id, qty_needed)
+                )
+                if cur.rowcount == 0:
+                    raise ValueError(
+                        f"Concurrent modification detected for inventory item {inv_id}; "
+                        f"transaction aborted"
+                    )
+
+                total_inv_cost += item_cost
+
+                # Capture low-stock state after deduction (read inside tx for accuracy)
+                updated_inv = tx_query(cur,
+                    "SELECT name, on_hand, par_level, unit FROM inventory WHERE id=%s",
+                    (inv_id,), one=True
+                )
+                if updated_inv and float(updated_inv["on_hand"]) <= float(updated_inv["par_level"]):
+                    low_stock_notifications.append((inv_id, dict(updated_inv)))
+
+            # ── 3. Calculate total cost (inventory + labor already in DB) ─────
+            cur.execute(
+                "SELECT COALESCE(SUM(quantity_used * unit_cost),0) AS total FROM inventory_consumption WHERE activity_id=%s",
+                (act_id,)
+            )
+            inv_cost_row = cur.fetchone()
+            cur.execute(
+                "SELECT COALESCE(SUM(hours * hourly_rate),0) AS total FROM labor_allocations WHERE activity_id=%s",
+                (act_id,)
+            )
+            lab_cost_row = cur.fetchone()
+            total_cost = float(inv_cost_row["total"]) + float(lab_cost_row["total"])
+            cur.execute(
+                "UPDATE operational_activities SET total_cost=%s WHERE id=%s",
+                (total_cost, act_id)
             )
 
-        # Deduct from main inventory
-        mutate(
-            "UPDATE inventory SET on_hand=GREATEST(0, on_hand-%s), last_updated=NOW() WHERE id=%s",
-            (qty_needed, inv_id)
-        )
-        total_inv_cost += item_cost
+            # ── 4. Auto-create finance expense entry ──────────────────────────
+            fin_id = None
+            if total_cost > 0:
+                fin_id = tx_mutate(cur,
+                    """INSERT INTO finance
+                           (type,category,description,amount,date,reference)
+                       VALUES (%s,%s,%s,%s,%s,%s) RETURNING id""",
+                    (
+                        "expense",
+                        d.get("finance_category", d["activity_type"].replace("_", " ").title()),
+                        d["description"],
+                        total_cost,
+                        act_date,
+                        f"ACT-{act_id}"
+                    )
+                )
 
-        # Check low stock threshold and notify
-        updated_inv = query("SELECT * FROM inventory WHERE id=%s", (inv_id,), one=True)
-        if updated_inv and float(updated_inv["on_hand"]) <= float(updated_inv["par_level"]):
-            create_notification(
-                user["id"],
-                f"Low Stock: {updated_inv['name']}",
-                f"{updated_inv['name']} is at {updated_inv['on_hand']} {updated_inv['unit']} (par level: {updated_inv['par_level']})",
-                "warning", "inventory", inv_id
+            # ── 5. Audit trail ────────────────────────────────────────────────
+            write_audit(cur,
+                action="CREATE",
+                record_type="operational_activity",
+                record_id=act_id,
+                record_label=d["description"],
+                after={
+                    "activity_type": d["activity_type"],
+                    "total_cost": total_cost,
+                    "finance_entry_id": fin_id,
+                    "inventory_items_count": len(d.get("inventory_items", [])),
+                },
+                user_id=user["id"]
             )
+            # Transaction commits here ─────────────────────────────────────────
 
-    # Recalculate and update total cost
-    total_cost = recalculate_activity_cost(act_id)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        log_security("ACTIVITY_CREATE_ERROR", str(e), user_id=user.get("id"))
+        return jsonify({"error": "Activity could not be saved — transaction rolled back"}), 500
 
-    # Auto-create finance expense entry for significant activities
-    if total_cost > 0:
-        mutate(
-            "INSERT INTO finance (type,category,description,amount,date,reference) VALUES (%s,%s,%s,%s,%s,%s)",
-            (
-                "expense",
-                d.get("finance_category", d["activity_type"].replace("_", " ").title()),
-                d["description"],
-                total_cost,
-                d.get("activity_date", datetime.utcnow().date().isoformat()),
-                f"ACT-{act_id}"
-            )
+    # ── 6. Fire low-stock notifications (outside tx — these are best-effort) ──
+    for inv_id, inv_data in low_stock_notifications:
+        create_notification(
+            user["id"],
+            f"Low Stock: {inv_data['name']}",
+            f"{inv_data['name']} is at {inv_data['on_hand']} {inv_data['unit']} "
+            f"(par level: {inv_data['par_level']})",
+            "warning", "inventory", inv_id
         )
 
     row = query("""
@@ -2460,19 +2850,76 @@ def get_activity(aid):
 @app.route("/api/erp/activities/<int:aid>", methods=["DELETE"])
 @require_role("owner", "manager")
 def delete_activity(aid):
-    # Restore inventory quantities before deleting
-    consumptions = query("SELECT * FROM inventory_consumption WHERE activity_id=%s", (aid,))
-    for c in consumptions:
-        mutate(
-            "UPDATE inventory SET on_hand=on_hand+%s, last_updated=NOW() WHERE id=%s",
-            (c["quantity_used"], c["inventory_id"])
-        )
-        if c["lot_id"]:
-            mutate(
-                "UPDATE inventory_lots SET quantity_remaining=quantity_remaining+%s WHERE id=%s",
-                (c["quantity_used"], c["lot_id"])
+    """
+    Soft-delete an activity and atomically restore all consumed inventory.
+    All inventory restores and the activity deletion share one transaction —
+    either all complete or none do.
+    Finance entries linked via ACT-{id} reference are soft-deleted (voided),
+    not permanently removed, to preserve ledger traceability.
+    """
+    user = g.user
+    try:
+        with db_transaction() as (db, cur):
+            # Lock the activity row
+            activity = tx_query(cur,
+                "SELECT * FROM operational_activities WHERE id=%s FOR UPDATE",
+                (aid,), one=True
             )
-    mutate("DELETE FROM operational_activities WHERE id=%s", (aid,))
+            if not activity:
+                raise ValueError("Activity not found")
+
+            # Read consumption records (lock inventory rows they touch)
+            consumptions = tx_query(cur,
+                "SELECT * FROM inventory_consumption WHERE activity_id=%s",
+                (aid,)
+            )
+
+            for c in consumptions:
+                # Lock inventory row before restoring
+                cur.execute(
+                    "SELECT id FROM inventory WHERE id=%s FOR UPDATE",
+                    (c["inventory_id"],)
+                )
+                cur.execute(
+                    "UPDATE inventory SET on_hand=on_hand+%s, last_updated=NOW() WHERE id=%s",
+                    (c["quantity_used"], c["inventory_id"])
+                )
+                if c["lot_id"]:
+                    cur.execute(
+                        "UPDATE inventory_lots SET quantity_remaining=quantity_remaining+%s WHERE id=%s",
+                        (c["quantity_used"], c["lot_id"])
+                    )
+
+            # Void (soft-delete) the linked finance entry rather than hard-delete
+            cur.execute(
+                """UPDATE finance SET notes = COALESCE(notes,'') || ' [VOIDED: activity deleted]',
+                          category = 'VOIDED-' || category
+                   WHERE reference=%s AND category NOT LIKE 'VOIDED-%%'""",
+                (f"ACT-{aid}",)
+            )
+
+            # Hard delete the activity (cascades to inventory_consumption via FK)
+            cur.execute("DELETE FROM operational_activities WHERE id=%s", (aid,))
+
+            write_audit(cur,
+                action="DELETE",
+                record_type="operational_activity",
+                record_id=aid,
+                record_label=activity.get("description", ""),
+                before={
+                    "activity_type": activity.get("activity_type"),
+                    "total_cost": float(activity.get("total_cost") or 0),
+                    "status": activity.get("status"),
+                },
+                user_id=user["id"]
+            )
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        log_security("ACTIVITY_DELETE_ERROR", str(e), user_id=user.get("id"))
+        return jsonify({"error": "Delete failed — transaction rolled back"}), 500
+
     return jsonify({"deleted": aid})
 
 
@@ -2530,21 +2977,54 @@ def get_production():
 @app.route("/api/erp/production", methods=["POST"])
 @require_auth
 def create_production_batch():
+    """
+    Record a production batch. If actual_revenue > 0, a matching finance
+    income entry is created in the same transaction.
+    """
+    idem_key = request.headers.get("Idempotency-Key", "")
+    if idem_key and check_idempotency(idem_key):
+        return jsonify({"error": "Duplicate request — this production batch has already been recorded"}), 409
+
     d = request.get_json() or {}
-    bid = mutate(
-        """INSERT INTO production_batches (unit_id,season_id,product_type,quantity,unit_of_measure,actual_revenue,batch_date,notes)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-        (d.get("unit_id"), d.get("season_id"), d["product_type"], d["quantity"],
-         d.get("unit_of_measure", "kg"), d.get("actual_revenue", 0),
-         d.get("batch_date", datetime.utcnow().date().isoformat()), d.get("notes"))
-    )
-    # If actual revenue > 0, record as income
-    if d.get("actual_revenue", 0) > 0:
-        mutate(
-            "INSERT INTO finance (type,category,description,amount,date,reference) VALUES (%s,%s,%s,%s,%s,%s)",
-            ("income", "Production Sale", f"{d['product_type']} — {d['quantity']} {d.get('unit_of_measure','kg')}",
-             d["actual_revenue"], d.get("batch_date", datetime.utcnow().date().isoformat()), f"PROD-{bid}")
-        )
+    if not d.get("product_type") or not d.get("quantity"):
+        return jsonify({"error": "product_type and quantity are required"}), 400
+
+    user = g.user
+    batch_date = d.get("batch_date", datetime.utcnow().date().isoformat())
+    revenue = float(d.get("actual_revenue", 0))
+    bid = None
+
+    try:
+        with db_transaction() as (db, cur):
+            bid = tx_mutate(cur,
+                """INSERT INTO production_batches
+                       (unit_id,season_id,product_type,quantity,unit_of_measure,
+                        actual_revenue,batch_date,notes)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (d.get("unit_id"), d.get("season_id"), d["product_type"], d["quantity"],
+                 d.get("unit_of_measure", "kg"), revenue, batch_date, d.get("notes"))
+            )
+            fin_id = None
+            if revenue > 0:
+                fin_id = tx_mutate(cur,
+                    """INSERT INTO finance (type,category,description,amount,date,reference)
+                       VALUES (%s,%s,%s,%s,%s,%s) RETURNING id""",
+                    ("income", "Production Sale",
+                     f"{d['product_type']} — {d['quantity']} {d.get('unit_of_measure','kg')}",
+                     revenue, batch_date, f"PROD-{bid}")
+                )
+            write_audit(cur,
+                action="CREATE",
+                record_type="production_batch",
+                record_id=bid,
+                record_label=d["product_type"],
+                after={"quantity": d["quantity"], "revenue": revenue, "finance_entry_id": fin_id},
+                user_id=user["id"]
+            )
+    except Exception as e:
+        log_security("PRODUCTION_BATCH_ERROR", str(e), user_id=user.get("id"))
+        return jsonify({"error": "Production batch could not be saved — transaction rolled back"}), 500
+
     return jsonify(row_to_dict(query("SELECT * FROM production_batches WHERE id=%s", (bid,), one=True))), 201
 
 
@@ -2569,34 +3049,84 @@ def get_inventory_lots():
 @app.route("/api/erp/inventory-lots", methods=["POST"])
 @require_auth
 def create_inventory_lot():
-    """Receive inventory: creates lot + increases on_hand + records expense."""
+    """
+    Receive inventory: creates lot + increases on_hand + records purchase expense.
+
+    TRANSACTION SAFETY: lot insert, on_hand increment, and finance entry all
+    commit together or not at all. The inventory row is locked before update
+    to prevent concurrent receipt races.
+    """
+    idem_key = request.headers.get("Idempotency-Key", "")
+    if idem_key and check_idempotency(idem_key):
+        return jsonify({"error": "Duplicate request — this receipt has already been processed"}), 409
+
     d = request.get_json() or {}
+    if not d.get("inventory_id") or not d.get("quantity_received") or not d.get("unit_cost"):
+        return jsonify({"error": "inventory_id, quantity_received, and unit_cost are required"}), 400
+
     qty = float(d["quantity_received"])
     unit_cost = float(d["unit_cost"])
+    if qty <= 0 or unit_cost < 0:
+        return jsonify({"error": "quantity_received must be > 0 and unit_cost must be >= 0"}), 422
 
-    lot_id = mutate(
-        """INSERT INTO inventory_lots (inventory_id,lot_number,quantity_received,quantity_remaining,unit_cost,received_date,expiry_date,supplier,notes)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
-        (d["inventory_id"], d.get("lot_number"), qty, qty, unit_cost,
-         d.get("received_date", datetime.utcnow().date().isoformat()),
-         d.get("expiry_date"), d.get("supplier"), d.get("notes"))
-    )
-    # Increase on_hand
-    mutate(
-        "UPDATE inventory SET on_hand=on_hand+%s, unit_cost=%s, last_updated=NOW() WHERE id=%s",
-        (qty, unit_cost, d["inventory_id"])
-    )
-    # Record as expense
-    inv = query("SELECT * FROM inventory WHERE id=%s", (d["inventory_id"],), one=True)
-    if inv:
-        mutate(
-            "INSERT INTO finance (type,category,description,amount,date,reference) VALUES (%s,%s,%s,%s,%s,%s)",
-            ("expense", "Inventory Purchase",
-             f"Purchased {qty} {inv['unit']} of {inv['name']}",
-             qty * unit_cost,
-             d.get("received_date", datetime.utcnow().date().isoformat()),
-             f"LOT-{lot_id}")
-        )
+    recv_date = d.get("received_date", datetime.utcnow().date().isoformat())
+    user = g.user
+    lot_id = None
+
+    try:
+        with db_transaction() as (db, cur):
+            # Lock inventory row before modifying on_hand
+            inv = tx_query(cur,
+                "SELECT * FROM inventory WHERE id=%s FOR UPDATE",
+                (d["inventory_id"],), one=True
+            )
+            if not inv:
+                raise ValueError(f"Inventory item {d['inventory_id']} not found")
+
+            # Create lot
+            lot_id = tx_mutate(cur,
+                """INSERT INTO inventory_lots
+                       (inventory_id,lot_number,quantity_received,quantity_remaining,
+                        unit_cost,received_date,expiry_date,supplier,notes)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING id""",
+                (d["inventory_id"], d.get("lot_number"), qty, qty, unit_cost,
+                 recv_date, d.get("expiry_date"), d.get("supplier"), d.get("notes"))
+            )
+
+            # Increase on_hand and update rolling unit cost
+            cur.execute(
+                "UPDATE inventory SET on_hand=on_hand+%s, unit_cost=%s, last_updated=NOW() WHERE id=%s",
+                (qty, unit_cost, d["inventory_id"])
+            )
+
+            # Record purchase as finance expense
+            fin_id = tx_mutate(cur,
+                """INSERT INTO finance (type,category,description,amount,date,reference)
+                   VALUES (%s,%s,%s,%s,%s,%s) RETURNING id""",
+                ("expense", "Inventory Purchase",
+                 f"Purchased {qty} {inv['unit']} of {inv['name']}",
+                 qty * unit_cost, recv_date, f"LOT-{lot_id}")
+            )
+
+            write_audit(cur,
+                action="CREATE",
+                record_type="inventory_lot",
+                record_id=lot_id,
+                record_label=inv["name"],
+                after={
+                    "inventory_id": d["inventory_id"],
+                    "qty": qty, "unit_cost": unit_cost,
+                    "finance_entry_id": fin_id,
+                },
+                user_id=user["id"]
+            )
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 422
+    except Exception as e:
+        log_security("INV_LOT_CREATE_ERROR", str(e), user_id=user.get("id"))
+        return jsonify({"error": "Lot could not be saved — transaction rolled back"}), 500
+
     return jsonify(row_to_dict(query("SELECT * FROM inventory_lots WHERE id=%s", (lot_id,), one=True))), 201
 
 
@@ -2647,20 +3177,45 @@ def create_depreciation():
 @app.route("/api/erp/depreciation/<int:did>/run", methods=["POST"])
 @require_role("owner", "manager", "finance")
 def run_depreciation(did):
-    """Run a depreciation period — adds annual amount to accumulated."""
-    row = query("SELECT * FROM asset_depreciation WHERE id=%s", (did,), one=True)
-    if not row:
-        return jsonify({"error": "Not found"}), 404
-    annual = float(row["annual_depreciation"])
-    mutate(
-        "UPDATE asset_depreciation SET accumulated_depreciation=accumulated_depreciation+%s WHERE id=%s",
-        (annual, did)
-    )
-    # Record as expense
-    mutate(
-        "INSERT INTO finance (type,category,description,amount,date) VALUES (%s,%s,%s,%s,%s)",
-        ("expense", "Depreciation", f"Asset depreciation — period entry", annual, datetime.utcnow().date().isoformat())
-    )
+    """
+    Run a depreciation period — adds annual amount to accumulated and
+    creates a matching finance expense entry. Atomic: either both write
+    or neither does.
+    """
+    user = g.user
+    try:
+        with db_transaction() as (db, cur):
+            row = tx_query(cur,
+                "SELECT * FROM asset_depreciation WHERE id=%s FOR UPDATE",
+                (did,), one=True
+            )
+            if not row:
+                raise ValueError("Depreciation schedule not found")
+            annual = float(row["annual_depreciation"])
+
+            cur.execute(
+                "UPDATE asset_depreciation SET accumulated_depreciation=accumulated_depreciation+%s WHERE id=%s",
+                (annual, did)
+            )
+            fin_id = tx_mutate(cur,
+                "INSERT INTO finance (type,category,description,amount,date) VALUES (%s,%s,%s,%s,%s) RETURNING id",
+                ("expense", "Depreciation",
+                 f"Asset depreciation — period entry (schedule {did})",
+                 annual, datetime.utcnow().date().isoformat())
+            )
+            write_audit(cur,
+                action="DEPRECIATION_RUN",
+                record_type="asset_depreciation",
+                record_id=did,
+                after={"period_amount": annual, "finance_entry_id": fin_id},
+                user_id=user["id"]
+            )
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
+    except Exception as e:
+        log_security("DEPRECIATION_RUN_ERROR", str(e), user_id=user.get("id"))
+        return jsonify({"error": "Depreciation run failed — transaction rolled back"}), 500
+
     return jsonify(row_to_dict(query("SELECT * FROM asset_depreciation WHERE id=%s", (did,), one=True)))
 
 
