@@ -314,178 +314,9 @@ def init_db():
         cur.execute(ddl)
     db.commit()
     db.close()
-def seed_db():
-    """Seed with Thornfield data if tables are empty. Safe to call multiple times."""
-    db = psycopg2.connect(DATABASE_URL)
-    cur = db.cursor()
-
-    def empty(table):
-        cur.execute(f"SELECT COUNT(*) FROM {table}")
-        return cur.fetchone()[0] == 0
-
-    if empty("assets"):
-        assets = [
-            ("AST-001", "John Deere 6130R Tractor",    "Vehicle",        "North Barn",  "Operational", "2025-08-12", 85000),
-            ("AST-002", "Irrigation Pump Station B",   "Infrastructure", "West Field",  "Maintenance", "2025-09-01", 22000),
-            ("AST-003", "Combine Harvester NH CR8090", "Vehicle",        "South Yard",  "Operational", "2025-07-20", 210000),
-            ("AST-004", "Grain Silo — Block C",        "Infrastructure", "Processing",  "Operational", "2025-06-15", 38000),
-            ("AST-005", "Sprayer Boom 24m",            "Equipment",      "East Shed",   "Repair",      "2025-10-03", 12000),
-            ("AST-006", "Livestock Scale — Digital",   "Equipment",      "Cattle Pen",  "Operational", "2025-09-28", 3500),
-            ("AST-007", "Feed Mixer Wagon",            "Equipment",      "Feedlot",     "Operational", "2025-09-10", 18000),
-            ("AST-008", "Borehole Pump — North",       "Infrastructure", "North Field", "Maintenance", "2025-09-29", 9500),
-            ("AST-009", "Isuzu NQR Truck",             "Vehicle",        "Main Yard",   "Operational", "2025-09-05", 45000),
-            ("AST-010", "Solar Panel Array — Barn",    "Infrastructure", "North Barn",  "Operational", "2025-08-01", 28000),
-        ]
-        cur.executemany(
-            "INSERT INTO assets (asset_id,description,category,location,status,last_service,value) VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            assets
-        )
-
-    if empty("livestock"):
-        herds = [
-            ("Herd A — Angus",    "Angus",    428, 524, "Good",    "Grazing", "North Paddock"),
-            ("Herd B — Brahman",  "Brahman",  676, 489, "Good",    "Grazing", "East Paddock"),
-            ("Flock C — Merino",  "Merino",   612,  68, "Monitor", "Paddock", "West Paddock"),
-            ("Herd D — Boer Goat","Boer Goat",126,  52, "Good",    "Browse",  "South Browse"),
-        ]
-        cur.executemany(
-            "INSERT INTO livestock (herd_name,breed,count,avg_weight,health,status,location) VALUES (%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            herds
-        )
-        cur.execute("SELECT id FROM livestock ORDER BY id")
-        ids = [r[0] for r in cur.fetchall()]
-        events = [
-            (ids[2], "Health",      "3 animals lame — vet called",         "2025-09-28", "Pending"),
-            (ids[0], "Vaccination", "FMD vaccination complete — 428 head", "2025-09-15", "Done"),
-            (ids[1], "Weigh-in",    "Next scheduled weigh-in",             "2025-10-10", "Upcoming"),
-            (ids[0], "Birth",       "12 calves born — Herd A",             "2025-09-20", "Logged"),
-        ]
-        cur.executemany(
-            "INSERT INTO livestock_events (livestock_id,event_type,description,event_date,status) VALUES (%s,%s,%s,%s,%s)",
-            events
-        )
-
-    if empty("crops"):
-        crops = [
-            ("Block N1", "Maize",    48,  "2024-11-01", "2025-04-01", "Harvested", "—",    0,  68400),
-            ("Block N2", "Soya Bean",60,  "2024-12-01", "2025-05-01", "Growing",   "Drip", 80, 0),
-            ("Block S1", "Tobacco",  90,  "2025-09-01", "2026-03-01", "Seedling",  "Pivot",60, 0),
-            ("Block E1", "Wheat",    100, "2025-06-01", "2025-11-01", "Ripening",  "Flood",30, 0),
-            ("Block W1", None,       42,  None,         None,         "Fallow",    "—",    0,  0),
-        ]
-        cur.executemany(
-            "INSERT INTO crops (block,crop,area_ha,planted,est_harvest,status,irrigation,irrigation_pct,est_yield_value) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            crops
-        )
-
-    if empty("workers"):
-        workers = [
-            ("Moses Ncube",    "MN", "Field Supervisor",  "Operations", "Present", 520,  "+263 77 100 0001", "2020-03-01"),
-            ("Tendai Moyo",    "TM", "Livestock Hand",    "Livestock",  "Present", 380,  "+263 77 100 0002", "2021-06-01"),
-            ("Rudo Chiweshe",  "RC", "Crop Technician",   "Crops",      "Present", 420,  "+263 77 100 0003", "2019-11-01"),
-            ("Brian Mutasa",   "BM", "Equipment Operator","Maintenance","Leave",   450,  "+263 77 100 0004", "2022-01-15"),
-            ("Agnes Gumbo",    "AG", "Accounts Clerk",    "Finance",    "Present", 490,  "+263 77 100 0005", "2018-07-01"),
-            ("Peter Zimuto",   "PZ", "Security",          "Operations", "Present", 340,  "+263 77 100 0006", "2023-02-01"),
-            ("Farai Mhike",    "FM", "Irrigation Tech",   "Crops",      "Present", 410,  "+263 77 100 0007", "2021-09-01"),
-            ("Sarah Mwangi",   "SM", "Estate Manager",    "Management", "Present", 1200, "+263 77 100 0008", "2017-05-01"),
-            ("John Dlamini",   "JD", "Driver",            "Operations", "Leave",   360,  "+263 77 100 0009", "2022-08-01"),
-        ]
-        cur.executemany(
-            "INSERT INTO workers (name,initials,role,department,status,salary,phone,start_date) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            workers
-        )
-
-    if empty("inventory"):
-        items = [
-            ("Diesel Fuel",        "Fuel",       "L",    8400, 3000, 12000, 1.20,  "Puma Energy"),
-            ("Maize Seed",         "Crop Input", "kg",   2100, 1000, 4000,  3.50,  "Seedco"),
-            ("Fertiliser (NPK)",   "Crop Input", "kg",   640,  2000, 5000,  0.85,  "Omnia"),
-            ("Cattle Feed Pellets","Feed",        "kg",   3200, 1500, 6000,  0.60,  "Agrifoods"),
-            ("Herbicide",          "Chemical",   "L",    180,  400,  800,   12.00, "Syngenta"),
-            ("Engine Oil",         "Maintenance","L",    42,   100,  200,   8.50,  "Total"),
-            ("Lime",               "Crop Input", "kg",   5000, 1000, 10000, 0.20,  "Local supplier"),
-            ("Vaccine — FMD",      "Veterinary", "dose", 240,  500,  1000,  2.20,  "Afrivet"),
-            ("Baling Wire",        "Sundry",     "kg",   85,   50,   200,   4.00,  "Hardware store"),
-            ("Glyphosate",         "Chemical",   "L",    95,   150,  400,   9.50,  "Agrochem"),
-        ]
-        cur.executemany(
-            "INSERT INTO inventory (name,category,unit,on_hand,par_level,max_level,unit_cost,supplier) VALUES (%s,%s,%s,%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            items
-        )
-
-    if empty("finance"):
-        records = [
-            ("income",  "Crop Sales",      "Maize sales — Block N1",         68400,  "2025-04-30"),
-            ("income",  "Livestock Sales", "Cattle sales — 48 head",         112000, "2025-07-15"),
-            ("income",  "Tobacco",         "Advance payment — Block S1",     48000,  "2025-09-01"),
-            ("income",  "Dairy",           "Milk sales YTD",                 14200,  "2025-09-30"),
-            ("income",  "Grants",          "Government agricultural grant",   5800,   "2025-05-01"),
-            ("expense", "Labour",          "Payroll Jan–Sep",                88200,  "2025-09-30"),
-            ("expense", "Crop Inputs",     "Seed, fertiliser, chemicals YTD",42400,  "2025-09-30"),
-            ("expense", "Equipment",       "Maintenance & repairs YTD",      18600,  "2025-09-30"),
-            ("expense", "Livestock",       "Feed and veterinary costs YTD",  22400,  "2025-09-30"),
-            ("expense", "Fuel & Energy",   "Diesel, electricity YTD",        12600,  "2025-09-30"),
-        ]
-        cur.executemany(
-            "INSERT INTO finance (type,category,description,amount,date) VALUES (%s,%s,%s,%s,%s)",
-            records
-        )
-
-    if empty("compliance"):
-        items = [
-            ("Environmental Impact Assessment","Environmental","Compliant","2025-08-01","2026-08-01","EMA Zimbabwe"),
-            ("Water Use Permit — Borehole",    "Water",        "Compliant","2023-01-01","2026-12-31","ZINWA"),
-            ("ZIMRA Tax Clearance",            "Tax",          "Compliant","2025-01-01","2025-12-31","ZIMRA"),
-            ("Livestock Movement Permit",      "Livestock",    "Due Soon", "2025-04-28","2025-10-28","DVS"),
-            ("Pesticide Applicator License",   "Chemical",     "Due Soon", "2024-10-15","2025-10-15","MCAZ"),
-            ("Annual Fire Safety Inspection",  "Safety",       "Overdue",  "2024-09-01","2025-09-01","Civil Protection"),
-            ("Occupational Health & Safety Audit","Safety",    "Overdue",  "2024-08-15","2025-08-15","NSSA"),
-        ]
-        cur.executemany(
-            "INSERT INTO compliance (title,category,status,issued_date,expiry_date,issuing_body) VALUES (%s,%s,%s,%s,%s,%s)",
-            items
-        )
-
-    if empty("settings"):
-        defaults = [
-            ("estate_name",         "Thornfield Estate"),
-            ("location",            "Harare, Zimbabwe"),
-            ("location_lat",        "-17.8292"),
-            ("location_lon",        "31.0522"),
-            ("total_area",          "340 ha"),
-            ("currency",            "USD ($)"),
-            ("current_season",      "Autumn 2025"),
-            ("notif_alert_emails",  "true"),
-            ("notif_stock_warnings","true"),
-            ("notif_compliance",    "true"),
-            ("notif_daily_summary", "false"),
-            ("notif_sms",           "false"),
-            ("pref_dark_mode",      "true"),
-            ("pref_auto_backup",    "true"),
-            ("pref_2fa",            "true"),
-            ("pref_audit_logging",  "false"),
-        ]
-        cur.executemany(
-            "INSERT INTO settings (key,value) VALUES (%s,%s) ON CONFLICT DO NOTHING",
-            defaults
-        )
-
-    db.commit()
-    db.close()
-def seed_owner():
-    """Create a default owner account if no users exist."""
-    db = psycopg2.connect(DATABASE_URL)
-    cur = db.cursor()
-    cur.execute("SELECT COUNT(*) FROM users")
-    if cur.fetchone()[0] == 0:
-        pw = hash_password("thornfield2025")
-        cur.execute(
-            "INSERT INTO users (name,email,password,role) VALUES (%s,%s,%s,%s) ON CONFLICT DO NOTHING",
-            ("James Thornfield", "admin@thornfield.com", pw, "owner")
-        )
-        db.commit()
-        print("  Default owner: admin@thornfield.com / thornfield2025")
-    db.close()
+# seed_owner() removed — create your owner account via the /api/auth/register
+# endpoint using an invite token, or directly in the database.
+# Never hardcode credentials in production code.
 
 # ─── AUTH ROUTES ───────────────────────────────────────────────────────────────
 
@@ -725,6 +556,41 @@ def health():
     if request.method == "HEAD":
         return "", 200
     return jsonify({"status": "ok", "service": "thornfield-estate"}), 200
+
+# ─── FIRST-TIME SETUP (owner bootstrap — only works when zero users exist) ─────
+
+@app.route("/api/auth/bootstrap", methods=["POST"])
+def bootstrap_owner():
+    """
+    Creates the first owner account. Only works when the users table is empty.
+    Call this once after deploying to a fresh database, then remove or lock it.
+    POST { "name": "...", "email": "...", "password": "..." }
+    """
+    # Refuse if any users already exist — prevents privilege escalation
+    existing = query("SELECT COUNT(*) as n FROM users", one=True)
+    if int(existing["n"]) > 0:
+        return jsonify({"error": "Setup already complete. This endpoint is disabled."}), 403
+
+    d = request.get_json() or {}
+    name     = d.get("name", "").strip()
+    email    = d.get("email", "").strip().lower()
+    password = d.get("password", "")
+
+    if not name or not email or not password:
+        return jsonify({"error": "name, email and password are required"}), 400
+    if len(password) < 10:
+        return jsonify({"error": "Password must be at least 10 characters for the owner account"}), 400
+
+    pw = hash_password(password)
+    new_id = mutate(
+        "INSERT INTO users (name,email,password,role) VALUES (%s,%s,%s,%s) RETURNING id",
+        (name, email, pw, "owner")
+    )
+    print(f"[bootstrap] Owner account created: {email}")
+    row = query("SELECT id,name,email,role,created_at FROM users WHERE id=%s", (new_id,), one=True)
+    return jsonify({"message": "Owner account created. Sign in to continue.", "user": row_to_dict(row)}), 201
+
+
 
 
 # ─── USER MANAGEMENT (owner only) ──────────────────────────────────────────────
@@ -1643,103 +1509,6 @@ def init_erp_db():
         cur.execute(ddl)
     for idx in indexes:
         cur.execute(idx)
-    db.commit()
-    db.close()
-
-
-def seed_erp_db():
-    """Seed ERP tables with Thornfield demo data."""
-    db = psycopg2.connect(DATABASE_URL)
-    cur = db.cursor()
-
-    def empty(table):
-        cur.execute(f"SELECT COUNT(*) FROM {table}")
-        return cur.fetchone()[0] == 0
-
-    if empty("farms"):
-        cur.execute(
-            "INSERT INTO farms (name,location,total_ha,currency) VALUES (%s,%s,%s,%s) RETURNING id",
-            ("Thornfield Estate", "Harare, Zimbabwe", 340, "USD")
-        )
-        farm_id = cur.fetchone()[0]
-        # Operational Units
-        units = [
-            (farm_id, "Block N1 — Maize", "field", 48),
-            (farm_id, "Block N2 — Soya Bean", "field", 60),
-            (farm_id, "Block S1 — Tobacco", "field", 90),
-            (farm_id, "Block E1 — Wheat", "field", 100),
-            (farm_id, "Block W1 — Fallow", "field", 42),
-            (farm_id, "Herd A — Angus", "herd", 0),
-            (farm_id, "Herd B — Brahman", "herd", 0),
-            (farm_id, "Flock C — Merino", "herd", 0),
-            (farm_id, "North Barn Warehouse", "warehouse", 0),
-            (farm_id, "Processing Silo C", "silo", 0),
-        ]
-        cur.executemany(
-            "INSERT INTO operational_units (farm_id,name,unit_type,area_ha) VALUES (%s,%s,%s,%s)",
-            units
-        )
-        # Cost Centers
-        centers = [
-            (farm_id, "Crop Operations", "CC-CROP"),
-            (farm_id, "Livestock Operations", "CC-LIVE"),
-            (farm_id, "Machinery & Equipment", "CC-MACH"),
-            (farm_id, "Labour", "CC-LAB"),
-            (farm_id, "Irrigation", "CC-IRRIG"),
-        ]
-        cur.executemany(
-            "INSERT INTO cost_centers (farm_id,name,code) VALUES (%s,%s,%s)",
-            centers
-        )
-        # Season
-        cur.execute(
-            "INSERT INTO seasons (farm_id,name,start_date,end_date,status) VALUES (%s,%s,%s,%s,%s) RETURNING id",
-            (farm_id, "Season 2025/2026", "2025-09-01", "2026-04-30", "Active")
-        )
-        season_id = cur.fetchone()[0]
-        # Budgets
-        budgets = [
-            (season_id, "Labour", 96000),
-            (season_id, "Crop Inputs", 48000),
-            (season_id, "Fuel & Energy", 18000),
-            (season_id, "Equipment Maintenance", 22000),
-            (season_id, "Livestock Feed & Vet", 28000),
-            (season_id, "Irrigation", 12000),
-            (season_id, "Administration", 8000),
-        ]
-        cur.executemany(
-            "INSERT INTO budgets (season_id,category,planned_amount) VALUES (%s,%s,%s)",
-            budgets
-        )
-        # Revenue Projections
-        projections = [
-            (season_id, "Maize — Block N1 (60t @ $220/t)", 13200),
-            (season_id, "Tobacco — Block S1 (45t @ $2100/t)", 94500),
-            (season_id, "Wheat — Block E1 (380t @ $280/t)", 106400),
-            (season_id, "Soya Bean — Block N2 (120t @ $480/t)", 57600),
-            (season_id, "Cattle Sales — 80 head", 144000),
-            (season_id, "Milk Production — YTD", 18000),
-        ]
-        cur.executemany(
-            "INSERT INTO revenue_projections (season_id,description,projected_amount) VALUES (%s,%s,%s)",
-            projections
-        )
-        # Contingency
-        cur.execute(
-            "INSERT INTO contingency_settings (season_id,contingency_type,contingency_pct) VALUES (%s,%s,%s)",
-            (season_id, "percentage", 10)
-        )
-        # Inventory Lots
-        cur.execute("SELECT id, on_hand, unit_cost FROM inventory ORDER BY id LIMIT 10")
-        inv_rows = cur.fetchall()
-        for row in inv_rows:
-            inv_id, qty, cost = row
-            cur.execute(
-                """INSERT INTO inventory_lots (inventory_id,lot_number,quantity_received,quantity_remaining,unit_cost,received_date)
-                   VALUES (%s,%s,%s,%s,%s,%s)""",
-                (inv_id, f"LOT-{inv_id:03d}-A", qty, qty, cost, "2025-09-01")
-            )
-
     db.commit()
     db.close()
 
@@ -2835,29 +2604,7 @@ except Exception:
     print("[startup] init_erp_db() FAILED:")
     traceback.print_exc()
 
-try:
-    print("[startup] Running seed_db()...")
-    seed_db()
-    print("[startup] seed_db() OK")
-except Exception:
-    print("[startup] seed_db() FAILED:")
-    traceback.print_exc()
-
-try:
-    print("[startup] Running seed_erp_db()...")
-    seed_erp_db()
-    print("[startup] seed_erp_db() OK")
-except Exception:
-    print("[startup] seed_erp_db() FAILED:")
-    traceback.print_exc()
-
-try:
-    print("[startup] Running seed_owner()...")
-    seed_owner()
-    print("[startup] seed_owner() OK")
-except Exception:
-    print("[startup] seed_owner() FAILED:")
-    traceback.print_exc()
+# seed_owner() removed — no hardcoded credentials at startup
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
