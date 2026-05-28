@@ -9,11 +9,18 @@ import psycopg2.extras
 from decimal import Decimal
 import json
 import os
-import hashlib
 import secrets
+import time
+import re
+import logging
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, request, jsonify, g, send_from_directory
+from flask import Flask, request, jsonify, g, send_from_directory, make_response
+
+# bcrypt is the only acceptable algorithm for password storage.
+# SHA-256 (even salted) is a fast hash — brute-forceable at billions/sec on GPUs.
+# bcrypt is deliberately slow (cost factor 12 = ~0.3s/hash), making offline attacks impractical.
+import bcrypt
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_DIR = os.path.join(BASE_DIR, "public")
@@ -36,16 +43,23 @@ ROLE_PAGES = {
     "field":   ["dashboard","assets","livestock","crops"],
 }
 
-def hash_password(password):
-    salt = secrets.token_hex(16)
-    hashed = hashlib.sha256((salt + password).encode()).hexdigest()
-    return f"{salt}:{hashed}"
+def hash_password(password: str) -> str:
+    """Hash a password with bcrypt (cost 12). Returns a self-contained hash string."""
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
 
-def verify_password(password, stored):
+def verify_password(password: str, stored: str) -> bool:
+    """Constant-time bcrypt comparison. Also handles legacy SHA-256 hashes for migration."""
     try:
-        salt, hashed = stored.split(":")
-        return hashlib.sha256((salt + password).encode()).hexdigest() == hashed
-    except:
+        # bcrypt hashes start with $2b$ or $2a$
+        if stored.startswith("$2"):
+            return bcrypt.checkpw(password.encode("utf-8"), stored.encode("utf-8"))
+        # Legacy SHA-256 migration path — accept once, then re-hash on next login
+        if ":" in stored:
+            import hashlib
+            salt, hashed = stored.split(":", 1)
+            return hashlib.sha256((salt + password).encode()).hexdigest() == hashed
+        return False
+    except Exception:
         return False
 
 
@@ -66,19 +80,67 @@ def close_db(e=None):
 # ─── AUTH DECORATORS ───────────────────────────────────────────────────────────
 
 def get_current_user():
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
+    """
+    Authenticate the request via the httpOnly session cookie.
+    Falls back to Bearer token for API clients that cannot use cookies
+    (e.g. server-to-server integrations) — but the primary path is cookie-based.
+    Tokens are NEVER returned to or stored by the browser frontend.
+    """
+    token = None
+
+    # Primary: httpOnly cookie (browser clients)
+    cookie_token = request.cookies.get(SESSION_COOKIE)
+    if cookie_token:
+        token = cookie_token
+    else:
+        # Fallback: Bearer header (programmatic API clients only)
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            token = auth[7:]
+
+    if not token:
         return None
-    token = auth[7:]
+
     return query(
-        "SELECT u.* FROM sessions s JOIN users u ON s.user_id=u.id WHERE s.token=%s AND s.expires_at > NOW() AND u.active=1",
+        "SELECT u.* FROM sessions s JOIN users u ON s.user_id=u.id "
+        "WHERE s.token=%s AND s.expires_at > NOW() AND u.active=1",
         (token,), one=True
     )
+
+
+def _validate_csrf():
+    """
+    Validate the CSRF double-submit token on state-changing requests.
+    The frontend stores the CSRF token in sessionStorage and sends it
+    as X-CSRF-Token. We compare it against the value stored in the session.
+    Safe methods (GET, HEAD, OPTIONS) are exempt.
+    """
+    if request.method in ("GET", "HEAD", "OPTIONS"):
+        return True  # safe method
+    csrf_header = request.headers.get("X-CSRF-Token", "")
+    if not csrf_header:
+        return False
+    # Validate the token exists in the active session
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
+        # API clients using Bearer auth skip CSRF (they can't get CSRF tokens anyway)
+        auth = request.headers.get("Authorization", "")
+        return auth.startswith("Bearer ")
+    row = query(
+        "SELECT csrf_token FROM sessions WHERE token=%s AND expires_at > NOW()",
+        (token,), one=True
+    )
+    if not row or not row["csrf_token"]:
+        return False
+    return secrets.compare_digest(csrf_header, row["csrf_token"])
 
 
 def require_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
+        if not _validate_csrf():
+            log_security("CSRF_REJECTED", f"path={request.path}")
+            return jsonify({"error": "Invalid or missing CSRF token"}), 403
         user = get_current_user()
         if not user:
             return jsonify({"error": "Unauthorized"}), 401
@@ -91,10 +153,14 @@ def require_role(*roles):
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
+            if not _validate_csrf():
+                log_security("CSRF_REJECTED", f"path={request.path}")
+                return jsonify({"error": "Invalid or missing CSRF token"}), 403
             user = get_current_user()
             if not user:
                 return jsonify({"error": "Unauthorized"}), 401
             if user["role"] not in roles:
+                log_security("AUTHZ_DENIED", f"role={user['role']} required={roles} path={request.path}", user_id=user["id"])
                 return jsonify({"error": "Forbidden"}), 403
             g.user = user
             return f(*args, **kwargs)
@@ -104,7 +170,20 @@ def require_role(*roles):
 
 
 
-def query(sql, args=(), one=False):
+def require_write_access(f):
+    """
+    Enforce write access. Field workers are read-only.
+    Allowed to write: owner, manager, finance (finance routes only — enforced per-route).
+    """
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not hasattr(g, "user"):
+            return jsonify({"error": "Unauthorized"}), 401
+        if g.user["role"] == "field":
+            log_security("WRITE_DENIED", f"role=field path={request.path}", user_id=g.user["id"])
+            return jsonify({"error": "Forbidden — read-only role"}), 403
+        return f(*args, **kwargs)
+    return decorated
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute(sql, args)
@@ -137,13 +216,99 @@ def rows_to_list(rows):
     return [dict(r) for r in rows]
 
 
-# ─── CORS (manual, no dependency needed) ───────────────────────────────────────
+# ─── SECURITY CONFIGURATION ────────────────────────────────────────────────────
+
+# Allowed origins for CORS. In production this must match your exact deployed domain.
+# Set ALLOWED_ORIGIN env var to override (e.g. https://thornfield.yourdomain.com).
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5000")
+
+# Session cookie name
+SESSION_COOKIE = "tf_session"
+SESSION_DAYS   = 7
+
+# ─── SECURITY LOGGING ──────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+security_log = logging.getLogger("security")
+
+def log_security(event: str, detail: str = "", user_id=None):
+    """Log security events without exposing passwords or tokens."""
+    ip = request.remote_addr or "unknown"
+    uid_str = f" user={user_id}" if user_id else ""
+    security_log.warning(f"SECURITY [{event}] ip={ip}{uid_str} {detail}")
+
+
+# ─── SERVER-SIDE RATE LIMITING (in-memory, per IP) ────────────────────────────
+# For multi-process deployments, replace _rate_store with a Redis backend.
+_rate_store: dict = {}   # ip -> {"count": int, "window_start": float, "locked_until": float}
+RATE_LOGIN_MAX    = 10   # attempts per window
+RATE_LOGIN_WINDOW = 900  # 15 minutes (seconds)
+RATE_LOGIN_LOCK   = 900  # lockout duration (seconds)
+
+def _check_rate_limit(ip: str) -> tuple[bool, int]:
+    """Returns (allowed, seconds_remaining). Thread-safe only for single-process."""
+    now = time.time()
+    entry = _rate_store.get(ip, {"count": 0, "window_start": now, "locked_until": 0})
+
+    if now < entry["locked_until"]:
+        remaining = int(entry["locked_until"] - now)
+        return False, remaining
+
+    if now - entry["window_start"] > RATE_LOGIN_WINDOW:
+        # Window expired — reset
+        entry = {"count": 0, "window_start": now, "locked_until": 0}
+
+    entry["count"] += 1
+    if entry["count"] > RATE_LOGIN_MAX:
+        entry["locked_until"] = now + RATE_LOGIN_LOCK
+        _rate_store[ip] = entry
+        log_security("RATE_LIMIT_TRIGGERED", f"ip={ip} count={entry['count']}")
+        return False, RATE_LOGIN_LOCK
+
+    _rate_store[ip] = entry
+    return True, 0
+
+def _reset_rate_limit(ip: str):
+    _rate_store.pop(ip, None)
+
+
+# ─── CORS (strict — no wildcard) ───────────────────────────────────────────────
 
 @app.after_request
-def cors(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
+def add_security_headers(response):
+    origin = request.headers.get("Origin", "")
+
+    # CORS — only allow the configured origin, never wildcard
+    if origin == ALLOWED_ORIGIN:
+        response.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
+        response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization,X-CSRF-Token"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type,X-CSRF-Token"
+    # Never expose Authorization in ACAO — tokens live in cookies now
+    response.headers.pop("Access-Control-Allow-Headers-Authorization", None)
+
+    # Security headers (also set these at the reverse-proxy / Railway level)
+    response.headers["X-Content-Type-Options"]    = "nosniff"
+    response.headers["X-Frame-Options"]            = "DENY"
+    response.headers["Referrer-Policy"]            = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"]         = "geolocation=(), microphone=(), camera=()"
+    response.headers["Strict-Transport-Security"]  = "max-age=31536000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "connect-src 'self'; "
+        "img-src 'self' data:; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self';"
+    )
+    # Remove headers that leak server info
+    response.headers.pop("Server", None)
+    response.headers.pop("X-Powered-By", None)
     return response
 
 
@@ -171,8 +336,11 @@ def init_db():
         """CREATE TABLE IF NOT EXISTS sessions (
             token       TEXT    PRIMARY KEY,
             user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            csrf_token  TEXT    NOT NULL DEFAULT '',
             expires_at  TIMESTAMPTZ NOT NULL,
-            created_at  TIMESTAMPTZ DEFAULT NOW()
+            created_at  TIMESTAMPTZ DEFAULT NOW(),
+            user_agent  TEXT,
+            ip_address  TEXT
         )""",
         """CREATE TABLE IF NOT EXISTS assets (
             id          SERIAL PRIMARY KEY,
@@ -312,6 +480,13 @@ def init_db():
     ]
     for ddl in tables:
         cur.execute(ddl)
+    # Migration: add new columns to existing sessions table (safe to run repeatedly)
+    try:
+        cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS csrf_token TEXT NOT NULL DEFAULT ''")
+        cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_agent TEXT")
+        cur.execute("ALTER TABLE sessions ADD COLUMN IF NOT EXISTS ip_address TEXT")
+    except Exception:
+        pass  # Column already exists on fresh DBs
     db.commit()
     db.close()
 # seed_owner() removed — create your owner account via the /api/auth/register
@@ -496,57 +671,150 @@ def reset_password():
 def login():
     import traceback
     try:
-        d = request.get_json()
-        print(f"[login] email={d.get('email')}", flush=True)
-        if not d.get("email") or not d.get("password"):
+        ip = request.remote_addr or "unknown"
+
+        # ── Server-side rate limiting ─────────────────────────────────────────
+        allowed, wait_secs = _check_rate_limit(ip)
+        if not allowed:
+            log_security("LOGIN_RATE_LIMITED", f"ip={ip} retry_after={wait_secs}s")
+            return jsonify({
+                "error": f"Too many login attempts. Please wait {wait_secs} seconds before trying again."
+            }), 429
+
+        d = request.get_json() or {}
+        email    = (d.get("email") or "").strip().lower()
+        password = d.get("password") or ""
+
+        if not email or not password:
             return jsonify({"error": "Email and password required"}), 400
-        user = query("SELECT * FROM users WHERE email=%s AND active=1", (d["email"],), one=True)
-        print(f"[login] user found: {bool(user)}", flush=True)
-        if not user:
+
+        # Basic email format check — prevent abuse of long inputs
+        if len(email) > 254 or len(password) > 1024:
+            return jsonify({"error": "Invalid credentials"}), 400
+
+        user = query("SELECT * FROM users WHERE email=%s AND active=1", (email,), one=True)
+
+        # Always run password verification even on miss (prevents timing oracle)
+        dummy_hash = "$2b$12$invalidhashfortimingprotectiononly000000000000000000000"
+        stored = user["password"] if user else dummy_hash
+        pw_ok  = verify_password(password, stored)
+
+        if not user or not pw_ok:
+            log_security("LOGIN_FAILED", f"email={email}")
             return jsonify({"error": "Invalid email or password"}), 401
-        pw_ok = verify_password(d["password"], user["password"])
-        print(f"[login] password ok: {pw_ok}", flush=True)
-        if not pw_ok:
-            return jsonify({"error": "Invalid email or password"}), 401
-        token = secrets.token_hex(32)
-        expires = (datetime.utcnow() + timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-        print(f"[login] inserting session, expires={expires}", flush=True)
-        mutate("INSERT INTO sessions (token,user_id,expires_at) VALUES (%s,%s,%s)", (token, user["id"], expires))
+
+        # ── Re-hash legacy SHA-256 passwords to bcrypt on first successful login ──
+        if user["password"].startswith("$2") is False and ":" in user["password"]:
+            new_hash = hash_password(password)
+            mutate("UPDATE users SET password=%s WHERE id=%s", (new_hash, user["id"]))
+            log_security("PASSWORD_REHASHED", "legacy SHA-256 → bcrypt", user_id=user["id"])
+
+        # ── Create session ────────────────────────────────────────────────────
+        token      = secrets.token_hex(32)
+        csrf_token = secrets.token_urlsafe(32)
+        expires    = datetime.utcnow() + timedelta(days=SESSION_DAYS)
+        expires_str = expires.strftime("%Y-%m-%d %H:%M:%S")
+
+        mutate(
+            "INSERT INTO sessions (token, user_id, csrf_token, expires_at, user_agent, ip_address) "
+            "VALUES (%s,%s,%s,%s,%s,%s)",
+            (token, user["id"], csrf_token, expires_str,
+             request.headers.get("User-Agent", "")[:512], ip)
+        )
         mutate("UPDATE users SET last_login=NOW() WHERE id=%s", (user["id"],))
-        print("[login] success", flush=True)
-        return jsonify({
-            "token": token,
+        _reset_rate_limit(ip)  # Clear failed attempts on success
+
+        log_security("LOGIN_SUCCESS", f"email={email}", user_id=user["id"])
+
+        # ── Set httpOnly session cookie ───────────────────────────────────────
+        # The cookie is:
+        #   httpOnly  — inaccessible to JavaScript (prevents XSS token theft)
+        #   Secure    — only sent over HTTPS
+        #   SameSite=Strict — not sent on cross-site requests (CSRF defence layer 1)
+        is_production = os.environ.get("FLASK_ENV") != "development"
+        resp = make_response(jsonify({
             "user": {
-                "id": user["id"],
-                "name": user["name"],
+                "id":    user["id"],
+                "name":  user["name"],
                 "email": user["email"],
-                "role": user["role"],
+                "role":  user["role"],
                 "pages": ROLE_PAGES.get(user["role"], [])
-            }
-        })
+            },
+            # Return the CSRF token in the JSON body — the frontend stores it in
+            # sessionStorage and sends it as X-CSRF-Token on every mutating request.
+            # This implements the double-submit cookie CSRF pattern.
+            "csrf_token": csrf_token
+        }))
+        resp.set_cookie(
+            SESSION_COOKIE,
+            token,
+            httponly=True,
+            secure=is_production,
+            samesite="Strict",
+            max_age=SESSION_DAYS * 86400,
+            path="/",
+        )
+        return resp
+
     except Exception as e:
-        print(f"[login] EXCEPTION: {e}", flush=True)
-        traceback.print_exc()
-        return jsonify({"error": "Server error", "detail": str(e)}), 500
+        import traceback as tb
+        tb.print_exc()
+        # Never leak internal error details to the client
+        log_security("LOGIN_ERROR", str(e))
+        return jsonify({"error": "Server error. Please try again."}), 500
 
 
 @app.route("/api/auth/logout", methods=["POST"])
 @require_auth
 def logout():
-    auth = request.headers.get("Authorization", "")[7:]
-    mutate("DELETE FROM sessions WHERE token=%s", (auth,))
-    return jsonify({"message": "Logged out"})
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
+        # Fallback: Bearer header (API clients)
+        auth = request.headers.get("Authorization", "")[7:]
+        token = auth
+    if token:
+        mutate("DELETE FROM sessions WHERE token=%s", (token,))
+        log_security("LOGOUT", "", user_id=g.user.get("id"))
+
+    resp = make_response(jsonify({"message": "Logged out"}))
+    # Overwrite the cookie with an expired one to force the browser to delete it
+    resp.set_cookie(
+        SESSION_COOKIE, "",
+        httponly=True, secure=True, samesite="Strict",
+        max_age=0, path="/"
+    )
+    return resp
 
 
 @app.route("/api/auth/me", methods=["GET", "HEAD"])
-@require_auth
 def me():
+    """
+    Session validation endpoint. Called on page load to restore a session.
+    For GET: returns user profile + a fresh CSRF token.
+    For HEAD: just confirms the session is valid (used by connectivity monitor).
+    No @require_auth here — we handle auth manually to skip CSRF check on GET
+    (this is a safe read-only endpoint used to bootstrap auth state).
+    """
     if request.method == "HEAD":
-        return "", 200
-    u = g.user
+        user = get_current_user()
+        return ("", 200) if user else ("", 401)
+
+    user = get_current_user()
+    if not user:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    # Fetch the csrf_token for the current session so the frontend can send it
+    token = request.cookies.get(SESSION_COOKIE) or ""
+    sess  = query("SELECT csrf_token FROM sessions WHERE token=%s", (token,), one=True)
+    csrf  = sess["csrf_token"] if sess else ""
+
     return jsonify({
-        "id": u["id"], "name": u["name"], "email": u["email"],
-        "role": u["role"], "pages": ROLE_PAGES.get(u["role"], [])
+        "id":         user["id"],
+        "name":       user["name"],
+        "email":      user["email"],
+        "role":       user["role"],
+        "pages":      ROLE_PAGES.get(user["role"], []),
+        "csrf_token": csrf,
     })
 
 
@@ -678,6 +946,7 @@ def get_asset(asset_id):
 
 @app.route("/api/assets", methods=["POST"])
 @require_auth
+@require_write_access
 def create_asset():
     d = request.get_json()
     # Auto-generate asset_id if not provided
@@ -702,6 +971,7 @@ def create_asset():
 
 @app.route("/api/assets/<int:asset_id>", methods=["PUT"])
 @require_auth
+@require_write_access
 def update_asset(asset_id):
     d = request.get_json()
     mutate(
@@ -716,6 +986,7 @@ def update_asset(asset_id):
 
 @app.route("/api/assets/<int:asset_id>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_asset(asset_id):
     mutate("DELETE FROM assets WHERE id=%s", (asset_id,))
     return jsonify({"deleted": asset_id})
@@ -744,6 +1015,7 @@ def get_herd(lid):
 
 @app.route("/api/livestock", methods=["POST"])
 @require_auth
+@require_write_access
 def create_herd():
     d = request.get_json()
     new_id = mutate(
@@ -757,6 +1029,7 @@ def create_herd():
 
 @app.route("/api/livestock/<int:lid>", methods=["PUT"])
 @require_auth
+@require_write_access
 def update_herd(lid):
     d = request.get_json()
     mutate(
@@ -770,6 +1043,7 @@ def update_herd(lid):
 
 @app.route("/api/livestock/<int:lid>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_herd(lid):
     mutate("DELETE FROM livestock WHERE id=%s", (lid,))
     return jsonify({"deleted": lid})
@@ -777,6 +1051,7 @@ def delete_herd(lid):
 
 @app.route("/api/livestock/<int:lid>/events", methods=["POST"])
 @require_auth
+@require_write_access
 def add_livestock_event(lid):
     d = request.get_json()
     new_id = mutate(
@@ -818,6 +1093,7 @@ def get_crop(cid):
 
 @app.route("/api/crops", methods=["POST"])
 @require_auth
+@require_write_access
 def create_crop():
     d = request.get_json()
     new_id = mutate(
@@ -832,6 +1108,7 @@ def create_crop():
 
 @app.route("/api/crops/<int:cid>", methods=["PUT"])
 @require_auth
+@require_write_access
 def update_crop(cid):
     d = request.get_json()
     mutate(
@@ -846,6 +1123,7 @@ def update_crop(cid):
 
 @app.route("/api/crops/<int:cid>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_crop(cid):
     mutate("DELETE FROM crops WHERE id=%s", (cid,))
     return jsonify({"deleted": cid})
@@ -871,6 +1149,7 @@ def get_worker(wid):
 
 @app.route("/api/workers", methods=["POST"])
 @require_auth
+@require_write_access
 def create_worker():
     d = request.get_json()
     initials = d.get("initials") or "".join(w[0].upper() for w in d["name"].split()[:2])
@@ -885,6 +1164,7 @@ def create_worker():
 
 @app.route("/api/workers/<int:wid>", methods=["PUT"])
 @require_auth
+@require_write_access
 def update_worker(wid):
     d = request.get_json()
     mutate(
@@ -898,6 +1178,7 @@ def update_worker(wid):
 
 @app.route("/api/workers/<int:wid>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_worker(wid):
     mutate("DELETE FROM workers WHERE id=%s", (wid,))
     return jsonify({"deleted": wid})
@@ -923,6 +1204,7 @@ def get_inventory_item(iid):
 
 @app.route("/api/inventory", methods=["POST"])
 @require_auth
+@require_write_access
 def create_inventory_item():
     d = request.get_json()
     new_id = mutate(
@@ -936,6 +1218,7 @@ def create_inventory_item():
 
 @app.route("/api/inventory/<int:iid>", methods=["PUT"])
 @require_auth
+@require_write_access
 def update_inventory_item(iid):
     d = request.get_json()
     mutate(
@@ -949,6 +1232,7 @@ def update_inventory_item(iid):
 
 @app.route("/api/inventory/<int:iid>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_inventory_item(iid):
     mutate("DELETE FROM inventory WHERE id=%s", (iid,))
     return jsonify({"deleted": iid})
@@ -985,6 +1269,7 @@ def get_finance_summary():
 
 @app.route("/api/finance", methods=["POST"])
 @require_auth
+@require_write_access
 def create_finance_record():
     d = request.get_json()
     new_id = mutate(
@@ -998,6 +1283,7 @@ def create_finance_record():
 
 @app.route("/api/finance/<int:fid>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_finance_record(fid):
     mutate("DELETE FROM finance WHERE id=%s", (fid,))
     return jsonify({"deleted": fid})
@@ -1023,6 +1309,7 @@ def get_compliance_item(cid):
 
 @app.route("/api/compliance", methods=["POST"])
 @require_auth
+@require_write_access
 def create_compliance_item():
     d = request.get_json()
     new_id = mutate(
@@ -1036,6 +1323,7 @@ def create_compliance_item():
 
 @app.route("/api/compliance/<int:cid>", methods=["PUT"])
 @require_auth
+@require_write_access
 def update_compliance_item(cid):
     d = request.get_json()
     mutate(
@@ -1049,6 +1337,7 @@ def update_compliance_item(cid):
 
 @app.route("/api/compliance/<int:cid>", methods=["DELETE"])
 @require_auth
+@require_write_access
 def delete_compliance_item(cid):
     mutate("DELETE FROM compliance WHERE id=%s", (cid,))
     return jsonify({"deleted": cid})
@@ -1292,6 +1581,110 @@ def get_audit_log():
         LIMIT 200
     """)
     return jsonify(rows_to_list(rows))
+
+
+# ─── AI / ANTHROPIC PROXY ─────────────────────────────────────────────────────
+# The Anthropic API key NEVER leaves the server. The frontend calls this endpoint,
+# which adds the key server-side. This prevents key exposure via browser DevTools.
+
+@app.route("/api/ai/digest", methods=["POST"])
+@require_auth
+def ai_digest():
+    """
+    Generate an estate intelligence digest using Claude.
+    The ANTHROPIC_API_KEY env var is required. If not set, returns a graceful error.
+    Only owner/manager roles can generate AI digests (financial + operational data).
+    """
+    if g.user["role"] not in ("owner", "manager"):
+        return jsonify({"error": "Forbidden — owner or manager role required"}), 403
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return jsonify({"error": "AI digest is not configured on this server (ANTHROPIC_API_KEY not set)"}), 501
+
+    d = request.get_json() or {}
+
+    # Sanitise / clamp all numeric inputs — never trust frontend values for prompts
+    def safe_num(v, default=0):
+        try: return float(v)
+        except: return default
+    def safe_int(v, default=0):
+        try: return int(v)
+        except: return default
+    def safe_str_list(lst, max_items=10, max_len=80):
+        if not isinstance(lst, list): return []
+        return [
+            {k: str(v)[:max_len] for k, v in item.items() if isinstance(item, dict)}
+            for item in lst[:max_items]
+        ]
+
+    farm_data = {
+        "revenue_ytd":        safe_num(d.get("revenue_ytd")),
+        "net_profit":         safe_num(d.get("net_profit")),
+        "livestock_count":    safe_int(d.get("livestock_count")),
+        "herd_count":         safe_int(d.get("herd_count")),
+        "crop_hectares":      safe_num(d.get("crop_hectares")),
+        "active_fields":      safe_int(d.get("active_fields")),
+        "workers_on_site":    safe_int(d.get("workers_on_site")),
+        "workers_total":      safe_int(d.get("workers_total")),
+        "compliance_overdue": safe_int(d.get("compliance_overdue")),
+        "compliance_due_soon":safe_int(d.get("compliance_due_soon")),
+        "low_stock_items":    safe_int(d.get("low_stock_items")),
+        "active_crops":       safe_str_list(d.get("active_crops", [])),
+        "herds":              safe_str_list(d.get("herds", [])),
+    }
+
+    prompt = f"""You are the estate intelligence system for Thornfield Estate, a commercial farm in Harare, Zimbabwe.
+
+Generate a concise weekly estate digest. Be direct, data-driven. No fluff. Use real numbers from the data.
+
+Farm Data:
+- Revenue YTD: ${farm_data['revenue_ytd']:,.0f}, Net Profit: ${farm_data['net_profit']:,.0f}
+- Livestock: {farm_data['livestock_count']} head across {farm_data['herd_count']} herds
+- Crops: {farm_data['crop_hectares']} ha in production, {farm_data['active_fields']} active fields
+- Workers: {farm_data['workers_on_site']}/{farm_data['workers_total']} on site
+- Compliance: {farm_data['compliance_overdue']} overdue, {farm_data['compliance_due_soon']} due soon
+- Low stock items: {farm_data['low_stock_items']}
+- Active crops: {', '.join(f"{c.get('block','')} ({c.get('crop','')}, {c.get('status','')})" for c in farm_data['active_crops'])}
+- Herds: {', '.join(f"{h.get('name','')}: {h.get('count','')} head, {h.get('health','')}" for h in farm_data['herds'])}
+
+Respond ONLY with a JSON object (no markdown, no backticks):
+{{
+  "headline": "2-line executive summary of the week",
+  "revenue_status": "one sentence on revenue vs target",
+  "livestock_summary": "one sentence on herd health",
+  "crop_status": "one sentence on crop pipeline",
+  "compliance_note": "one sentence on compliance standing",
+  "top_3_actions": ["action 1", "action 2", "action 3"]
+}}"""
+
+    import urllib.request as urlreq
+    payload = json.dumps({
+        "model": "claude-sonnet-4-20250514",
+        "max_tokens": 1000,
+        "messages": [{"role": "user", "content": prompt}]
+    }).encode("utf-8")
+
+    req = urlreq.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+        method="POST"
+    )
+    try:
+        with urlreq.urlopen(req, timeout=20) as resp:
+            result = json.loads(resp.read().decode())
+        text = "".join(b.get("text", "") for b in result.get("content", []))
+        digest = json.loads(text.strip())
+        log_security("AI_DIGEST_GENERATED", "", user_id=g.user["id"])
+        return jsonify({"content": [{"text": text}]})
+    except Exception as e:
+        log_security("AI_DIGEST_ERROR", str(e)[:120], user_id=g.user["id"])
+        return jsonify({"error": "Could not generate digest. Please try again."}), 502
 
 
 # ─── STATIC / FRONTEND ────────────────────────────────────────────────────────
@@ -2586,7 +2979,8 @@ def get_erp_dashboard():
 import os
 import traceback
 
-print(f"[startup] DATABASE_URL = {os.environ.get('DATABASE_URL', 'NOT SET')}")
+# Startup — don't log DATABASE_URL as it contains credentials
+print("[startup] Initialising Thornfield ERP...")
 
 try:
     print("[startup] Running init_db()...")

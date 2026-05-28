@@ -3,6 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- ═══ SECURITY HEADERS (enforce also server-side via HTTP response headers) ═══ -->
+<!-- Content-Security-Policy: restrict script/style/connect sources.
+     NOTE: These meta CSP tags are a defence-in-depth hint to the browser.
+     The authoritative CSP MUST be set as an HTTP response header by the server. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  connect-src 'self';
+  img-src 'self' data:;
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+">
+<!-- Prevent clickjacking -->
+<meta http-equiv="X-Frame-Options" content="DENY">
+<!-- Prevent MIME sniffing -->
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<!-- Referrer policy -->
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>MyFarm — Thornfield Estate Intelligence</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d0e10'/%3E%3Cpath d='M16 7l2.5 4.3h5L21 15l1.9 3.2-1.9.6-1.1-1.9L16 21l-3.9-4.1-1.1 1.9-1.9-.6L11 15l-2.5-3.7h5z' fill='%23b8924a' opacity='.9'/%3E%3C/svg%3E">
 <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d0e10'/%3E%3Cpath d='M16 7l2.5 4.3h5L21 15l1.9 3.2-1.9.6-1.1-1.9L16 21l-3.9-4.1-1.1 1.9-1.9-.6L11 15l-2.5-3.7h5z' fill='%23b8924a' opacity='.9'/%3E%3C/svg%3E">
@@ -5951,12 +5972,22 @@ const ROLE_PAGES=window.ROLE_PAGES={owner:['dashboard','assets','livestock','cro
 const CAN_WRITE_PAGES={owner:['dashboard','assets','livestock','crops','workers','inventory','finance','compliance','users','settings'],manager:['dashboard','assets','livestock','crops','workers','inventory','compliance','settings'],finance:['finance'],field:[]};
 
 // ─── CSRF TOKEN ────────────────────────────────────────────────────────────────
-// Generate a per-session CSRF token stored in sessionStorage (not localStorage).
-// Sent as X-CSRF-Token on every mutating request. The server should verify it
-// matches the value it set in a httpOnly cookie or returns in /auth/me.
+// A per-session CSRF token stored in sessionStorage (NOT localStorage).
+// Sent as X-CSRF-Token on every mutating request.
+// MANDATORY: The backend MUST verify this token against the value it embedded in
+// the session or returned from /auth/me. A client-generated CSRF token only works
+// as a double-submit cookie pattern when the server also verifies it.
+// sessionStorage is inaccessible across tabs and cleared on tab close — much safer
+// than localStorage for this purpose.
 function getCSRF(){
   let t=sessionStorage.getItem('tf_csrf');
-  if(!t){t=crypto.randomUUID?crypto.randomUUID():Math.random().toString(36).slice(2)+Date.now().toString(36);sessionStorage.setItem('tf_csrf',t);}
+  if(!t){
+    // Use crypto.randomUUID when available, fall back to a high-entropy string
+    t = (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('');
+    sessionStorage.setItem('tf_csrf',t);
+  }
   return t;
 }
 
@@ -5973,17 +6004,32 @@ function _onLoginFail(){
 }
 function _onLoginSuccess(){_loginTracker.attempts=0;_loginTracker.lockedUntil=0;}
 
-function getToken(){return localStorage.getItem('tf_token');}
-function setToken(t){localStorage.setItem('tf_token',t);}
-function clearAuth(){localStorage.removeItem('tf_token');localStorage.removeItem('tf_user');}
-function saveUser(u){localStorage.setItem('tf_user',JSON.stringify(u));}
-function loadUser(){try{return JSON.parse(localStorage.getItem('tf_user'));}catch{return null;}}
+// ─── SECURE SESSION MODEL ─────────────────────────────────────────────────────
+// Auth tokens are NEVER stored in localStorage or accessible to JavaScript.
+// The server sets a httpOnly, Secure, SameSite=Strict cookie on login.
+// The frontend only holds a minimal user-profile object (no secrets) in
+// sessionStorage for UI purposes (name, role, id). This is NOT a credential —
+// it is cleared on tab close and on logout. All API requests rely on the
+// cookie being sent automatically by the browser (credentials:'include').
+function getToken(){return null;} // Tokens are httpOnly cookies — never readable by JS
+function setToken(t){/* no-op: token set server-side as httpOnly cookie */}
+function clearAuth(){
+  // Clear non-sensitive UI state only
+  try{sessionStorage.removeItem('tf_user');}catch{}
+  try{localStorage.removeItem('tf_sb_collapsed');}catch{} // keep UI prefs
+}
+function saveUser(u){
+  // Store only non-sensitive profile data (no token/secret) in sessionStorage
+  // sessionStorage is scoped to the tab and cleared when the tab closes
+  try{sessionStorage.setItem('tf_user',JSON.stringify({id:u.id,name:u.name,role:u.role}));}catch{}
+}
+function loadUser(){try{return JSON.parse(sessionStorage.getItem('tf_user'));}catch{return null;}}
 function canWrite(){return(CAN_WRITE_PAGES[currentUser?.role]||[]).includes(currentPage);}
 
 // seed data removed
 async function api(path,method='GET',body=null){
-  const opts={method,headers:{'Content-Type':'application/json'}};
-  const token=getToken();if(token)opts.headers['Authorization']='Bearer '+token;
+  const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};
+  // NEVER send Authorization header — auth is via httpOnly cookie (auto-sent by browser)
   // Attach CSRF token on all state-changing methods
   if(['POST','PUT','PATCH','DELETE'].includes(method.toUpperCase())){
     opts.headers['X-CSRF-Token']=getCSRF();
@@ -6339,7 +6385,7 @@ async function doLogin(){
   const btn=document.getElementById('login-btn');
   btn.textContent='Signing in…';btn.disabled=true;
   try{
-    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()},body:JSON.stringify({email,password})});
+    const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()},credentials:'include',body:JSON.stringify({email,password})});
     const d=await r.json();
     if(!r.ok){
       _onLoginFail();
@@ -6356,7 +6402,9 @@ async function doLogin(){
       return;
     }
     _onLoginSuccess();
-    setToken(d.token);saveUser(d.user);currentUser=d.user;enterApp();
+    // Server sets httpOnly session cookie — we never touch or store the token.
+    // Only store non-sensitive user profile (name, role) for UI use.
+    saveUser(d.user);currentUser=d.user;enterApp();
   }catch(e){errEl.textContent='Could not reach server — check your connection.';errEl.classList.add('show');}
   finally{btn.textContent='Sign In';btn.disabled=false;}
 }
@@ -6485,7 +6533,7 @@ function enterApp(){
 
 async function doLogout(){
   _stopSessionMonitor();
-  try{await api('/auth/logout','POST');}catch{}
+  try{await fetch(API+'/auth/logout',{method:'POST',headers:{'X-CSRF-Token':getCSRF(),'Content-Type':'application/json'},credentials:'include'});}catch{}
   clearAuth();currentUser=null;
   try { sessionStorage.removeItem('tf_ob_done'); } catch {}
   document.getElementById('app').classList.add('hidden');
@@ -6793,7 +6841,7 @@ async function loadDashboard(){
   try{
     const controller=new AbortController();
     const timer=setTimeout(()=>controller.abort(),TIMEOUT_MS);
-    const res=await fetch(API+'/dashboard',{headers:{'Content-Type':'application/json','Authorization':'Bearer '+getToken()},signal:controller.signal});
+    const res=await fetch(API+'/dashboard',{headers:{'Content-Type':'application/json'},credentials:'include',signal:controller.signal});
     clearTimeout(timer);
     if(res.status===401){doLogout();return;}
     if(!res.ok)throw new Error('Server returned '+res.status);
@@ -7653,14 +7701,13 @@ Rules:
 5. Output ONLY the HTML content — no markdown, no code fences, no explanation.`;
 
     // 3. Call backend report generation endpoint (required — no local fallback)
-    const token = getToken();
     const proxyRes = await fetch(API + '/reports/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        ...(token ? {'Authorization': 'Bearer ' + token} : {}),
         'X-CSRF-Token': getCSRF(),
       },
+      credentials: 'include',
       body: JSON.stringify({ prompt, type: _repState.type, period, estate })
     });
 
@@ -8146,7 +8193,7 @@ async function modalSave(){
   else if(type==='inventory'){body={name:g('f-name'),category:g('f-cat'),unit:g('f-unit'),on_hand:parseFloat(g('f-onhand'))||0,par_level:parseFloat(g('f-par'))||0,max_level:parseFloat(g('f-max'))||0,unit_cost:parseFloat(g('f-cost'))||0,supplier:g('f-supplier'),notes:g('f-notes')};ep=id?`/inventory/${id}`:'/inventory';method=id?'PUT':'POST';}
   else if(type==='finance'){body={type:subtype||'income',category:g('f-cat'),description:g('f-desc'),amount:parseFloat(g('f-amount'))||0,date:g('f-date'),notes:g('f-notes')};ep='/finance';method='POST';}
   else if(type==='compliance'){body={title:g('f-title'),category:g('f-cat'),status:g('f-status'),issued_date:g('f-issued'),expiry_date:g('f-expiry'),issuing_body:g('f-issuer'),notes:g('f-notes')};ep=id?`/compliance/${id}`:'/compliance';method=id?'PUT':'POST';}
-  else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id){body.password=pw||'thornfield2025';}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
+  else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id&&!pw){toast('Password is required when creating a new user.','error');return;}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
   try{await api(ep,method,body);toast(id?'Updated':'Created');closeModal();loadPage(currentPage);}catch(e){}
 }
 
@@ -8187,39 +8234,26 @@ async function generateDigestNow() {
     const weekStart = new Date(today); weekStart.setDate(today.getDate() - today.getDay());
     const monthFmt = (m) => new Date(m+'-01').toLocaleDateString('en-GB',{month:'short',year:'2-digit'});
 
-    // Build digest content via Anthropic API
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    // Build digest content via BACKEND proxy — the Anthropic API key lives server-side only.
+    // The frontend NEVER calls api.anthropic.com directly or handles any API credentials.
+    const resp = await fetch(API + '/ai/digest', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': getCSRF() },
+      credentials: 'include',
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        messages: [{
-          role: 'user',
-          content: `You are the estate intelligence system for Thornfield Estate, a commercial farm in Harare, Zimbabwe.
-
-Generate a concise weekly estate digest. Be direct, data-driven. No fluff. Use real numbers from the data.
-
-Farm Data:
-- Revenue YTD: $${(dash.revenue_ytd||0).toLocaleString()}, Net Profit: $${(dash.net_profit||0).toLocaleString()}
-- Livestock: ${dash.livestock_count||0} head across ${herds.length} herds
-- Crops: ${dash.crop_hectares||0} ha in production, ${crops.filter(c=>c.status!=='Fallow').length} active fields
-- Workers: ${dash.workers_on_site||0}/${dash.workers_total||0} on site
-- Compliance: ${dash.compliance_overdue||0} overdue, ${dash.compliance_due_soon||0} due soon
-- Low stock items: ${dash.low_stock_items||0}
-- Active crops: ${crops.filter(c=>c.status!=='Fallow'&&c.status!=='Harvested').map(c=>c.block+' ('+c.crop+', '+c.status+')').join('; ')}
-- Herds: ${herds.map(h=>h.herd_name+': '+h.count+' head, '+h.health).join('; ')}
-
-Respond ONLY with a JSON object (no markdown, no backticks):
-{
-  "headline": "2-line executive summary of the week",
-  "revenue_status": "one sentence on revenue vs target",
-  "livestock_summary": "one sentence on herd health",
-  "crop_status": "one sentence on crop pipeline",
-  "compliance_note": "one sentence on compliance standing",
-  "top_3_actions": ["action 1", "action 2", "action 3"]
-}`
-        }]
+        revenue_ytd: dash.revenue_ytd||0,
+        net_profit: dash.net_profit||0,
+        livestock_count: dash.livestock_count||0,
+        herd_count: herds.length,
+        crop_hectares: dash.crop_hectares||0,
+        active_fields: crops.filter(c=>c.status!=='Fallow').length,
+        workers_on_site: dash.workers_on_site||0,
+        workers_total: dash.workers_total||0,
+        compliance_overdue: dash.compliance_overdue||0,
+        compliance_due_soon: dash.compliance_due_soon||0,
+        low_stock_items: dash.low_stock_items||0,
+        active_crops: crops.filter(c=>c.status!=='Fallow'&&c.status!=='Harvested').map(c=>({block:c.block,crop:c.crop,status:c.status})),
+        herds: herds.map(h=>({name:h.herd_name,count:h.count,health:h.health}))
       })
     });
 
@@ -8651,17 +8685,18 @@ function copyInviteCode(){
     if(dr)dr.textContent=n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
     if(dd)dd.textContent='Thornfield Estate, Harare · '+n.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
   })();
-  const token=getToken();
-  if(token){
-    currentUser=loadUser();
-    if(currentUser){
-      try{
-        const r=await fetch(API+'/auth/me',{headers:{'Authorization':'Bearer '+token}});
-        if(r.ok){const u=await r.json();currentUser=u;saveUser(u);enterApp();return;}
-      }catch{}
+  // Check if the user has an active server-side session (cookie-based)
+  // We probe /auth/me — if the httpOnly session cookie is valid, the server returns the user profile.
+  try{
+    const r=await fetch(API+'/auth/me',{credentials:'include'});
+    if(r.ok){
+      const u=await r.json();
+      currentUser=u;
+      saveUser(u);
+      enterApp();
+      return;
     }
-    clearAuth();
-  }
+  }catch{}
   // No valid session — show landing page
   const as=document.getElementById('auth-screen');
   as.classList.remove('hidden','auth-mode');
