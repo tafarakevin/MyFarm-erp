@@ -5683,6 +5683,52 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 <div id="toast-container"></div>
 
 <script>
+// ════════════════════════════════════════════════════════════════════════════
+// FRONTEND OBSERVABILITY LAYER
+// ════════════════════════════════════════════════════════════════════════════
+(function(){
+  function _reportFrontendError(payload) {
+    try {
+      payload.request_id = window._lastRequestId || '-';
+      payload.ts         = new Date().toISOString();
+      if (window._reportingError) return;
+      window._reportingError = true;
+      fetch('/api/client-error', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+        keepalive: true,
+      }).catch(function(){}).finally(function(){ window._reportingError = false; });
+    } catch(e) { window._reportingError = false; }
+  }
+  window._reportFrontendError = _reportFrontendError;
+
+  window.onerror = function(message, source, lineno, colno, error) {
+    _reportFrontendError({
+      type: 'JS_ERROR',
+      message: String(message).substring(0, 500),
+      stack: error && error.stack ? String(error.stack).substring(0, 2000) : '',
+      url: String(source || window.location.href).substring(0, 300),
+      lineno, colno,
+    });
+    return false;
+  };
+
+  window.onunhandledrejection = function(event) {
+    const reason = event.reason;
+    _reportFrontendError({
+      type: 'UNHANDLED_REJECTION',
+      message: reason instanceof Error ? String(reason.message).substring(0, 500) : String(reason).substring(0, 500),
+      stack: reason instanceof Error && reason.stack ? String(reason.stack).substring(0, 2000) : '',
+      url: window.location.href.substring(0, 300),
+    });
+  };
+
+  window.addEventListener('offline', function() {
+    _reportFrontendError({ type: 'NETWORK_OFFLINE', message: 'Browser went offline', url: window.location.href });
+  });
+})();
+window._lastRequestId = '-';
 
 // ─── THEME TOGGLE ──────────────────────────────────────────────────────────────
 function toggleTheme(){
@@ -6039,8 +6085,26 @@ async function api(path,method='GET',body=null){
   if(body)opts.body=JSON.stringify(body);
   try{
     const r=await fetch(API+path,opts);
+    // Capture request ID for end-to-end log correlation
+    const reqId = r.headers.get('X-Request-ID')||'-';
+    window._lastRequestId = reqId;
     if(r.status===401){doLogout();return null;}
-    if(!r.ok){const e=await r.json().catch(()=>({error:r.statusText}));throw new Error(e.error||r.statusText);}
+    if(!r.ok){
+      const e=await r.json().catch(()=>({error:r.statusText}));
+      // Report 5xx errors to the backend observability endpoint
+      if(r.status>=500&&window._reportFrontendError){
+        window._reportFrontendError({
+          type:'API_ERROR',
+          message:method+' '+path+' → '+r.status,
+          url:window.location.href,
+          request_id:reqId,
+          endpoint:path,
+          status:r.status,
+          server_error:e.error||'',
+        });
+      }
+      throw Object.assign(new Error(e.error||r.statusText),{status:r.status,data:e,request_id:reqId});
+    }
     const data=await r.json();
     return data;
   }catch(e){

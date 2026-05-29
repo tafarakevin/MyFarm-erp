@@ -189,7 +189,15 @@ def require_write_access(f):
 def query(sql, args=(), one=False):
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute(sql, args)
+    try:
+        _timed_execute(cur, sql, args)
+    except Exception as e:
+        _inc("db_errors")
+        db_log.error("DB query error", extra={
+            "event": "DB_ERROR", "exc": str(e),
+            "request_id": getattr(g, "request_id", "-"),
+        })
+        raise
     rv = cur.fetchall()
     return (rv[0] if rv else None) if one else rv
 
@@ -201,7 +209,15 @@ def mutate(sql, args=()):
     """
     db = get_db()
     cur = db.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute(sql, args)
+    try:
+        _timed_execute(cur, sql, args)
+    except Exception as e:
+        _inc("db_errors")
+        db_log.error("DB mutate error", extra={
+            "event": "DB_ERROR", "exc": str(e),
+            "request_id": getattr(g, "request_id", "-"),
+        })
+        raise
     returned_id = None
     if 'RETURNING' in sql.upper():
         try:
@@ -267,24 +283,61 @@ def tx_query(cur, sql, args=(), one=False):
 
 
 def write_audit(cur, action, record_type, record_id=None, record_label="",
-                before=None, after=None, user_id=None):
+                before=None, after=None, user_id=None, reason=None):
     """
-    Write an audit entry inside an existing transaction cursor.
-    'before' and 'after' should be dicts; they are stored as JSONB.
-    Call this inside every db_transaction() block that mutates financial
-    or operational data.
+    Write an immutable audit entry inside an existing transaction cursor.
+
+    Fields stored:
+      action        — CREATE / UPDATE / DELETE / SOFT_DELETE / LOGIN / etc.
+      record_type   — table / module name (e.g. "finance", "livestock")
+      record_id     — PK of the affected row
+      record_label  — human-readable label for the record
+      before_state  — full previous state as JSONB (for UPDATE/DELETE)
+      after_state   — full new state as JSONB (for CREATE/UPDATE)
+      performed_by  — user ID of the actor
+      request_ip    — IP address at time of change
+      session_id    — session token prefix (first 8 chars, never full token)
+      request_id    — X-Request-ID for correlating with API access logs
+      reason        — optional free-text justification (e.g. for manual adjustments)
+
+    IMMUTABILITY: the audit_log table has NO UPDATE or DELETE routes.
+    The /api/audit-log POST endpoint is kept only for legacy clients;
+    new server-side code always calls this function inside a transaction.
     """
+    ip         = request.remote_addr or "unknown"
+    request_id = getattr(g, "request_id", "-")
+    # Store only the first 8 chars of the session token — enough for correlation
+    # without exposing the full secret
+    cookie = request.cookies.get("tf_session", "") or ""
+    session_prefix = cookie[:8] if cookie else "-"
+
+    _inc("audit_writes")
     cur.execute(
         """INSERT INTO audit_log
                (action, record_type, record_id, record_label,
-                before_state, after_state, performed_by)
-           VALUES (%s, %s, %s, %s, %s, %s, %s)""",
+                before_state, after_state, performed_by,
+                request_ip, session_id, request_id, reason)
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (
             action, record_type, record_id, record_label,
             json.dumps(before) if before else None,
             json.dumps(after)  if after  else None,
-            user_id,
+            user_id, ip, session_prefix, request_id, reason,
         )
+    )
+    # Emit a structured log entry so audit events appear in the application log
+    app_log.info(
+        f"AUDIT {action} {record_type}#{record_id}",
+        extra={
+            "event":        "AUDIT",
+            "audit_action": action,
+            "record_type":  record_type,
+            "record_id":    record_id,
+            "record_label": record_label,
+            "user_id":      user_id,
+            "ip":           ip,
+            "request_id":   request_id,
+        }
     )
 
 
@@ -337,18 +390,269 @@ _DUMMY_HASH = bcrypt.hashpw(
     bcrypt.gensalt(rounds=12)
 ).decode("utf-8")
 
-# ─── SECURITY LOGGING ──────────────────────────────────────────────────────────
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-)
-security_log = logging.getLogger("security")
+# ══════════════════════════════════════════════════════════════════════════════
+# OBSERVABILITY LAYER
+# ══════════════════════════════════════════════════════════════════════════════
+#
+# Architecture:
+#   - Structured JSON logging (machine-parseable, Railway Log Drain compatible)
+#   - Per-request unique IDs (X-Request-ID) + correlation IDs stored in g
+#   - Timing middleware — every response carries X-Response-Time
+#   - Sentry SDK integration (optional — set SENTRY_DSN env var to enable)
+#   - Security event log (separate logger, never exposes credentials)
+#   - Application event log (INFO/WARNING/ERROR/CRITICAL with structured fields)
+#   - DB query timing (slow-query detection > 200 ms)
+#   - /api/health/live  — liveness probe (no auth)
+#   - /api/health/ready — readiness probe (DB ping, no auth)
+#   - /api/admin/metrics — operational metrics (owner auth)
+#   - /api/admin/logs   — recent structured log tail (owner auth)
+#
+# Environment variables (all optional):
+#   SENTRY_DSN         — enables Sentry error tracking
+#   LOG_LEVEL          — DEBUG / INFO / WARNING / ERROR (default: INFO)
+#   SLOW_QUERY_MS      — slow query threshold in ms (default: 200)
 
-def log_security(event: str, detail: str = "", user_id=None):
-    """Log security events without exposing passwords or tokens."""
-    ip = request.remote_addr or "unknown"
-    uid_str = f" user={user_id}" if user_id else ""
-    security_log.warning(f"SECURITY [{event}] ip={ip}{uid_str} {detail}")
+import uuid as _uuid_mod
+import traceback as _traceback_mod
+import threading as _threading_mod
+from collections import deque as _deque
+
+# ── Structured JSON log formatter ─────────────────────────────────────────────
+
+class _JSONFormatter(logging.Formatter):
+    """Emits one JSON object per log line — compatible with Railway Log Drain,
+    Logtail, Datadog, and any structured log aggregator."""
+    def format(self, record: logging.LogRecord) -> str:
+        payload = {
+            "ts":      self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level":   record.levelname,
+            "logger":  record.name,
+            "msg":     record.getMessage(),
+            "module":  record.module,
+            "line":    record.lineno,
+        }
+        # Attach structured extras set via logger.info("msg", extra={...})
+        for k, v in record.__dict__.items():
+            if k not in ("args", "asctime", "created", "exc_info", "exc_text",
+                         "filename", "funcName", "id", "levelname", "levelno",
+                         "lineno", "message", "module", "msecs", "msg", "name",
+                         "pathname", "process", "processName", "relativeCreated",
+                         "stack_info", "thread", "threadName", "taskName"):
+                payload[k] = v
+        if record.exc_info:
+            payload["exc"] = self.formatException(record.exc_info)
+        return json.dumps(payload, default=str)
+
+# ── In-memory rolling log buffer (last 500 entries, for /api/admin/logs) ──────
+_LOG_BUFFER: _deque = _deque(maxlen=500)
+_LOG_BUFFER_LOCK = _threading_mod.Lock()
+
+class _BufferHandler(logging.Handler):
+    def emit(self, record: logging.LogRecord):
+        entry = {
+            "ts":     self.formatTime(record, "%Y-%m-%dT%H:%M:%S") if hasattr(self, "formatTime") else "",
+            "level":  record.levelname,
+            "logger": record.name,
+            "msg":    record.getMessage(),
+        }
+        # Pull structured extras
+        for k in ("request_id", "endpoint", "method", "status", "duration_ms",
+                  "user_id", "ip", "event"):
+            if hasattr(record, k):
+                entry[k] = getattr(record, k)
+        with _LOG_BUFFER_LOCK:
+            _LOG_BUFFER.append(entry)
+
+    def formatTime(self, record, datefmt=None):
+        import datetime
+        return datetime.datetime.utcfromtimestamp(record.created).strftime(
+            datefmt or "%Y-%m-%dT%H:%M:%S"
+        )
+
+# ── Logger setup ──────────────────────────────────────────────────────────────
+_LOG_LEVEL = getattr(logging, os.environ.get("LOG_LEVEL", "INFO").upper(), logging.INFO)
+
+def _build_logger(name: str) -> logging.Logger:
+    lg = logging.getLogger(name)
+    lg.setLevel(_LOG_LEVEL)
+    if not lg.handlers:
+        sh = logging.StreamHandler()
+        sh.setFormatter(_JSONFormatter())
+        lg.addHandler(sh)
+        bh = _BufferHandler()
+        lg.addHandler(bh)
+    lg.propagate = False
+    return lg
+
+app_log      = _build_logger("app")       # general application events
+security_log = _build_logger("security")  # auth, CSRF, rate-limit events
+db_log       = _build_logger("db")        # query performance
+api_log      = _build_logger("api")       # request/response lifecycle
+
+# ── Sentry (optional — zero-config if SENTRY_DSN not set) ────────────────────
+_SENTRY_ENABLED = False
+try:
+    _sentry_dsn = os.environ.get("SENTRY_DSN", "")
+    if _sentry_dsn:
+        import sentry_sdk
+        from sentry_sdk.integrations.flask import FlaskIntegration
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=0.2,     # 20% of requests get performance traces
+            send_default_pii=False,     # never send passwords / tokens
+            environment=os.environ.get("FLASK_ENV", "production"),
+            release=os.environ.get("RAILWAY_GIT_COMMIT_SHA", "unknown"),
+        )
+        _SENTRY_ENABLED = True
+        app_log.info("Sentry error tracking enabled", extra={"event": "SENTRY_INIT"})
+except ImportError:
+    pass  # sentry-sdk not installed — continue without it
+
+SLOW_QUERY_MS = int(os.environ.get("SLOW_QUERY_MS", "200"))
+
+# ── Performance-instrumented query wrappers ───────────────────────────────────
+
+def _timed_execute(cur, sql: str, args=()):
+    """Execute a DB statement, logging slow queries above SLOW_QUERY_MS."""
+    t0 = time.monotonic()
+    cur.execute(sql, args)
+    elapsed_ms = (time.monotonic() - t0) * 1000
+    if elapsed_ms > SLOW_QUERY_MS:
+        # Truncate SQL for the log — never log full args (may contain PII)
+        snippet = sql.strip().replace("\n", " ")[:120]
+        db_log.warning(
+            "Slow query detected",
+            extra={
+                "event":       "SLOW_QUERY",
+                "duration_ms": round(elapsed_ms, 1),
+                "sql_snippet": snippet,
+                "request_id":  getattr(g, "request_id", "-"),
+            }
+        )
+    return elapsed_ms
+
+# ── Metric counters (in-memory, reset on restart) ────────────────────────────
+_metrics: dict = {
+    "requests_total":    0,
+    "requests_5xx":      0,
+    "requests_4xx":      0,
+    "requests_2xx":      0,
+    "requests_3xx":      0,
+    "login_success":     0,
+    "login_failure":     0,
+    "login_rate_limited":0,
+    "db_errors":         0,
+    "slow_queries":      0,
+    "audit_writes":      0,
+    "started_at":        datetime.utcnow().isoformat(),
+}
+_metrics_lock = _threading_mod.Lock()
+
+def _inc(key: str, n: int = 1):
+    with _metrics_lock:
+        _metrics[key] = _metrics.get(key, 0) + n
+
+# ── Request lifecycle hooks ────────────────────────────────────────────────────
+
+@app.before_request
+def _before_request():
+    """Assign a unique request ID and start a request timer."""
+    g.request_id  = request.headers.get("X-Request-ID") or _uuid_mod.uuid4().hex[:16]
+    g.request_t0  = time.monotonic()
+    _inc("requests_total")
+
+@app.after_request
+def _after_request_logging(response):
+    """Attach request ID + timing to every response; emit structured access log."""
+    duration_ms = round((time.monotonic() - getattr(g, "request_t0", time.monotonic())) * 1000, 1)
+    response.headers["X-Request-ID"]    = getattr(g, "request_id", "-")
+    response.headers["X-Response-Time"] = f"{duration_ms}ms"
+
+    status = response.status_code
+    if   status >= 500: _inc("requests_5xx")
+    elif status >= 400: _inc("requests_4xx")
+    elif status >= 300: _inc("requests_3xx")
+    else:               _inc("requests_2xx")
+
+    # Skip logging for static files and HEAD health probes
+    path = request.path
+    if not path.startswith("/api/") or (request.method == "HEAD" and "/health" in path):
+        return response
+
+    user_id = getattr(g, "user", {}).get("id") if hasattr(g, "user") else None
+    api_log.info(
+        f"{request.method} {path} {status}",
+        extra={
+            "event":       "API_REQUEST",
+            "request_id":  getattr(g, "request_id", "-"),
+            "method":      request.method,
+            "endpoint":    path,
+            "status":      status,
+            "duration_ms": duration_ms,
+            "ip":          request.remote_addr or "unknown",
+            "user_id":     user_id,
+        }
+    )
+    return response
+
+# ── Global unhandled exception handler ───────────────────────────────────────
+
+@app.errorhandler(Exception)
+def _handle_unhandled_exception(e):
+    """
+    Catch-all for any exception that escapes a route handler.
+    Logs full stack trace, increments 5xx counter, and returns a safe error body.
+    Never leaks internal details to the client.
+    """
+    _inc("requests_5xx")
+    tb_str = _traceback_mod.format_exc()
+    request_id = getattr(g, "request_id", "unknown")
+    app_log.error(
+        f"Unhandled exception: {type(e).__name__}: {e}",
+        extra={
+            "event":      "UNHANDLED_EXCEPTION",
+            "request_id": request_id,
+            "endpoint":   request.path,
+            "method":     request.method,
+            "exc_type":   type(e).__name__,
+            "traceback":  tb_str,
+        }
+    )
+    if _SENTRY_ENABLED:
+        import sentry_sdk
+        sentry_sdk.capture_exception(e)
+    return jsonify({
+        "error":      "An unexpected server error occurred.",
+        "request_id": request_id,   # client can quote this in a bug report
+    }), 500
+
+# ── Security event helper ─────────────────────────────────────────────────────
+
+def log_security(event: str, detail: str = "", user_id=None, level: str = "warning"):
+    """
+    Emit a structured security event log.
+    Never include passwords, tokens, or session values in 'detail'.
+
+    level: "info" | "warning" | "critical"
+    """
+    ip  = request.remote_addr or "unknown"
+    rid = getattr(g, "request_id", "-")
+    log_fn = getattr(security_log, level, security_log.warning)
+    log_fn(
+        f"SECURITY [{event}]",
+        extra={
+            "event":      event,
+            "request_id": rid,
+            "ip":         ip,
+            "user_id":    user_id,
+            "detail":     detail,
+        }
+    )
+    # Increment relevant metric counters
+    if event == "LOGIN_SUCCESS":     _inc("login_success")
+    elif event == "LOGIN_FAILED":    _inc("login_failure")
+    elif event == "RATE_LIMIT_TRIGGERED": _inc("login_rate_limited")
 
 
 # ─── SERVER-SIDE RATE LIMITING (in-memory, per IP) ────────────────────────────
@@ -415,7 +719,8 @@ def add_security_headers(response):
         "img-src 'self' data:; "
         "frame-ancestors 'none'; "
         "base-uri 'self'; "
-        "form-action 'self';"
+        "form-action 'self'; "
+        "report-uri /api/csp-report;"
     )
     # Remove headers that leak server info
     response.headers.pop("Server", None)
@@ -571,15 +876,33 @@ def init_db():
             created_at  TIMESTAMPTZ DEFAULT NOW()
         )""",
         """CREATE TABLE IF NOT EXISTS audit_log (
-            id           SERIAL PRIMARY KEY,
-            action       TEXT    NOT NULL,
-            record_type  TEXT    NOT NULL,
-            record_id    INTEGER,
-            record_label TEXT,
-            before_state JSONB,
-            after_state  JSONB,
-            performed_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
-            created_at   TIMESTAMPTZ DEFAULT NOW()
+            id             SERIAL PRIMARY KEY,
+            action         TEXT    NOT NULL,
+            record_type    TEXT    NOT NULL,
+            record_id      INTEGER,
+            record_label   TEXT,
+            before_state   JSONB,
+            after_state    JSONB,
+            performed_by   INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            request_ip     TEXT,
+            session_id     TEXT,
+            request_id     TEXT,
+            reason         TEXT,
+            created_at     TIMESTAMPTZ DEFAULT NOW()
+        )""",
+        # app_event_log: structured events for operational monitoring
+        # (separate from audit_log which is financial/entity-change focused)
+        """CREATE TABLE IF NOT EXISTS app_event_log (
+            id          SERIAL PRIMARY KEY,
+            level       TEXT    NOT NULL DEFAULT 'INFO',
+            event       TEXT    NOT NULL,
+            message     TEXT    NOT NULL,
+            request_id  TEXT,
+            user_id     INTEGER,
+            ip          TEXT,
+            endpoint    TEXT,
+            payload     JSONB,
+            created_at  TIMESTAMPTZ DEFAULT NOW()
         )""",
         # Idempotency keys — prevent duplicate processing of retried requests
         """CREATE TABLE IF NOT EXISTS idempotency_keys (
@@ -620,6 +943,24 @@ def init_db():
         "ALTER TABLE workers ADD CONSTRAINT IF NOT EXISTS workers_nonneg_salary CHECK (salary >= 0)",
         # Idempotency key TTL index (allows cleaning up old keys)
         "CREATE INDEX IF NOT EXISTS idx_idem_created ON idempotency_keys(created_at)",
+        # Audit log new columns (safe if already added by CREATE TABLE)
+        "ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS request_ip  TEXT",
+        "ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS session_id  TEXT",
+        "ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS request_id  TEXT",
+        "ALTER TABLE audit_log ADD COLUMN IF NOT EXISTS reason      TEXT",
+        # Audit log indexes — these are heavy to scan without them
+        "CREATE INDEX IF NOT EXISTS idx_audit_record    ON audit_log(record_type, record_id)",
+        "CREATE INDEX IF NOT EXISTS idx_audit_user      ON audit_log(performed_by)",
+        "CREATE INDEX IF NOT EXISTS idx_audit_action    ON audit_log(action)",
+        "CREATE INDEX IF NOT EXISTS idx_audit_created   ON audit_log(created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_audit_ip        ON audit_log(request_ip)",
+        # app_event_log indexes
+        "CREATE INDEX IF NOT EXISTS idx_applog_event    ON app_event_log(event)",
+        "CREATE INDEX IF NOT EXISTS idx_applog_level    ON app_event_log(level)",
+        "CREATE INDEX IF NOT EXISTS idx_applog_created  ON app_event_log(created_at DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_applog_user     ON app_event_log(user_id)",
+        # Sessions — index for expiry cleanup
+        "CREATE INDEX IF NOT EXISTS idx_sessions_exp    ON sessions(expires_at)",
     ]
     for sql in migrations:
         try:
@@ -864,7 +1205,15 @@ def login():
         mutate("UPDATE users SET last_login=NOW() WHERE id=%s", (user["id"],))
         _reset_rate_limit(ip)  # Clear failed attempts on success
 
-        log_security("LOGIN_SUCCESS", f"email={email}", user_id=user["id"])
+        log_security("LOGIN_SUCCESS", f"email={email}", user_id=user["id"], level="info")
+        app_log.info("User login", extra={
+            "event":      "LOGIN",
+            "user_id":    user["id"],
+            "user_email": email,
+            "user_role":  user["role"],
+            "ip":         ip,
+            "request_id": getattr(g, "request_id", "-"),
+        })
 
         # ── Set httpOnly session cookie ───────────────────────────────────────
         # The cookie is:
@@ -914,7 +1263,12 @@ def logout():
         token = auth
     if token:
         mutate("DELETE FROM sessions WHERE token=%s", (token,))
-        log_security("LOGOUT", "", user_id=g.user.get("id"))
+        log_security("LOGOUT", "", user_id=g.user.get("id"), level="info")
+    app_log.info("User logout", extra={
+        "event":   "LOGOUT",
+        "user_id": g.user.get("id"),
+        "ip":      request.remote_addr or "unknown",
+    })
 
     resp = make_response(jsonify({"message": "Logged out"}))
     # Overwrite the cookie with an expired one to force the browser to delete it
@@ -958,12 +1312,186 @@ def me():
     })
 
 
+# ─── OBSERVABILITY ENDPOINTS ───────────────────────────────────────────────────
+
 @app.route("/api/health", methods=["GET", "HEAD"])
-def health():
-    """Lightweight liveness probe — no auth required."""
+@app.route("/api/health/live", methods=["GET", "HEAD"])
+def health_live():
+    """
+    Liveness probe — confirms the process is running.
+    No auth. No DB call. Should never return non-200 unless the process is dead.
+    Used by Railway health checks and uptime monitors.
+    """
     if request.method == "HEAD":
         return "", 200
-    return jsonify({"status": "ok", "service": "thornfield-estate"}), 200
+    return jsonify({
+        "status":    "ok",
+        "service":   "thornfield-estate",
+        "timestamp": datetime.utcnow().isoformat(),
+    }), 200
+
+
+@app.route("/api/health/ready", methods=["GET", "HEAD"])
+def health_ready():
+    """
+    Readiness probe — confirms the DB connection is alive.
+    No auth. Returns 503 if the database is unreachable.
+    Use this for load-balancer / Railway health gate.
+    """
+    try:
+        db = psycopg2.connect(DATABASE_URL, connect_timeout=3)
+        cur = db.cursor()
+        cur.execute("SELECT 1")
+        db.close()
+        db_ok = True
+        db_error = None
+    except Exception as e:
+        db_ok = False
+        db_error = str(e)
+        app_log.error("DB readiness check failed", extra={"event": "DB_HEALTH_FAIL", "exc": db_error})
+
+    status_code = 200 if db_ok else 503
+    if request.method == "HEAD":
+        return "", status_code
+    return jsonify({
+        "status":    "ready" if db_ok else "degraded",
+        "database":  "ok" if db_ok else f"error: {db_error}",
+        "timestamp": datetime.utcnow().isoformat(),
+    }), status_code
+
+
+@app.route("/api/admin/metrics", methods=["GET"])
+@require_role("owner")
+def admin_metrics():
+    """
+    Operational metrics dashboard data.
+    Requires owner role. Returns in-process counters + live DB stats.
+    """
+    # Live DB stats
+    try:
+        db_stats = query("""
+            SELECT
+                (SELECT COUNT(*) FROM sessions   WHERE expires_at > NOW())  AS active_sessions,
+                (SELECT COUNT(*) FROM audit_log  WHERE created_at > NOW() - INTERVAL '24h') AS audit_24h,
+                (SELECT COUNT(*) FROM audit_log)                            AS audit_total,
+                (SELECT COUNT(*) FROM finance    WHERE created_at > NOW() - INTERVAL '24h') AS finance_changes_24h,
+                (SELECT COUNT(*) FROM idempotency_keys WHERE created_at > NOW() - INTERVAL '24h') AS idem_keys_24h
+        """, one=True)
+    except Exception as e:
+        db_stats = {"error": str(e)}
+
+    with _metrics_lock:
+        snapshot = dict(_metrics)
+
+    return jsonify({
+        "process":   snapshot,
+        "database":  row_to_dict(db_stats) if db_stats else {},
+        "timestamp": datetime.utcnow().isoformat(),
+        "sentry":    _SENTRY_ENABLED,
+    })
+
+
+@app.route("/api/admin/logs", methods=["GET"])
+@require_role("owner")
+def admin_logs():
+    """
+    Tail the in-memory structured log buffer (last 500 entries).
+    Supports filtering by level and event type via query params.
+    ?level=ERROR  — filter by log level (INFO/WARNING/ERROR/CRITICAL)
+    ?event=AUDIT  — filter by event type
+    ?limit=100    — max entries to return (default 100, max 500)
+    """
+    level_filter = request.args.get("level", "").upper()
+    event_filter = request.args.get("event", "")
+    limit        = min(int(request.args.get("limit", 100)), 500)
+
+    with _LOG_BUFFER_LOCK:
+        entries = list(_LOG_BUFFER)
+
+    if level_filter:
+        entries = [e for e in entries if e.get("level") == level_filter]
+    if event_filter:
+        entries = [e for e in entries if e.get("event") == event_filter]
+
+    return jsonify({
+        "entries": entries[-limit:],
+        "total":   len(entries),
+        "buffered": len(list(_LOG_BUFFER)),
+    })
+
+
+@app.route("/api/admin/audit-summary", methods=["GET"])
+@require_role("owner")
+def admin_audit_summary():
+    """
+    Aggregated audit summary for the admin dashboard.
+    Shows who changed what, how frequently, over the last 30 days.
+    """
+    rows = query("""
+        SELECT
+            a.action,
+            a.record_type,
+            COUNT(*)                         AS count,
+            MAX(a.created_at)                AS last_at,
+            u.name                           AS last_user
+        FROM audit_log a
+        LEFT JOIN users u ON a.performed_by = u.id
+        WHERE a.created_at > NOW() - INTERVAL '30 days'
+        GROUP BY a.action, a.record_type, u.name
+        ORDER BY count DESC
+        LIMIT 50
+    """)
+
+    # Top actors (users making the most changes)
+    actors = query("""
+        SELECT u.name, u.role, COUNT(*) AS changes
+        FROM audit_log a
+        JOIN users u ON a.performed_by = u.id
+        WHERE a.created_at > NOW() - INTERVAL '30 days'
+        GROUP BY u.name, u.role
+        ORDER BY changes DESC
+        LIMIT 10
+    """)
+
+    # Recent security events
+    security_events = query("""
+        SELECT a.action, a.record_label, a.request_ip, a.created_at, u.name
+        FROM audit_log a
+        LEFT JOIN users u ON a.performed_by = u.id
+        WHERE a.action IN ('LOGIN_FAILED','RATE_LIMIT','CSRF_REJECTED',
+                           'AUTHZ_DENIED','WRITE_DENIED','SOFT_DELETE','DELETE')
+          AND a.created_at > NOW() - INTERVAL '7 days'
+        ORDER BY a.created_at DESC
+        LIMIT 30
+    """)
+
+    return jsonify({
+        "activity_breakdown": rows_to_list(rows),
+        "top_actors":         rows_to_list(actors),
+        "security_events":    rows_to_list(security_events),
+        "window_days":        30,
+        "timestamp":          datetime.utcnow().isoformat(),
+    })
+
+
+@app.route("/api/admin/sessions", methods=["GET"])
+@require_role("owner")
+def admin_sessions():
+    """List all active sessions with user info — for security monitoring."""
+    rows = query("""
+        SELECT s.token_prefix, s.user_id, s.created_at, s.expires_at,
+               s.ip_address, s.user_agent,
+               u.name, u.email, u.role
+        FROM (
+            SELECT LEFT(token, 8) AS token_prefix, user_id, created_at,
+                   expires_at, ip_address, user_agent
+            FROM sessions
+            WHERE expires_at > NOW()
+        ) s
+        JOIN users u ON s.user_id = u.id
+        ORDER BY s.created_at DESC
+    """)
+    return jsonify(rows_to_list(rows))
 
 # ─── FIRST-TIME SETUP (owner bootstrap — only works when zero users exist) ─────
 
@@ -994,7 +1522,9 @@ def bootstrap_owner():
         "INSERT INTO users (name,email,password,role) VALUES (%s,%s,%s,%s) RETURNING id",
         (name, email, pw, "owner")
     )
-    print(f"[bootstrap] Owner account created: {email}")
+    app_log.info("Bootstrap: owner account created", extra={
+        "event": "BOOTSTRAP", "email": email, "user_id": new_id,
+    })
     row = query("SELECT id,name,email,role,created_at FROM users WHERE id=%s", (new_id,), one=True)
     return jsonify({"message": "Owner account created. Sign in to continue.", "user": row_to_dict(row)}), 201
 
@@ -1834,20 +2364,34 @@ def finance_transactions():
 # ─── AUDIT LOG ─────────────────────────────────────────────────────────────────
 
 @app.route("/api/audit-log", methods=["POST"])
-@require_auth
+@require_role("owner")
 def write_audit_log():
+    """
+    DEPRECATED for external callers — all server-side code now calls
+    write_audit() inside a db_transaction() instead.
+
+    This endpoint is kept for backwards compatibility but is now restricted to
+    owner-role requests only. It cannot be used to write before_state /
+    after_state (those are set server-side only) to prevent audit tampering.
+    """
     d = request.get_json() or {}
+    ip = request.remote_addr or "unknown"
+    rid = getattr(g, "request_id", "-")
     mutate(
-        """INSERT INTO audit_log (action, record_type, record_id, record_label, performed_by)
-           VALUES (%s,%s,%s,%s,%s)""",
+        """INSERT INTO audit_log
+               (action, record_type, record_id, record_label,
+                performed_by, request_ip, request_id)
+           VALUES (%s,%s,%s,%s,%s,%s,%s)""",
         (
-            d.get("action", ""),
-            d.get("record_type", ""),
+            d.get("action", "MANUAL"),
+            d.get("record_type", "unknown"),
             d.get("record_id"),
             d.get("record_label", ""),
-            d.get("performed_by"),
+            g.user["id"],    # always use the authenticated user, ignore any payload field
+            ip, rid,
         )
     )
+    _inc("audit_writes")
     return jsonify({"ok": True}), 201
 
 
@@ -1855,12 +2399,23 @@ def write_audit_log():
 @require_role("owner")
 def get_audit_log():
     """
-    Return audit log entries. Supports filtering by record_type, record_id,
-    and action. Returns before_state and after_state for full change history.
+    Return audit log entries with full observability fields.
+
+    Query parameters:
+      record_type — filter by module (e.g. "finance", "livestock")
+      record_id   — filter by specific record PK
+      action      — filter by action type (CREATE/UPDATE/DELETE/LOGIN/etc.)
+      user_id     — filter by performing user
+      ip          — filter by request IP address
+      since       — ISO8601 timestamp — only entries after this point
+      limit       — max results (default 200, max 1000)
     """
     record_type = request.args.get("record_type")
     record_id   = request.args.get("record_id")
     action      = request.args.get("action")
+    user_id     = request.args.get("user_id")
+    ip_filter   = request.args.get("ip")
+    since       = request.args.get("since")
     limit       = min(int(request.args.get("limit", 200)), 1000)
 
     conditions = []
@@ -1871,11 +2426,23 @@ def get_audit_log():
         conditions.append("a.record_id = %s"); params.append(int(record_id))
     if action:
         conditions.append("a.action = %s"); params.append(action)
+    if user_id:
+        conditions.append("a.performed_by = %s"); params.append(int(user_id))
+    if ip_filter:
+        conditions.append("a.request_ip = %s"); params.append(ip_filter)
+    if since:
+        conditions.append("a.created_at > %s"); params.append(since)
 
     where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
     rows = query(f"""
-        SELECT a.id, a.action, a.record_type, a.record_id, a.record_label,
-               a.before_state, a.after_state, a.created_at, u.name as user_name
+        SELECT
+            a.id, a.action, a.record_type, a.record_id, a.record_label,
+            a.before_state, a.after_state,
+            a.request_ip, a.session_id, a.request_id, a.reason,
+            a.created_at,
+            u.name  AS user_name,
+            u.role  AS user_role,
+            u.email AS user_email
         FROM audit_log a
         LEFT JOIN users u ON a.performed_by = u.id
         {where}
@@ -1883,6 +2450,88 @@ def get_audit_log():
         LIMIT {limit}
     """, tuple(params))
     return jsonify(rows_to_list(rows))
+
+
+# ─── FRONTEND OBSERVABILITY ────────────────────────────────────────────────────
+
+@app.route("/api/client-error", methods=["POST"])
+def client_error_report():
+    """
+    Frontend error collection endpoint.
+    The frontend JS catches unhandled errors and fetch failures and POSTs them here.
+    No auth required (user may not be logged in when the error occurs).
+    Rate-limited by IP to prevent abuse (reuses the existing rate-limit store).
+    """
+    ip = request.remote_addr or "unknown"
+
+    # Simple rate limit: 20 client errors per 15 minutes per IP
+    _rate_key = f"cliErr:{ip}"
+    now = time.time()
+    entry = _rate_store.get(_rate_key, {"count": 0, "window_start": now})
+    if now - entry["window_start"] > 900:
+        entry = {"count": 0, "window_start": now}
+    entry["count"] += 1
+    _rate_store[_rate_key] = entry
+    if entry["count"] > 20:
+        return jsonify({"ok": False}), 429
+
+    d = request.get_json(silent=True) or {}
+
+    # Scrub anything that looks like a token or password before logging
+    def _scrub(v):
+        if isinstance(v, str):
+            return re.sub(r"(token|password|secret|csrf|cookie)[^\s]*\s*[:=]\s*\S+",
+                          "[REDACTED]", v, flags=re.IGNORECASE)
+        return v
+
+    msg        = _scrub(str(d.get("message", "")))[:500]
+    stack      = _scrub(str(d.get("stack", "")))[:2000]
+    url        = str(d.get("url", ""))[:300]
+    error_type = str(d.get("type", "JS_ERROR"))[:50]
+    request_id = str(d.get("request_id", getattr(g, "request_id", "-")))[:32]
+
+    app_log.error(
+        f"Frontend error: {msg}",
+        extra={
+            "event":        "FRONTEND_ERROR",
+            "error_type":   error_type,
+            "page_url":     url,
+            "stack":        stack,
+            "ip":           ip,
+            "request_id":   request_id,
+        }
+    )
+    if _SENTRY_ENABLED:
+        import sentry_sdk
+        with sentry_sdk.push_scope() as scope:
+            scope.set_tag("source", "frontend")
+            scope.set_extra("stack", stack)
+            scope.set_extra("url", url)
+            sentry_sdk.capture_message(f"[Frontend] {msg}", level="error")
+
+    return jsonify({"ok": True}), 202
+
+
+@app.route("/api/csp-report", methods=["POST"])
+def csp_report():
+    """
+    CSP violation report endpoint.
+    Configure Content-Security-Policy: report-uri /api/csp-report in server.py
+    to receive browser CSP violation reports without any auth.
+    """
+    d = request.get_json(silent=True, force=True) or {}
+    report = d.get("csp-report", d)
+    app_log.warning(
+        "CSP violation reported",
+        extra={
+            "event":            "CSP_VIOLATION",
+            "blocked_uri":      str(report.get("blocked-uri", ""))[:200],
+            "violated_directive": str(report.get("violated-directive", ""))[:100],
+            "document_uri":     str(report.get("document-uri", ""))[:200],
+            "ip":               request.remote_addr or "unknown",
+        }
+    )
+    return "", 204
 
 
 # ─── AI / ANTHROPIC PROXY ─────────────────────────────────────────────────────
@@ -3576,6 +4225,30 @@ except Exception:
     traceback.print_exc()
 
 # seed_owner() removed — no hardcoded credentials at startup
+
+# ─── APPLICATION STARTUP ───────────────────────────────────────────────────────
+def _on_startup():
+    """Called once when the server process starts. Logs config summary."""
+    app_log.info("Thornfield ERP starting", extra={
+        "event":       "STARTUP",
+        "flask_env":   os.environ.get("FLASK_ENV", "production"),
+        "sentry":      _SENTRY_ENABLED,
+        "log_level":   os.environ.get("LOG_LEVEL", "INFO"),
+        "allowed_origin": ALLOWED_ORIGIN,
+        "slow_query_ms":  SLOW_QUERY_MS,
+        "session_days":   SESSION_DAYS,
+    })
+    try:
+        init_db()
+        app_log.info("Database schema initialised", extra={"event": "DB_INIT_OK"})
+    except Exception as e:
+        app_log.critical("Database init FAILED — check DATABASE_URL", extra={
+            "event": "DB_INIT_FAIL", "exc": str(e),
+        })
+        raise
+
+_on_startup()
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
