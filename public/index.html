@@ -3,24 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- ═══ SECURITY HEADERS (enforce also server-side via HTTP response headers) ═══ -->
-<!-- Content-Security-Policy: restrict script/style/connect sources.
-     NOTE: These meta CSP tags are a defence-in-depth hint to the browser.
-     The authoritative CSP MUST be set as an HTTP response header by the server. -->
+<!-- ═══ SECURITY HEADERS ════════════════════════════════════════════════════
+     frame-ancestors and X-Frame-Options MUST be set as HTTP response headers
+     by the server (Flask after_request). Browsers ignore frame-ancestors in
+     <meta> tags entirely, and X-Frame-Options is not valid in <meta> at all.
+     Both are already set correctly in server.py add_security_headers().
+
+     The meta CSP below is retained as a browser hint only for directives that
+     ARE valid in <meta> (script-src, style-src, img-src, etc).
+     ══════════════════════════════════════════════════════════════════════════ -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
   script-src 'self' 'unsafe-inline';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
   connect-src 'self';
-  img-src 'self' data:;
-  frame-ancestors 'none';
+  img-src 'self' data: https://images.unsplash.com;
   base-uri 'self';
   form-action 'self';
 ">
-<!-- Prevent clickjacking -->
-<meta http-equiv="X-Frame-Options" content="DENY">
-<!-- Prevent MIME sniffing -->
+<!-- Prevent MIME sniffing (valid as meta) -->
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <!-- Referrer policy -->
 <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -6386,8 +6388,8 @@ async function doLogin(){
   const btn=document.getElementById('login-btn');
   btn.textContent='Signing in…';btn.disabled=true;
   try{
-    // No X-CSRF-Token on login — there is no session yet so the server has no
-    // stored token to validate against. The httpOnly cookie is set by this response.
+    // No X-CSRF-Token on login — no session exists yet so the server
+    // has no stored token to validate against.
     const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({email,password})});
     const d=await r.json();
     if(!r.ok){
