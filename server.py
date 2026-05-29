@@ -738,18 +738,6 @@ def health_check():
     return jsonify({"status": "ok", "ts": time.time()}), 200
 
 
-@app.route("/api/health/ready", methods=["GET"])
-def health_ready():
-    """Readiness probe — verifies DB connectivity."""
-    try:
-        db = psycopg2.connect(DATABASE_URL, connect_timeout=3)
-        cur = db.cursor()
-        cur.execute("SELECT 1")
-        db.close()
-        return jsonify({"status": "ready"}), 200
-    except Exception as e:
-        return jsonify({"status": "not_ready", "error": str(e)}), 503
-
 
 @app.after_request
 def add_security_headers(response):
