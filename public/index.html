@@ -37,6 +37,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
+<!-- Performance: DNS prefetch for API (same origin on Railway) -->
+<link rel="dns-prefetch" href="/">
+<style>
+/* Prevent font flash — ensure fallback is close to loaded font metrics */
+:root { font-synthesis: none; }
+</style>
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    MYFARM — INSTITUTIONAL AGRICULTURAL INTELLIGENCE PLATFORM
@@ -950,6 +956,7 @@ body {
   padding: 8px 0 120px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.06) transparent;
+  overscroll-behavior: contain;
 }
 .sb-nav::-webkit-scrollbar { width: 3px; }
 .sb-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius: 3px; }
@@ -1643,6 +1650,10 @@ body {
   padding: 36px 40px;
   background: var(--bg);
   min-height: 0;
+  overscroll-behavior: contain;   /* Prevent scroll chaining to parent on mobile */
+  scroll-padding-top: 16px;
+  /* Enable hardware-accelerated scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 .page { display: none; }
 .page.active { display: block; animation: pageFadeIn 0.22s ease both; }
@@ -2084,6 +2095,8 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
+  /* Promote to own compositor layer — prevents full-page repaint on row hover */
+  contain: layout style;
 }
 .data-table thead tr {
   border-bottom: 1px solid var(--bdr);
@@ -2112,6 +2125,23 @@ body {
   color: var(--text-primary);
 }
 .data-table td:first-child { color: var(--text-primary); font-weight: 400; }
+
+/* ─── PERFORMANCE: content-visibility for off-screen pages ─────────────── */
+.page { content-visibility: auto; contain-intrinsic-size: 0 600px; }
+.page.active-page { content-visibility: visible; contain-intrinsic-size: none; }
+
+/* ─── PERFORMANCE: GPU-accelerated transitions only ───────────────────── */
+.nav-item, .stat-card, .card, .modal, .toast {
+  transform: translateZ(0);
+}
+/* ─── PERFORMANCE: reduce animation for prefers-reduced-motion ─────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 /* ─── STATUS PILLS ───────────────────────────────────────────────────────── */
 .pill {
@@ -2148,6 +2178,9 @@ body {
   border: 1px solid;
   white-space: nowrap;
   letter-spacing: 0.02em;
+  touch-action: manipulation;   /* Eliminate 300ms tap delay on mobile */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 .btn-primary {
   background: rgba(184,146,74,0.12);
@@ -3793,6 +3826,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   white-space: nowrap;
   overflow: hidden;
   position: relative;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .nav-item::after {
@@ -5680,7 +5715,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   </div>
 </div>
 
-<div id="toast-container"></div>
+<div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <script>
 // ════════════════════════════════════════════════════════════════════════════
@@ -6075,7 +6110,24 @@ function loadUser(){try{return JSON.parse(sessionStorage.getItem('tf_user'));}ca
 function canWrite(){return(CAN_WRITE_PAGES[currentUser?.role]||[]).includes(currentPage);}
 
 // seed data removed
+// ─── REQUEST DEDUPLICATION CACHE ─────────────────────────────────────────────
+// Prevents duplicate in-flight GET requests when multiple components load at once.
+// Cache TTL: 20 seconds for read-only data. Write methods bypass this entirely.
+const _reqCache = new Map(); // key → {promise, ts}
+const _REQ_CACHE_TTL = 20000; // 20s
+
+function _cacheKey(path) { return 'GET:' + path; }
+
 async function api(path,method='GET',body=null){
+  // ── Request deduplication for GET requests ────────────────────────────────
+  if (method === 'GET' && !body) {
+    const ck = _cacheKey(path);
+    const hit = _reqCache.get(ck);
+    if (hit && (Date.now() - hit.ts) < _REQ_CACHE_TTL) {
+      return hit.promise;
+    }
+  }
+
   const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};
   // NEVER send Authorization header — auth is via httpOnly cookie (auto-sent by browser)
   // Attach CSRF token on all state-changing methods
@@ -6083,32 +6135,63 @@ async function api(path,method='GET',body=null){
     opts.headers['X-CSRF-Token']=getCSRF();
   }
   if(body)opts.body=JSON.stringify(body);
-  try{
-    const r=await fetch(API+path,opts);
-    // Capture request ID for end-to-end log correlation
-    const reqId = r.headers.get('X-Request-ID')||'-';
-    window._lastRequestId = reqId;
-    if(r.status===401){doLogout();return null;}
-    if(!r.ok){
-      const e=await r.json().catch(()=>({error:r.statusText}));
-      // Report 5xx errors to the backend observability endpoint
-      if(r.status>=500&&window._reportFrontendError){
-        window._reportFrontendError({
-          type:'API_ERROR',
-          message:method+' '+path+' → '+r.status,
-          url:window.location.href,
-          request_id:reqId,
-          endpoint:path,
-          status:r.status,
-          server_error:e.error||'',
-        });
+
+  // ── AbortController timeout (30s default, 60s for reports) ────────────────
+  const isReport = path.includes('/report') || path.includes('/erp/');
+  const timeoutMs = isReport ? 60000 : 30000;
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(() => ctrl.abort(), timeoutMs);
+  opts.signal = ctrl.signal;
+
+  const promise = (async () => {
+    try{
+      const r=await fetch(API+path,opts);
+      clearTimeout(timeoutId);
+      // Capture request ID for end-to-end log correlation
+      const reqId = r.headers.get('X-Request-ID')||'-';
+      window._lastRequestId = reqId;
+      if(r.status===401){doLogout();return null;}
+      if(!r.ok){
+        const e=await r.json().catch(()=>({error:r.statusText}));
+        // Report 5xx errors to the backend observability endpoint
+        if(r.status>=500&&window._reportFrontendError){
+          window._reportFrontendError({
+            type:'API_ERROR',
+            message:method+' '+path+' → '+r.status,
+            url:window.location.href,
+            request_id:reqId,
+            endpoint:path,
+            status:r.status,
+            server_error:e.error||'',
+          });
+        }
+        throw Object.assign(new Error(e.error||r.statusText),{status:r.status,data:e,request_id:reqId});
       }
-      throw Object.assign(new Error(e.error||r.statusText),{status:r.status,data:e,request_id:reqId});
+      const data=await r.json();
+      return data;
+    }catch(e){
+      clearTimeout(timeoutId);
+      // Remove failed entry from dedup cache so next call retries
+      if (method === 'GET') _reqCache.delete(_cacheKey(path));
+      const isAbort = e.name === 'AbortError';
+      const errMsg = isAbort ? 'Request timed out — server may be starting up' : e.message;
+      toast('Error: '+errMsg,'error');
+      throw Object.assign(e, { message: errMsg });
     }
-    const data=await r.json();
-    return data;
-  }catch(e){
-    toast('Error: '+e.message,'error');throw e;
+  })();
+
+  // Store in dedup cache for GET requests
+  if (method === 'GET' && !body) {
+    _reqCache.set(_cacheKey(path), { promise, ts: Date.now() });
+  }
+
+  return promise;
+}
+
+// Invalidate cache for a given path prefix (call after mutations)
+function _invalidateCache(pathPrefix) {
+  for (const key of _reqCache.keys()) {
+    if (key.includes(pathPrefix)) _reqCache.delete(key);
   }
 }
 
@@ -6716,6 +6799,11 @@ function loadPage(pg){
     contentEl.scrollTop = 0;
     contentEl.style.scrollBehavior = '';
   }
+  // Apply content-visibility optimization — only active page is fully rendered
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+  const activePage = document.getElementById('page-' + pg);
+  if (activePage) activePage.classList.add('active-page');
+
   const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons};loaders[pg]?.();}
 
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
@@ -7392,14 +7480,13 @@ async function loadFinance(){
   document.getElementById('fin-trend-chart').innerHTML=`<div class="skel skel-bar"></div>`;
   document.getElementById('fin-mom-table').innerHTML=skelFin;
 
-  // ── Fetch finance data — fail loudly on error ──────────────────────────────
-  const TIMEOUT_MS=12000;
+  // ── Fetch finance data — paginated (up to 1000 records) ───────────────────
   let records=[],summary={};
   try{
-    const timeoutErr=new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out — server may be starting up')),TIMEOUT_MS));
-    const [rec,sum]=await Promise.race([
-      Promise.all([api('/finance'),api('/finance/summary').catch(()=>({}))]),
-      timeoutErr
+    // Paginated to prevent unbounded loads on large datasets
+    const [rec,sum]=await Promise.all([
+      api('/finance?limit=1000&offset=0'),
+      api('/finance/summary').catch(()=>({}))
     ]);
     records=Array.isArray(rec)?rec:[];
     summary=(sum&&typeof sum==='object')?sum:{};
@@ -8263,7 +8350,7 @@ async function modalSave(){
   else if(type==='finance'){body={type:subtype||'income',category:g('f-cat'),description:g('f-desc'),amount:parseFloat(g('f-amount'))||0,date:g('f-date'),notes:g('f-notes')};ep='/finance';method='POST';}
   else if(type==='compliance'){body={title:g('f-title'),category:g('f-cat'),status:g('f-status'),issued_date:g('f-issued'),expiry_date:g('f-expiry'),issuing_body:g('f-issuer'),notes:g('f-notes')};ep=id?`/compliance/${id}`:'/compliance';method=id?'PUT':'POST';}
   else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id&&!pw){toast('Password is required when creating a new user.','error');return;}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
-  try{await api(ep,method,body);toast(id?'Updated':'Created');closeModal();loadPage(currentPage);}catch(e){}
+  try{await api(ep,method,body);toast(id?'Updated':'Created');closeModal();_invalidateCache('/'+ep.split('/')[1]);loadPage(currentPage);}catch(e){}
 }
 
 // ─── ESTATE INTELLIGENCE DIGEST ──────────────────────────────────────────────
@@ -10250,7 +10337,7 @@ async function initErpState(){
     ERP.seasons = seasons || [];
     ERP.activeSeason = seasons.find(s=>s.status==='Active') || seasons[0] || null;
   } catch(e) {
-    console.log('ERP init skipped (not authenticated)');
+    // ERP init skipped — user not yet authenticated
   }
 }
 
@@ -10264,7 +10351,26 @@ document.addEventListener('DOMContentLoaded', ()=>{
   setTimeout(()=>{
     if(currentUser) initErpState();
   }, 2000);
+
+  // ── Idle-time request cache cleanup ────────────────────────────────────────
+  // Flush stale entries from the dedup cache every 2 minutes during idle time.
+  const _flushStaleCache = () => {
+    const now = Date.now();
+    for (const [key, entry] of _reqCache.entries()) {
+      if (now - entry.ts > _REQ_CACHE_TTL * 3) _reqCache.delete(key);
+    }
+  };
+  if (typeof requestIdleCallback !== 'undefined') {
+    setInterval(() => requestIdleCallback(_flushStaleCache, { timeout: 5000 }), 120000);
+  } else {
+    setInterval(_flushStaleCache, 120000);
+  }
+
+  // ── Mobile: prevent 300ms tap delay on supported browsers ─────────────────
+  if ('ontouchstart' in window) {
+    document.documentElement.style.touchAction = 'manipulation';
+  }
 });
 
-console.log('[Thornfield ERP Module] Loaded — 9 ERP intelligence pages available');
+// ERP Module — 9 intelligence pages loaded
 </script>
