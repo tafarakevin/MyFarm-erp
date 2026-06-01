@@ -37,11 +37,29 @@ app.json_encoder = DecimalEncoder
 DATABASE_URL = os.environ["DATABASE_URL"]
 
 # Role hierarchy — what each role can access
+_ENT_OWNER = [
+    'ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting',
+    'ent-forecasting','ent-inventory-opt','ent-livestock-analytics',
+    'ent-crop-analytics','ent-labour-analytics','ent-asset-analytics',
+    'ent-calculations','ent-scenarios',
+]
+_ENT_MANAGER = [
+    'ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting',
+    'ent-forecasting','ent-inventory-opt','ent-livestock-analytics',
+    'ent-crop-analytics','ent-labour-analytics','ent-asset-analytics',
+    'ent-scenarios',
+]
+_ENT_FINANCE = [
+    'ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting',
+    'ent-forecasting','ent-scenarios',
+]
+_ENT_FIELD = ['ent-crop-analytics','ent-livestock-analytics']
+
 ROLE_PAGES = {
-    "owner":   ["dashboard","assets","livestock","crops","workers","inventory","finance","reports","compliance","settings","users",'erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],
-    "manager": ["dashboard","assets","livestock","crops","workers","inventory","finance","reports","compliance",'erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],
-    "finance": ["dashboard","finance","reports","erp-dashboard","erp-profitability","erp-budgets","erp-costing"],
-    "field":   ["dashboard","assets","livestock","crops"],
+    "owner":   ["dashboard","assets","livestock","crops","workers","inventory","finance","reports","compliance","settings","users",'erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'] + _ENT_OWNER,
+    "manager": ["dashboard","assets","livestock","crops","workers","inventory","finance","reports","compliance",'erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'] + _ENT_MANAGER,
+    "finance": ["dashboard","finance","reports","erp-dashboard","erp-profitability","erp-budgets","erp-costing"] + _ENT_FINANCE,
+    "field":   ["dashboard","assets","livestock","crops"] + _ENT_FIELD,
 }
 
 def hash_password(password: str) -> str:
@@ -4341,3 +4359,28 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"\n  Thornfield ERP running at http://localhost:{port}\n")
     app.run(debug=False, host="0.0.0.0", port=port)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# ENTERPRISE ERP ENGINE — PHASES 1-10
+# Appended after all existing routes — no modifications to existing code above.
+# ═══════════════════════════════════════════════════════════════════════════════
+def _load_enterprise_engine():
+    try:
+        import sys as _sys
+        import erp_engine as _erp_engine
+        _erp_engine.register_enterprise_routes(app, _sys.modules[__name__])
+        _erp_engine.init_enterprise_db()
+        app_log.info(
+            "Enterprise ERP Engine registered — Phases 1-10 active",
+            extra={"event": "ENTERPRISE_ENGINE_LOADED",
+                   "formulas": len(_erp_engine.CalculationRegistry.all_formulas())}
+        )
+    except ImportError as _ie:
+        print(f"[enterprise] erp_engine.py not found — enterprise routes disabled: {_ie}")
+    except Exception as _ee:
+        import traceback as _tb
+        print(f"[enterprise] Failed to load enterprise engine: {_ee}")
+        _tb.print_exc()
+
+_load_enterprise_engine()
