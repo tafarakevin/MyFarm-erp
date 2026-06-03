@@ -6093,7 +6093,8 @@ function checkErpModeForPage(pg) {
 }
 
 const API=window.location.origin+'/api';
-let currentPage='dashboard',modalCtx={},currentUser=null;
+let currentPage='dashboard',modalCtx={};
+var currentUser=null; // var hoists to window scope, accessible across <script> tags
 
 // ─── HTTPS ENFORCEMENT ────────────────────────────────────────────────────────
 // Redirect HTTP → HTTPS immediately. Runs before any auth or API calls.
@@ -8922,8 +8923,6 @@ function copyInviteCode(){
 
 // ─── DEMO MODE — enter app without a backend ──────────────────────────────────
 </script>
-</body>
-</html>
 
 <!-- ═══════════════════════════════════════════════════════════════════════
      THORNFIELD ERP — EXTENSION MODULE
@@ -11231,3 +11230,6 @@ async function loadEntScenarios(){
   ${entTable(['Name','Type','Yield Δ%','Price Δ%','Fuel Δ%','Fertiliser Δ%','Labour Δ%',''], scRows)}
 </div>`);
 }
+
+</body>
+</html>
