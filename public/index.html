@@ -6093,7 +6093,7 @@ function checkErpModeForPage(pg) {
 }
 
 const API=window.location.origin+'/api';
-let currentPage='dashboard',modalCtx={};
+var currentPage='dashboard',modalCtx={};
 var currentUser=null; // var hoists to window scope, accessible across <script> tags
 
 // ─── HTTPS ENFORCEMENT ────────────────────────────────────────────────────────
@@ -6175,8 +6175,8 @@ function canWrite(){return(CAN_WRITE_PAGES[currentUser?.role]||[]).includes(curr
 // ─── REQUEST DEDUPLICATION CACHE ─────────────────────────────────────────────
 // Prevents duplicate in-flight GET requests when multiple components load at once.
 // Cache TTL: 20 seconds for read-only data. Write methods bypass this entirely.
-const _reqCache = new Map(); // key → {promise, ts}
-const _REQ_CACHE_TTL = 20000; // 20s
+var _reqCache = new Map(); // key → {promise, ts}
+var _REQ_CACHE_TTL = 20000; // 20s
 
 function _cacheKey(path) { return 'GET:' + path; }
 
@@ -6866,7 +6866,7 @@ function loadPage(pg){
   const activePage = document.getElementById('page-' + pg);
   if (activePage) activePage.classList.add('active-page');
 
-  const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons,'ent-kpi-dashboard':loadEntKpiDashboard,'ent-profitability':loadEntProfitability,'ent-cogs':loadEntCogs,'ent-cost-accounting':loadEntCostAccounting,'ent-forecasting':loadEntForecasting,'ent-inventory-opt':loadEntInventoryOpt,'ent-livestock-analytics':loadEntLivestockAnalytics,'ent-crop-analytics':loadEntCropAnalytics,'ent-labour-analytics':loadEntLabourAnalytics,'ent-asset-analytics':loadEntAssetAnalytics,'ent-calculations':loadEntCalculations,'ent-scenarios':loadEntScenarios};loaders[pg]?.();}}
+  const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons,'ent-kpi-dashboard':loadEntKpiDashboard,'ent-profitability':loadEntProfitability,'ent-cogs':loadEntCogs,'ent-cost-accounting':loadEntCostAccounting,'ent-forecasting':loadEntForecasting,'ent-inventory-opt':loadEntInventoryOpt,'ent-livestock-analytics':loadEntLivestockAnalytics,'ent-crop-analytics':loadEntCropAnalytics,'ent-labour-analytics':loadEntLabourAnalytics,'ent-asset-analytics':loadEntAssetAnalytics,'ent-calculations':loadEntCalculations,'ent-scenarios':loadEntScenarios};loaders[pg]?.();}
 
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
 function rpill(r){const m={owner:'gold',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
