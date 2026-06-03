@@ -8434,7 +8434,22 @@ async function modalSave(){
   }
   else if(type==='compliance'){body={title:g('f-title'),category:g('f-cat'),status:g('f-status'),issued_date:g('f-issued'),expiry_date:g('f-expiry'),issuing_body:g('f-issuer'),notes:g('f-notes')};ep=id?`/compliance/${id}`:'/compliance';method=id?'PUT':'POST';}
   else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id&&!pw){toast('Password is required when creating a new user.','error');return;}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
-  try{await api(ep,method,body);toast(id?'Updated':'Created');closeModal();_invalidateCache('/'+ep.split('/')[1]);loadPage(currentPage);}catch(e){
+  try{
+    const saved = await api(ep,method,body);
+    toast(id?'Updated':'Record added');
+    closeModal();
+    _invalidateCache('/'+ep.split('/')[1]);
+    // For finance, call loadFinance directly to guarantee the page refreshes.
+    // Also re-navigate to the correct tab so the new record is visible.
+    if(type==='finance'){
+      const tabToShow = subtype||'income';
+      await loadFinance();
+      const tabBtn = document.querySelector(`.fin-tab[data-tab="${tabToShow==='income'?'income':'expenses'}"]`);
+      if(tabBtn) finTab(tabBtn, tabToShow==='income'?'income':'expenses');
+    } else {
+      loadPage(currentPage);
+    }
+  }catch(e){
     // Surface the server's error message so the user knows what went wrong
     const msg = e?.data?.error || e?.message || 'Server error — please try again.';
     toast('Error: ' + msg, 'error');
