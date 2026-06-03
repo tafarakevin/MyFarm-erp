@@ -5043,6 +5043,45 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <span class="sb-icon">calculate</span><span class="sb-label">Cost Breakdown</span>
       </div>
 
+      <!-- ENTERPRISE ANALYTICS -->
+      <div class="sb-section-label">Enterprise</div>
+      <div class="sb-item" data-page="ent-kpi-dashboard" tabindex="0" role="button" title="Enterprise KPI Dashboard">
+        <span class="sb-icon">analytics</span><span class="sb-label">KPI Dashboard</span>
+      </div>
+      <div class="sb-item" data-page="ent-profitability" tabindex="0" role="button" title="Advanced Profitability">
+        <span class="sb-icon">show_chart</span><span class="sb-label">Profitability</span>
+      </div>
+      <div class="sb-item" data-page="ent-cogs" tabindex="0" role="button" title="COGS Ledger">
+        <span class="sb-icon">receipt_long</span><span class="sb-label">COGS Ledger</span>
+      </div>
+      <div class="sb-item" data-page="ent-cost-accounting" tabindex="0" role="button" title="Cost Accounting">
+        <span class="sb-icon">calculate</span><span class="sb-label">Cost Accounting</span>
+      </div>
+      <div class="sb-item" data-page="ent-forecasting" tabindex="0" role="button" title="Forecasting &amp; Scenarios">
+        <span class="sb-icon">timeline</span><span class="sb-label">Forecasting</span>
+      </div>
+      <div class="sb-item" data-page="ent-inventory-opt" tabindex="0" role="button" title="Inventory Optimisation">
+        <span class="sb-icon">inventory_2</span><span class="sb-label">Inventory Opt.</span>
+      </div>
+      <div class="sb-item" data-page="ent-livestock-analytics" tabindex="0" role="button" title="Livestock Analytics">
+        <span class="sb-icon">pets</span><span class="sb-label">Livestock Analytics</span>
+      </div>
+      <div class="sb-item" data-page="ent-crop-analytics" tabindex="0" role="button" title="Crop Analytics">
+        <span class="sb-icon">eco</span><span class="sb-label">Crop Analytics</span>
+      </div>
+      <div class="sb-item" data-page="ent-labour-analytics" tabindex="0" role="button" title="Labour Analytics">
+        <span class="sb-icon">groups</span><span class="sb-label">Labour Analytics</span>
+      </div>
+      <div class="sb-item" data-page="ent-asset-analytics" tabindex="0" role="button" title="Asset Analytics">
+        <span class="sb-icon">precision_manufacturing</span><span class="sb-label">Asset Analytics</span>
+      </div>
+      <div class="sb-item" data-page="ent-calculations" tabindex="0" role="button" title="Calculation Registry">
+        <span class="sb-icon">functions</span><span class="sb-label">Calculations</span>
+      </div>
+      <div class="sb-item" data-page="ent-scenarios" tabindex="0" role="button" title="Scenario Modelling">
+        <span class="sb-icon">alt_route</span><span class="sb-label">Scenarios</span>
+      </div>
+
       <!-- ADMIN -->
       <div class="sb-section-label">Administration</div>
       <div class="sb-item" data-page="compliance" tabindex="0" role="button" title="Compliance">
@@ -5866,6 +5905,19 @@ const CMD_PAGES = [
   { label: 'Certifications',    page: 'compliance',        icon: 'workspace_premium',       group: 'Compliance' },
   { label: 'Users',             page: 'users',             icon: 'manage_accounts',         group: 'Administration' },
   { label: 'Settings',          page: 'settings',          icon: 'settings',                group: 'Administration' },
+  // Enterprise Analytics
+  { label: 'Enterprise KPI Dashboard', page: 'ent-kpi-dashboard',      icon: 'analytics',               group: 'Enterprise' },
+  { label: 'Advanced Profitability',   page: 'ent-profitability',       icon: 'show_chart',              group: 'Enterprise' },
+  { label: 'COGS Ledger',              page: 'ent-cogs',                icon: 'receipt_long',            group: 'Enterprise' },
+  { label: 'Cost Accounting',          page: 'ent-cost-accounting',     icon: 'calculate',               group: 'Enterprise' },
+  { label: 'Forecasting \]; Scenarios', page: 'ent-forecasting',         icon: 'timeline',                group: 'Enterprise' },
+  { label: 'Inventory Optimisation',   page: 'ent-inventory-opt',       icon: 'inventory_2',             group: 'Enterprise' },
+  { label: 'Livestock Analytics',      page: 'ent-livestock-analytics', icon: 'pets',                    group: 'Enterprise' },
+  { label: 'Crop Analytics',           page: 'ent-crop-analytics',      icon: 'eco',                     group: 'Enterprise' },
+  { label: 'Labour Analytics',         page: 'ent-labour-analytics',    icon: 'groups',                  group: 'Enterprise' },
+  { label: 'Asset Analytics',          page: 'ent-asset-analytics',     icon: 'precision_manufacturing', group: 'Enterprise' },
+  { label: 'Calculation Registry',     page: 'ent-calculations',        icon: 'functions',               group: 'Enterprise' },
+  { label: 'Scenario Modelling',       page: 'ent-scenarios',           icon: 'alt_route',               group: 'Enterprise' },
 ];
 let _cmdIdx = 0;
 
@@ -6051,7 +6103,16 @@ let currentPage='dashboard',modalCtx={},currentUser=null;
   }
 })();
 
-const ROLE_PAGES=window.ROLE_PAGES={owner:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','users','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],manager:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons'],finance:['dashboard','finance','reports','erp-dashboard','erp-profitability','erp-budgets','erp-costing'],field:['dashboard','assets','livestock','crops']};
+const _ENT_OWNER=['ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting','ent-forecasting','ent-inventory-opt','ent-livestock-analytics','ent-crop-analytics','ent-labour-analytics','ent-asset-analytics','ent-calculations','ent-scenarios'];
+const _ENT_MANAGER=['ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting','ent-forecasting','ent-inventory-opt','ent-livestock-analytics','ent-crop-analytics','ent-labour-analytics','ent-asset-analytics','ent-scenarios'];
+const _ENT_FINANCE=['ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting','ent-forecasting','ent-scenarios'];
+const _ENT_FIELD=['ent-crop-analytics','ent-livestock-analytics'];
+const ROLE_PAGES=window.ROLE_PAGES={
+  owner:  ['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','users','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons',..._ENT_OWNER],
+  manager:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons',..._ENT_MANAGER],
+  finance:['dashboard','finance','reports','erp-dashboard','erp-profitability','erp-budgets','erp-costing',..._ENT_FINANCE],
+  field:  ['dashboard','assets','livestock','crops',..._ENT_FIELD],
+};
 const CAN_WRITE_PAGES={owner:['dashboard','assets','livestock','crops','workers','inventory','finance','compliance','users','settings'],manager:['dashboard','assets','livestock','crops','workers','inventory','compliance','settings'],finance:['finance'],field:[]};
 
 // ─── CSRF TOKEN ────────────────────────────────────────────────────────────────
@@ -6804,7 +6865,7 @@ function loadPage(pg){
   const activePage = document.getElementById('page-' + pg);
   if (activePage) activePage.classList.add('active-page');
 
-  const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons};loaders[pg]?.();}
+  const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons,'ent-kpi-dashboard':loadEntKpiDashboard,'ent-profitability':loadEntProfitability,'ent-cogs':loadEntCogs,'ent-cost-accounting':loadEntCostAccounting,'ent-forecasting':loadEntForecasting,'ent-inventory-opt':loadEntInventoryOpt,'ent-livestock-analytics':loadEntLivestockAnalytics,'ent-crop-analytics':loadEntCropAnalytics,'ent-labour-analytics':loadEntLabourAnalytics,'ent-asset-analytics':loadEntAssetAnalytics,'ent-calculations':loadEntCalculations,'ent-scenarios':loadEntScenarios};loaders[pg]?.();}}
 
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
 function rpill(r){const m={owner:'gold',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
@@ -10373,4 +10434,800 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 
 // ERP Module — 9 intelligence pages loaded
+// Enterprise Engine — 12 analytics pages
 </script>
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENTERPRISE ENGINE — 12 ANALYTICS PAGES
+// All routes hit /api/enterprise/* (Blueprint prefix in erp_engine.py)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function entFetch(path, method='GET', body=null){
+  return api('/enterprise' + path, method, body);
+}
+
+// ── Shared formatting helpers (reuse erpFmt if available) ────────────────
+const entFmt = {
+  usd: v => '$' + (Number(v)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}),
+  pct: v => (Number(v)||0).toFixed(1) + '%',
+  num: v => (Number(v)||0).toLocaleString(),
+  dec: (v,d=2) => (Number(v)||0).toFixed(d),
+  date: v => v ? v.toString().slice(0,10) : '—',
+  badge: (v, pos='Up', neg='Down') => `<span class="badge ${v>=0?'badge-success':'badge-error'}">${v>=0?pos:neg}</span>`,
+  clr: v => Number(v) >= 0 ? 'var(--success-txt)' : 'var(--error-txt)',
+};
+
+function entContent(html){ erpContent(html); }
+
+// ── Reusable KPI card ─────────────────────────────────────────────────────
+function entKpi(title, value, sub='', icon='insights', clr=''){
+  return `<div class="kpi-card"><div class="kpi-label"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;color:var(--gold)">${icon}</span>${title}</div><div class="kpi-value" style="${clr?'color:'+clr:''}">${value}</div>${sub?`<div class="kpi-sub">${sub}</div>`:''}</div>`;
+}
+
+// ── Loading skeleton ───────────────────────────────────────────────────────
+function entLoading(title){
+  return `<div class="page-header"><h1>${title}</h1></div><div style="color:var(--text-muted);padding:20px;font-size:13px">Loading…</div>`;
+}
+
+// ── Simple table builder ───────────────────────────────────────────────────
+function entTable(headers, rows){
+  if(!rows||!rows.length) return `<p style="color:var(--text-muted);font-size:13px;padding:10px 0">No data available.</p>`;
+  return `<table class="erp-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 1 — Enterprise KPI Dashboard  → GET /api/enterprise/kpi-dashboard
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntKpiDashboard(){
+  currentPage = 'ent-kpi-dashboard';
+  entContent(entLoading('Enterprise KPI Dashboard'));
+  let d;
+  try{ d = await entFetch('/kpi-dashboard'); }
+  catch(e){ entContent(`<div class="page-header"><h1>Enterprise KPI Dashboard</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  entContent(`
+<div class="page-header"><h1>Enterprise KPI Dashboard</h1><div class="page-subtitle">Powered by ${d.registered_formulas||0} registered calculation formulas</div></div>
+<div class="erp-grid">
+  ${entKpi('Revenue',         entFmt.usd(d.revenue),          `COGS: ${entFmt.usd(d.cogs)}`,            'trending_up',              'var(--success-txt)')}
+  ${entKpi('Gross Profit',    entFmt.usd(d.gross_profit),     `Margin: ${entFmt.pct(d.gross_margin_pct)}`,'show_chart',             entFmt.clr(d.gross_profit))}
+  ${entKpi('Operating Profit',entFmt.usd(d.operating_profit), `OpEx: ${entFmt.usd(d.operating_expenses)}`,'bar_chart',              entFmt.clr(d.operating_profit))}
+  ${entKpi('EBITDA',          entFmt.usd(d.ebitda),           `Margin: ${entFmt.pct(d.ebitda_margin_pct)}`,'account_balance',        entFmt.clr(d.ebitda))}
+  ${entKpi('Net Profit',      entFmt.usd(d.net_profit),       `Net Margin: ${entFmt.pct(d.net_margin_pct)}`,'savings',               entFmt.clr(d.net_profit))}
+  ${entKpi('Inventory Value', entFmt.usd(d.inventory_value),  `Low stock: ${d.low_stock_items} items`,   'inventory_2')}
+</div>
+<div class="erp-grid-3">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">landscape</span> Per-Unit Metrics</div>
+    <table class="erp-table"><tbody>
+      <tr><td>Profit / ha</td><td class="amount" style="color:${entFmt.clr(d.profit_per_ha)}">${entFmt.usd(d.profit_per_ha)}</td></tr>
+      <tr><td>Revenue / ha</td><td class="amount">${entFmt.usd(d.revenue_per_ha)}</td></tr>
+      <tr><td>Cost / ha</td><td class="amount">${entFmt.usd(d.cost_per_ha)}</td></tr>
+      <tr><td>Profit / animal</td><td class="amount" style="color:${entFmt.clr(d.profit_per_animal)}">${entFmt.usd(d.profit_per_animal)}</td></tr>
+      <tr><td>Profit / worker</td><td class="amount" style="color:${entFmt.clr(d.profit_per_worker)}">${entFmt.usd(d.profit_per_worker)}</td></tr>
+    </tbody></table>
+  </div>
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">groups</span> Labour KPIs</div>
+    <table class="erp-table"><tbody>
+      <tr><td>Labour Productivity</td><td class="amount">${entFmt.usd(d.labour_productivity)} / hr</td></tr>
+      <tr><td>Labour Cost / ha</td><td class="amount">${entFmt.usd(d.labour_cost_per_ha)}</td></tr>
+      <tr><td>Payroll Efficiency</td><td class="amount">${entFmt.dec(d.payroll_efficiency)}x</td></tr>
+      <tr><td>Asset Hours</td><td class="amount">${entFmt.num(d.total_asset_hours)} hrs</td></tr>
+    </tbody></table>
+  </div>
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">info</span> Farm Summary</div>
+    <table class="erp-table"><tbody>
+      <tr><td>Farm Area</td><td class="amount">${entFmt.dec(d.farm_ha, 1)} ha</td></tr>
+      <tr><td>Total Animals</td><td class="amount">${entFmt.num(d.total_animals)} head</td></tr>
+      <tr><td>Workers Present</td><td class="amount">${d.workers_present} / ${d.workers_total}</td></tr>
+      <tr><td>Formulas Registered</td><td class="amount">${d.registered_formulas}</td></tr>
+    </tbody></table>
+  </div>
+</div>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 2 — Advanced Profitability  → GET /api/enterprise/profitability/advanced
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntProfitability(){
+  currentPage = 'ent-profitability';
+  entContent(entLoading('Advanced Profitability'));
+  let [adv, byEnt, bySeason] = [null,null,null];
+  try{
+    [adv, byEnt, bySeason] = await Promise.all([
+      entFetch('/profitability/advanced'),
+      entFetch('/profitability/by-enterprise'),
+      entFetch('/profitability/by-season'),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>Advanced Profitability</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const byEntRows = (byEnt||[]).map(r=>`<tr>
+    <td>${r.unit_type||'—'}</td>
+    <td class="amount">${entFmt.usd(r.revenue)}</td>
+    <td class="amount">${entFmt.usd(r.costs)}</td>
+    <td class="amount" style="color:${entFmt.clr(r.gross_profit)}">${entFmt.usd(r.gross_profit)}</td>
+    <td class="amount">${entFmt.pct(r.margin_pct)}</td>
+  </tr>`).join('');
+
+  const bySeasonRows = (bySeason||[]).map(r=>`<tr>
+    <td>${r.name||'—'}</td>
+    <td class="amount">${entFmt.usd(r.revenue)}</td>
+    <td class="amount">${entFmt.usd(r.activity_costs)}</td>
+    <td class="amount" style="color:${entFmt.clr(r.gross_profit)}">${entFmt.usd(r.gross_profit)}</td>
+    <td class="amount">${entFmt.pct(r.margin_pct)}</td>
+    <td class="amount">${entFmt.pct(r.budget_utilisation_pct)}</td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header"><h1>Advanced Profitability</h1><div class="page-subtitle">Full P&L waterfall with EBITDA and per-unit metrics</div></div>
+<div class="erp-grid">
+  ${entKpi('Revenue',          entFmt.usd(adv.revenue),          '', 'trending_up', 'var(--success-txt)')}
+  ${entKpi('COGS',             entFmt.usd(adv.cogs),             '', 'receipt_long', 'var(--error-txt)')}
+  ${entKpi('Gross Profit',     entFmt.usd(adv.gross_profit),     `${entFmt.pct(adv.gross_margin_pct)} margin`, 'show_chart', entFmt.clr(adv.gross_profit))}
+  ${entKpi('OpEx',             entFmt.usd(adv.operating_expenses),'Labour: '+entFmt.usd(adv.labour_cost), 'payments', 'var(--error-txt)')}
+  ${entKpi('Operating Profit', entFmt.usd(adv.operating_profit), '', 'bar_chart', entFmt.clr(adv.operating_profit))}
+  ${entKpi('EBITDA',           entFmt.usd(adv.ebitda),           `${entFmt.pct(adv.ebitda_margin_pct)} margin`, 'account_balance', entFmt.clr(adv.ebitda))}
+  ${entKpi('Contingency',      entFmt.usd(adv.contingency_provision), '', 'shield', 'var(--gold-lt)')}
+  ${entKpi('Net Profit',       entFmt.usd(adv.net_profit),       `${entFmt.pct(adv.net_margin_pct)} margin`, 'savings', entFmt.clr(adv.net_profit))}
+</div>
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">category</span> By Enterprise Type</div>
+    ${entTable(['Type','Revenue','Costs','Gross Profit','Margin'], byEntRows)}
+  </div>
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">date_range</span> By Season</div>
+    ${entTable(['Season','Revenue','Activity Costs','Gross Profit','Margin','Budget Used'], bySeasonRows)}
+  </div>
+</div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">landscape</span> Per-Unit Metrics</div>
+  <div class="erp-grid-3">
+    ${entKpi('Profit / ha',     entFmt.usd(adv.profit_per_ha),   '', 'landscape', entFmt.clr(adv.profit_per_ha))}
+    ${entKpi('Revenue / ha',    entFmt.usd(adv.revenue_per_ha),  '', 'trending_up')}
+    ${entKpi('Cost / ha',       entFmt.usd(adv.cost_per_ha),     '', 'payments', 'var(--error-txt)')}
+    ${entKpi('Profit / animal', entFmt.usd(adv.profit_per_animal),'', 'pets', entFmt.clr(adv.profit_per_animal))}
+    ${entKpi('Profit / worker', entFmt.usd(adv.profit_per_worker),'', 'groups', entFmt.clr(adv.profit_per_worker))}
+    ${entKpi('Depreciation',    entFmt.usd(adv.depreciation),    '', 'waterfall_chart')}
+  </div>
+</div>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 3 — COGS Ledger  → GET/POST /api/enterprise/cogs  + /cogs/summary
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntCogs(){
+  currentPage = 'ent-cogs';
+  entContent(entLoading('COGS Ledger'));
+  let [summary, entries] = [null, []];
+  try{
+    [summary, entries] = await Promise.all([
+      entFetch('/cogs/summary'),
+      entFetch('/cogs'),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>COGS Ledger</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const rows = (entries||[]).map(r=>`<tr>
+    <td>${r.entry_type||'—'}</td>
+    <td>${r.component||'—'}</td>
+    <td>${r.unit_name||'—'}</td>
+    <td>${r.season_name||'—'}</td>
+    <td class="amount">${entFmt.usd(r.amount)}</td>
+    <td>${entFmt.date(r.entry_date)}</td>
+    <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="deleteEntCogs(${r.id})">Delete</button></td>
+  </tr>`).join('');
+
+  const bdown = (summary?.breakdown||[]).map(r=>`<tr>
+    <td>${r.entry_type||'—'}</td>
+    <td>${r.component||'—'}</td>
+    <td class="amount">${entFmt.usd(r.total)}</td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header" style="justify-content:space-between;align-items:flex-start">
+  <div><h1>COGS Ledger</h1><div class="page-subtitle">Cost of Goods Sold — crop, livestock and overhead entries</div></div>
+  <button class="erp-btn primary" onclick="openEntCogsForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Add Entry</button>
+</div>
+<div class="erp-grid">
+  ${entKpi('Total COGS',    entFmt.usd(summary?.total_cogs),   '', 'receipt_long', 'var(--error-txt)')}
+  ${entKpi('Revenue',       entFmt.usd(summary?.total_revenue),'', 'trending_up',  'var(--success-txt)')}
+  ${entKpi('Gross Profit',  entFmt.usd(summary?.gross_profit), `${entFmt.pct(summary?.gross_margin_pct)} margin`, 'show_chart', entFmt.clr(summary?.gross_profit||0))}
+</div>
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">pie_chart</span> Breakdown by Component</div>
+    ${entTable(['Type','Component','Total'], bdown)}
+  </div>
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">list</span> All COGS Entries</div>
+    ${entTable(['Type','Component','Unit','Season','Amount','Date',''], rows)}
+  </div>
+</div>`);
+}
+
+async function openEntCogsForm(){
+  const [units, seasons] = await Promise.all([
+    erpFetch('/erp/units').catch(()=>[]),
+    erpFetch('/erp/seasons').catch(()=>[]),
+  ]);
+  erpModal('Add COGS Entry', 'Record a cost-of-goods-sold component', [
+    {id:'cogs_type',   label:'Type',      type:'select', options:['crop','livestock','overhead']},
+    {id:'cogs_comp',   label:'Component', type:'text',   placeholder:'e.g. Seed, Feed, Vet'},
+    {id:'cogs_amount', label:'Amount (USD)', type:'number'},
+    {id:'cogs_unit',   label:'Unit',      type:'select', options:[''].concat((units||[]).map(u=>u.name+'|'+u.id))},
+    {id:'cogs_season', label:'Season',    type:'select', options:[''].concat((seasons||[]).map(s=>s.name+'|'+s.id))},
+    {id:'cogs_date',   label:'Date',      type:'date'},
+    {id:'cogs_notes',  label:'Notes',     type:'text'},
+  ], async (vals) => {
+    const unitSel = vals.cogs_unit ? vals.cogs_unit.split('|') : [];
+    const seasonSel = vals.cogs_season ? vals.cogs_season.split('|') : [];
+    await entFetch('/cogs','POST',{
+      entry_type: vals.cogs_type,
+      component:  vals.cogs_comp,
+      amount:     parseFloat(vals.cogs_amount)||0,
+      unit_id:    unitSel[1]||null,
+      season_id:  seasonSel[1]||null,
+      entry_date: vals.cogs_date||null,
+      notes:      vals.cogs_notes,
+    });
+    loadEntCogs();
+  });
+}
+
+async function deleteEntCogs(id){
+  erpConfirm('Delete COGS Entry?', 'This action cannot be undone.', async()=>{
+    await entFetch(`/cogs/${id}`,'DELETE');
+    loadEntCogs();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 4 — Cost Accounting  → GET /api/enterprise/cost-accounting/enterprise-summary
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntCostAccounting(){
+  currentPage = 'ent-cost-accounting';
+  entContent(entLoading('Cost Accounting'));
+  let [units, rules] = [[], []];
+  try{
+    [units, rules] = await Promise.all([
+      entFetch('/cost-accounting/enterprise-summary'),
+      entFetch('/cost-accounting/allocation-rules'),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>Cost Accounting</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const unitRows = (units||[]).map(r=>`<tr>
+    <td>${r.name}</td>
+    <td><span class="badge">${r.unit_type}</span></td>
+    <td class="amount">${entFmt.dec(r.area_ha,1)} ha</td>
+    <td class="amount">${entFmt.usd(r.revenue)}</td>
+    <td class="amount">${entFmt.usd(r.total_costs)}</td>
+    <td class="amount" style="color:${entFmt.clr(r.gross_profit)}">${entFmt.usd(r.gross_profit)}</td>
+    <td class="amount">${entFmt.pct(r.gross_margin_pct)}</td>
+    <td class="amount">${entFmt.usd(r.cost_per_ha)}</td>
+    <td class="amount">${entFmt.usd(r.profit_per_ha)}</td>
+  </tr>`).join('');
+
+  const ruleRows = (rules||[]).map(r=>`<tr>
+    <td>${r.name}</td>
+    <td>${r.cost_category}</td>
+    <td>${r.allocation_type}</td>
+    <td class="amount">${r.allocation_type==='percentage' ? entFmt.pct(r.allocation_pct) : entFmt.usd(r.allocation_fixed)}</td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header" style="justify-content:space-between;align-items:flex-start">
+  <div><h1>Cost Accounting</h1><div class="page-subtitle">Per-unit P&L with overhead allocation rules</div></div>
+  <button class="erp-btn primary" onclick="openEntAllocRuleForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Add Rule</button>
+</div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">grid_on</span> Unit-Level P&L</div>
+  ${entTable(['Unit','Type','Area','Revenue','Total Costs','Gross Profit','Margin','Cost/ha','Profit/ha'], unitRows)}
+</div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">account_tree</span> Cost Allocation Rules</div>
+  ${entTable(['Rule Name','Cost Category','Method','Allocation'], ruleRows)}
+</div>`);
+}
+
+async function openEntAllocRuleForm(){
+  erpModal('Add Allocation Rule', 'Define how shared costs are distributed', [
+    {id:'ar_name',    label:'Rule Name',      type:'text'},
+    {id:'ar_cat',     label:'Cost Category',  type:'text', placeholder:'e.g. Utilities, Insurance'},
+    {id:'ar_type',    label:'Method',         type:'select', options:['percentage','fixed']},
+    {id:'ar_pct',     label:'Allocation %',   type:'number'},
+    {id:'ar_fixed',   label:'Fixed Amount',   type:'number'},
+  ], async(vals)=>{
+    await entFetch('/cost-accounting/allocation-rules','POST',{
+      name:             vals.ar_name,
+      cost_category:    vals.ar_cat,
+      allocation_type:  vals.ar_type,
+      allocation_pct:   parseFloat(vals.ar_pct)||0,
+      allocation_fixed: parseFloat(vals.ar_fixed)||0,
+    });
+    loadEntCostAccounting();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 5 — Forecasting & Scenarios  → /api/enterprise/forecasting/*
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntForecasting(){
+  currentPage = 'ent-forecasting';
+  entContent(entLoading('Forecasting & Scenarios'));
+  let [cashflow, scenarios, whatif] = [null,[],null];
+  try{
+    [cashflow, scenarios, whatif] = await Promise.all([
+      entFetch('/forecasting/cashflow'),
+      entFetch('/forecasting/scenarios'),
+      entFetch('/forecasting/what-if','POST',{}),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>Forecasting</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const cfRows = (cashflow?.forecast||[]).slice(0,6).map(m=>`<tr>
+    <td>${m.month}</td>
+    <td class="amount positive">${entFmt.usd(m.inflows)}</td>
+    <td class="amount negative">${entFmt.usd(m.outflows)}</td>
+    <td class="amount" style="color:${entFmt.clr(m.net_cashflow)}">${entFmt.usd(m.net_cashflow)}</td>
+    <td class="amount" style="color:${entFmt.clr(m.closing_balance)}">${entFmt.usd(m.closing_balance)}</td>
+  </tr>`).join('');
+
+  const scRows = (scenarios||[]).map(s=>`<tr>
+    <td>${s.name}</td>
+    <td><span class="badge">${s.scenario_type}</span></td>
+    <td class="amount">${entFmt.pct(s.yield_change_pct||0)}</td>
+    <td class="amount">${entFmt.pct(s.price_change_pct||0)}</td>
+    <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="runEntScenario(${s.id})">▶ Run</button></td>
+  </tr>`).join('');
+
+  const wi = whatif?.scenarios||{};
+  entContent(`
+<div class="page-header" style="justify-content:space-between;align-items:flex-start">
+  <div><h1>Forecasting &amp; Scenarios</h1><div class="page-subtitle">Cash-flow projections, what-if analysis and saved scenarios</div></div>
+  <button class="erp-btn primary" onclick="openEntScenarioForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> New Scenario</button>
+</div>
+<div class="erp-grid-2">
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">timeline</span> 12-Month Cash Flow Forecast</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Avg monthly income: ${entFmt.usd(cashflow?.avg_monthly_income)} | Opening balance: ${entFmt.usd(cashflow?.opening_balance)}</div>
+    ${entTable(['Month','Inflows','Outflows','Net','Balance'], cfRows)}
+  </div>
+  <div class="erp-panel">
+    <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">alt_route</span> What-If Analysis (Base Case)</div>
+    <table class="erp-table"><tbody>
+      ${['worst_case','expected_case','best_case'].map(k=>{const s=wi[k]||{};return `<tr><td><b>${k.replace('_',' ')}</b></td><td class="amount">${entFmt.usd(s.revenue)}</td><td class="amount">${entFmt.usd(s.expenses)}</td><td class="amount" style="color:${entFmt.clr(s.profit||0)}">${entFmt.usd(s.profit)}</td><td class="amount">${entFmt.pct(s.margin_pct||0)}</td></tr>`;}).join('')}
+    </tbody></table>
+  </div>
+</div>
+<div class="erp-panel">
+  <div class="erp-panel-title" style="justify-content:space-between">
+    <span><span class="material-symbols-outlined nav-icon">saved_search</span> Saved Scenarios</span>
+  </div>
+  ${entTable(['Name','Type','Yield Δ','Price Δ',''], scRows)}
+</div>`);
+}
+
+async function openEntScenarioForm(){
+  const seasons = await erpFetch('/erp/seasons').catch(()=>[]);
+  erpModal('New Forecast Scenario','Define parameters for scenario analysis',[
+    {id:'sc_name',  label:'Scenario Name',  type:'text'},
+    {id:'sc_type',  label:'Type',           type:'select', options:['expected','optimistic','pessimistic','stress']},
+    {id:'sc_season',label:'Season',         type:'select', options:[''].concat((seasons||[]).map(s=>s.name+'|'+s.id))},
+    {id:'sc_yield', label:'Yield Change %', type:'number'},
+    {id:'sc_price', label:'Price Change %', type:'number'},
+    {id:'sc_fuel',  label:'Fuel Change %',  type:'number'},
+    {id:'sc_fert',  label:'Fertiliser Change %', type:'number'},
+    {id:'sc_lab',   label:'Labour Change %', type:'number'},
+  ], async(vals)=>{
+    const ss = vals.sc_season ? vals.sc_season.split('|') : [];
+    await entFetch('/forecasting/scenarios','POST',{
+      name: vals.sc_name,
+      scenario_type: vals.sc_type,
+      season_id: ss[1]||null,
+      yield_change_pct: parseFloat(vals.sc_yield)||0,
+      price_change_pct: parseFloat(vals.sc_price)||0,
+      fuel_change_pct:  parseFloat(vals.sc_fuel)||0,
+      fertiliser_change_pct: parseFloat(vals.sc_fert)||0,
+      labour_change_pct: parseFloat(vals.sc_lab)||0,
+    });
+    loadEntForecasting();
+  });
+}
+
+async function runEntScenario(id){
+  let result;
+  try{ result = await entFetch(`/forecasting/scenarios/${id}/run`,'POST'); }
+  catch(e){ toast('Scenario run failed: '+e.message,'error'); return; }
+  const s = result;
+  erpModal('Scenario Result', s.scenario?.name||'Result', [], async()=>{}, `
+    <table class="erp-table"><tbody>
+      <tr><td>Base Revenue</td><td class="amount">${entFmt.usd(s.base_revenue)}</td></tr>
+      <tr><td>Projected Revenue</td><td class="amount positive">${entFmt.usd(s.projected_revenue)}</td></tr>
+      <tr><td>Revenue Impact</td><td class="amount" style="color:${entFmt.clr(s.revenue_impact)}">${entFmt.usd(s.revenue_impact)}</td></tr>
+      <tr><td>Base Expenses</td><td class="amount">${entFmt.usd(s.base_expenses)}</td></tr>
+      <tr><td>Projected Expenses</td><td class="amount">${entFmt.usd(s.projected_expenses)}</td></tr>
+      <tr><td>Projected Profit</td><td class="amount" style="color:${entFmt.clr(s.projected_profit)}">${entFmt.usd(s.projected_profit)}</td></tr>
+      <tr><td>Projected Margin</td><td class="amount">${entFmt.pct(s.projected_margin_pct)}</td></tr>
+      <tr><td>Projected ROI</td><td class="amount">${entFmt.pct(s.projected_roi)}</td></tr>
+    </tbody></table>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 6 — Inventory Optimisation  → GET /api/enterprise/inventory/optimisation
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntInventoryOpt(){
+  currentPage = 'ent-inventory-opt';
+  entContent(entLoading('Inventory Optimisation'));
+  let data;
+  try{ data = await entFetch('/inventory/optimisation'); }
+  catch(e){ entContent(`<div class="page-header"><h1>Inventory Optimisation</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const items = data?.items||[];
+  const reorder = data?.purchasing_recommendations||[];
+
+  const rows = items.map(r=>`<tr>
+    <td>${r.name}</td>
+    <td><span class="badge">${r.abc_class}</span></td>
+    <td><span class="badge ${r.movement_class==='Fast Moving'?'badge-success':r.movement_class==='Dead Stock'?'badge-error':''}">${r.movement_class}</span></td>
+    <td class="amount">${entFmt.num(r.on_hand)} ${r.unit||''}</td>
+    <td class="amount">${entFmt.dec(r.days_remaining,0)} days</td>
+    <td class="amount">${entFmt.usd(r.reorder_point)}</td>
+    <td class="amount">${entFmt.usd(r.eoq)}</td>
+    <td class="amount">${entFmt.usd(r.wavg_value)}</td>
+    <td>${r.reorder_recommended ? '<span style="color:var(--error-txt);font-weight:600">⚠ Reorder</span>' : '<span style="color:var(--success-txt)">OK</span>'}</td>
+  </tr>`).join('');
+
+  const rorRows = reorder.map(r=>`<tr>
+    <td>${r.name}</td>
+    <td class="amount">${entFmt.num(r.on_hand)}</td>
+    <td class="amount">${entFmt.dec(r.reorder_point,0)}</td>
+    <td class="amount">${entFmt.dec(r.eoq,0)}</td>
+    <td><span class="badge ${r.urgency==='Critical'?'badge-error':''}">${r.urgency}</span></td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header"><h1>Inventory Optimisation</h1><div class="page-subtitle">EOQ, ROP, ABC classification, WAVG cost and movement analysis</div></div>
+<div class="erp-grid">
+  ${entKpi('Total Value',       entFmt.usd(data.total_inventory_value), '', 'inventory_2')}
+  ${entKpi('Total Consumed',    entFmt.usd(data.total_consumed_value),  '', 'output')}
+  ${entKpi('Turnover Ratio',    entFmt.dec(data.inventory_turnover)+'x','', 'autorenew')}
+  ${entKpi('Below Reorder',     data.items_below_reorder + ' items',    '', 'warning', data.items_below_reorder>0?'var(--error-txt)':'')}
+  ${entKpi('Dead Stock Items',  data.dead_stock_count + ' items',       '', 'do_not_disturb', data.dead_stock_count>0?'var(--gold-lt)':'')}
+</div>
+${reorder.length ? `<div class="erp-panel"><div class="erp-panel-title" style="color:var(--error-txt)"><span class="material-symbols-outlined nav-icon">warning</span> Purchase Recommendations (${reorder.length})</div>${entTable(['Item','On Hand','Reorder Point','EOQ','Urgency'],rorRows)}</div>` : ''}
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">grid_on</span> Full Inventory Analysis</div>
+  ${entTable(['Item','ABC','Movement','On Hand','Days Left','ROP','EOQ','WAVG Value','Status'], rows)}
+</div>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 7 — Livestock Analytics  → GET /api/enterprise/livestock/analytics
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntLivestockAnalytics(){
+  currentPage = 'ent-livestock-analytics';
+  entContent(entLoading('Livestock Analytics'));
+  let herds;
+  try{ herds = await entFetch('/livestock/analytics'); }
+  catch(e){ entContent(`<div class="page-header"><h1>Livestock Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const cards = (herds||[]).map(h=>{
+    const k = h.kpis||{};
+    return `<div class="erp-panel">
+      <div class="erp-panel-title" style="justify-content:space-between">
+        <span><span class="material-symbols-outlined nav-icon">pets</span> ${h.herd_name}</span>
+        <span class="badge">${h.health}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${h.breed} · ${entFmt.num(h.count)} head · ${h.location||'—'}</div>
+      <table class="erp-table"><tbody>
+        <tr><td>Feed Cost / Head</td><td class="amount">${entFmt.usd(k.feed_cost_per_head)}</td></tr>
+        <tr><td>Vet Cost / Head</td><td class="amount">${entFmt.usd(k.vet_cost_per_head)}</td></tr>
+        <tr><td>Revenue / Head</td><td class="amount positive">${entFmt.usd(k.revenue_per_head)}</td></tr>
+        <tr><td>Profit / Head</td><td class="amount" style="color:${entFmt.clr(k.profit_per_head||0)}">${entFmt.usd(k.profit_per_head)}</td></tr>
+        <tr><td>Mortality Rate</td><td class="amount">${entFmt.pct(k.mortality_rate_pct)}</td></tr>
+        <tr><td>Birth Rate</td><td class="amount">${entFmt.pct(k.birth_rate_pct)}</td></tr>
+        <tr><td>Gross Profit</td><td class="amount" style="color:${entFmt.clr(k.gross_profit||0)}">${entFmt.usd(k.gross_profit)}</td></tr>
+        <tr><td>Gross Margin</td><td class="amount">${entFmt.pct(k.gross_margin_pct)}</td></tr>
+      </tbody></table>
+      <button class="erp-btn" style="margin-top:10px;width:100%;justify-content:center" onclick="openEntLivestockSnapshotForm(${h.id},'${h.herd_name}')"><span class="material-symbols-outlined" style="font-size:14px">add</span> Log KPI Snapshot</button>
+    </div>`;
+  }).join('');
+
+  entContent(`
+<div class="page-header"><h1>Livestock Analytics</h1><div class="page-subtitle">Per-herd KPIs — feed conversion, mortality, profitability</div></div>
+<div class="erp-grid">${cards||'<p style="color:var(--text-muted)">No livestock data.</p>'}</div>`);
+}
+
+async function openEntLivestockSnapshotForm(livestockId, herdName){
+  erpModal(`KPI Snapshot — ${herdName}`, 'Record periodic performance data', [
+    {id:'ls_date',      label:'Snapshot Date',     type:'date'},
+    {id:'ls_head',      label:'Head Count',        type:'number'},
+    {id:'ls_deaths',    label:'Deaths',            type:'number'},
+    {id:'ls_births',    label:'Births',            type:'number'},
+    {id:'ls_wopen',     label:'Weight Opening (kg)',type:'number'},
+    {id:'ls_wclose',    label:'Weight Closing (kg)',type:'number'},
+    {id:'ls_feed',      label:'Feed Cost',         type:'number'},
+    {id:'ls_vet',       label:'Vet Cost',          type:'number'},
+    {id:'ls_revenue',   label:'Revenue',           type:'number'},
+  ], async(vals)=>{
+    await entFetch('/livestock/kpi-snapshots','POST',{
+      livestock_id:       livestockId,
+      snapshot_date:      vals.ls_date,
+      head_count:         parseFloat(vals.ls_head)||0,
+      deaths:             parseFloat(vals.ls_deaths)||0,
+      births:             parseFloat(vals.ls_births)||0,
+      weight_opening_kg:  parseFloat(vals.ls_wopen)||0,
+      weight_closing_kg:  parseFloat(vals.ls_wclose)||0,
+      feed_cost:          parseFloat(vals.ls_feed)||0,
+      vet_cost:           parseFloat(vals.ls_vet)||0,
+      revenue:            parseFloat(vals.ls_revenue)||0,
+    });
+    loadEntLivestockAnalytics();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 8 — Crop Analytics  → GET /api/enterprise/crops/analytics
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntCropAnalytics(){
+  currentPage = 'ent-crop-analytics';
+  entContent(entLoading('Crop Analytics'));
+  let [rows, comparison] = [[], []];
+  try{
+    [rows, comparison] = await Promise.all([
+      entFetch('/crops/analytics'),
+      entFetch('/crops/season-comparison'),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>Crop Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const tableRows = (rows||[]).map(r=>{
+    const a = r.analytics||{};
+    return `<tr>
+      <td><b>${r.block}</b></td>
+      <td>${r.crop||'—'}</td>
+      <td class="amount">${entFmt.dec(r.area_ha,1)} ha</td>
+      <td class="amount">${entFmt.dec(a.yield_per_ha,0)} kg/ha</td>
+      <td class="amount">${entFmt.usd(a.revenue_per_ha)}/ha</td>
+      <td class="amount">${entFmt.usd(a.cost_per_ha)}/ha</td>
+      <td class="amount" style="color:${entFmt.clr(a.profit_per_ha||0)}">${entFmt.usd(a.profit_per_ha)}/ha</td>
+      <td class="amount">${entFmt.pct(a.net_margin_pct)}</td>
+      <td class="amount">${a.yield_variance_pct != null ? entFmt.pct(a.yield_variance_pct) : '—'}</td>
+      <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="openEntCropRecordForm(${r.id},'${r.block}')">+ Record</button></td>
+    </tr>`;
+  }).join('');
+
+  const compRows = (comparison||[]).map(r=>`<tr>
+    <td>${r.block}</td><td>${r.crop||'—'}</td><td>${r.season_name||'—'}</td>
+    <td class="amount">${entFmt.dec(r.actual_yield_kg,0)} kg</td>
+    <td class="amount">${entFmt.usd(r.revenue)}</td>
+    <td class="amount">${entFmt.usd(r.total_cost)}</td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header"><h1>Crop Analytics</h1><div class="page-subtitle">Yield, revenue and cost analysis per field block</div></div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">eco</span> Block-Level Analytics</div>
+  ${entTable(['Block','Crop','Area','Yield/ha','Revenue/ha','Cost/ha','Profit/ha','Net Margin','Yield Var%',''], tableRows)}
+</div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">compare_arrows</span> Season Comparison</div>
+  ${entTable(['Block','Crop','Season','Yield (kg)','Revenue','Total Cost'], compRows)}
+</div>`);
+}
+
+async function openEntCropRecordForm(cropId, blockName){
+  const seasons = await erpFetch('/erp/seasons').catch(()=>[]);
+  erpModal(`Production Record — ${blockName}`, 'Record actual yield and costs', [
+    {id:'cr_season',  label:'Season',          type:'select', options:[''].concat((seasons||[]).map(s=>s.name+'|'+s.id))},
+    {id:'cr_yield',   label:'Actual Yield (kg)',type:'number'},
+    {id:'cr_estyield',label:'Estimated Yield (kg)',type:'number'},
+    {id:'cr_revenue', label:'Revenue (USD)',    type:'number'},
+    {id:'cr_seed',    label:'Seed Cost',        type:'number'},
+    {id:'cr_fert',    label:'Fertiliser Cost',  type:'number'},
+    {id:'cr_chem',    label:'Chemical Cost',    type:'number'},
+    {id:'cr_labour',  label:'Labour Cost',      type:'number'},
+    {id:'cr_water',   label:'Water Applied (mm)',type:'number'},
+    {id:'cr_date',    label:'Record Date',      type:'date'},
+  ], async(vals)=>{
+    const ss = vals.cr_season ? vals.cr_season.split('|') : [];
+    await entFetch('/crops/production-records','POST',{
+      crop_block_id:      cropId,
+      season_id:          ss[1]||null,
+      actual_yield_kg:    parseFloat(vals.cr_yield)||0,
+      estimated_yield_kg: parseFloat(vals.cr_estyield)||0,
+      revenue:            parseFloat(vals.cr_revenue)||0,
+      seed_cost:          parseFloat(vals.cr_seed)||0,
+      fertiliser_cost:    parseFloat(vals.cr_fert)||0,
+      chemical_cost:      parseFloat(vals.cr_chem)||0,
+      labour_cost:        parseFloat(vals.cr_labour)||0,
+      water_mm_applied:   parseFloat(vals.cr_water)||0,
+      record_date:        vals.cr_date||null,
+    });
+    loadEntCropAnalytics();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 9 — Labour Analytics  → GET /api/enterprise/labour/analytics
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntLabourAnalytics(){
+  currentPage = 'ent-labour-analytics';
+  entContent(entLoading('Labour Analytics'));
+  let data;
+  try{ data = await entFetch('/labour/analytics'); }
+  catch(e){ entContent(`<div class="page-header"><h1>Labour Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const kpis = data?.farm_kpis||{};
+  const workers = data?.workers||[];
+
+  const wRows = workers.map(w=>`<tr>
+    <td>${w.name}</td>
+    <td>${w.role}</td>
+    <td class="amount">${entFmt.dec(w.actual_hours,1)} hrs</td>
+    <td class="amount">${w.planned_hours ? entFmt.dec(w.planned_hours,1) : '—'}</td>
+    <td class="amount" style="color:${entFmt.clr(w.hours_variance||0)}">${w.hours_variance != null ? entFmt.dec(w.hours_variance,1) : '—'}</td>
+    <td class="amount">${entFmt.usd(w.allocated_cost)}</td>
+    <td class="amount">${w.efficiency_pct != null ? entFmt.pct(w.efficiency_pct) : '—'}</td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header"><h1>Labour Analytics</h1><div class="page-subtitle">Productivity, efficiency and cost per worker</div></div>
+<div class="erp-grid">
+  ${entKpi('Total Hours',       entFmt.num(kpis.total_actual_hours)+' hrs', '', 'schedule')}
+  ${entKpi('Total Labour Cost', entFmt.usd(kpis.total_labour_cost),        '', 'payments', 'var(--error-txt)')}
+  ${entKpi('Labour Productivity',entFmt.usd(kpis.labour_productivity)+'/hr','', 'trending_up')}
+  ${entKpi('Labour Cost / ha',  entFmt.usd(kpis.labour_cost_per_ha),       '', 'landscape')}
+  ${entKpi('Output / Hr',       entFmt.usd(kpis.output_per_labour_hour),   '', 'speed')}
+  ${entKpi('Payroll Efficiency',entFmt.dec(kpis.payroll_efficiency)+'x',   '', 'workspace_premium')}
+</div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">groups</span> Worker Breakdown</div>
+  ${entTable(['Name','Role','Actual Hrs','Planned Hrs','Variance','Allocated Cost','Efficiency'], wRows)}
+</div>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 10 — Asset Analytics  → GET /api/enterprise/assets/analytics
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntAssetAnalytics(){
+  currentPage = 'ent-asset-analytics';
+  entContent(entLoading('Asset Analytics'));
+  let [assets, replacement] = [[], []];
+  try{
+    [assets, replacement] = await Promise.all([
+      entFetch('/assets/analytics'),
+      entFetch('/assets/replacement-forecast'),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>Asset Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const aRows = (assets||[]).map(a=>{
+    const p = a.performance||{};
+    return `<tr>
+      <td><b>${a.asset_id}</b></td>
+      <td>${a.description}</td>
+      <td class="amount">${entFmt.usd(a.value)}</td>
+      <td class="amount">${entFmt.usd(p.book_value)}</td>
+      <td class="amount">${entFmt.dec(p.utilisation_pct,1)}%</td>
+      <td class="amount">${p.cost_per_hour ? entFmt.usd(p.cost_per_hour)+'/hr' : '—'}</td>
+      <td class="amount">${entFmt.pct(p.asset_roi_pct)}</td>
+      <td class="amount">${entFmt.dec(p.efficiency_score,1)}</td>
+    </tr>`;
+  }).join('');
+
+  const repRows = (replacement||[]).filter(r=>r.replacement_due).map(r=>`<tr>
+    <td><b>${r.asset_id}</b></td>
+    <td>${r.description}</td>
+    <td class="amount">${entFmt.usd(r.value)}</td>
+    <td class="amount">${r.years_remaining} yrs</td>
+    <td class="amount">${entFmt.usd(r.book_value)}</td>
+    <td><span class="badge badge-error">Replace Soon</span></td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header"><h1>Asset Analytics</h1><div class="page-subtitle">Utilisation, ROI, efficiency scores and replacement forecasting</div></div>
+${repRows ? `<div class="erp-panel" style="border-color:var(--error-bdr)"><div class="erp-panel-title" style="color:var(--error-txt)"><span class="material-symbols-outlined nav-icon">warning</span> Assets Due for Replacement</div>${entTable(['Asset ID','Description','Cost','Years Left','Book Value','Status'],repRows)}</div>` : ''}
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">precision_manufacturing</span> Asset Performance</div>
+  ${entTable(['ID','Description','Cost','Book Value','Utilisation','Cost/hr','ROI','Efficiency Score'], aRows)}
+</div>`);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 11 — Calculation Registry  → GET /api/enterprise/calculations/registry
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntCalculations(){
+  currentPage = 'ent-calculations';
+  entContent(entLoading('Calculation Registry'));
+  let data;
+  try{ data = await entFetch('/calculations/registry'); }
+  catch(e){ entContent(`<div class="page-header"><h1>Calculation Registry</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const formulas = data?.formulas||[];
+  const byModule = {};
+  formulas.forEach(f=>{ (byModule[f.module]||(byModule[f.module]=[])).push(f); });
+
+  const panels = Object.entries(byModule).map(([mod, fmls])=>`
+    <div class="erp-panel">
+      <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">functions</span> ${mod}</div>
+      <table class="erp-table"><thead><tr><th>Formula</th><th>Version</th><th>Description</th><th></th></tr></thead><tbody>
+        ${fmls.map(f=>`<tr>
+          <td><code style="font-family:var(--ff-mono);font-size:12px;color:var(--gold-lt)">${f.name}</code></td>
+          <td>${f.version}</td>
+          <td style="color:var(--text-muted)">${f.description}</td>
+          <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="openEntFormulaInvoker('${f.name}')">▶ Invoke</button></td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div>`).join('');
+
+  entContent(`
+<div class="page-header"><h1>Calculation Registry</h1><div class="page-subtitle">${formulas.length} registered formulas across ${Object.keys(byModule).length} calculators</div></div>
+${panels}`);
+}
+
+async function openEntFormulaInvoker(formulaName){
+  erpModal(`Invoke: ${formulaName}`, 'Enter inputs as JSON (e.g. {"revenue":10000,"cogs":4000})', [
+    {id:'inv_inputs', label:'Inputs (JSON)', type:'text', placeholder:'{"revenue":10000,"cogs":4000}'},
+  ], async(vals)=>{
+    let inputs = {};
+    try{ inputs = JSON.parse(vals.inv_inputs||'{}'); }
+    catch{ throw new Error('Invalid JSON. Example: {"revenue":10000,"cogs":4000}'); }
+    const result = await entFetch('/calculations/invoke','POST',{ formula: formulaName, inputs });
+    toast(`Result: ${JSON.stringify(result.result)}`);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE 12 — Scenario Modelling  → /api/enterprise/forecasting/scenarios
+// ─────────────────────────────────────────────────────────────────────────────
+async function loadEntScenarios(){
+  currentPage = 'ent-scenarios';
+  entContent(entLoading('Scenario Modelling'));
+  let [scenarios, whatif] = [[], null];
+  try{
+    [scenarios, whatif] = await Promise.all([
+      entFetch('/forecasting/scenarios'),
+      entFetch('/forecasting/what-if','POST',{}),
+    ]);
+  }catch(e){ entContent(`<div class="page-header"><h1>Scenario Modelling</h1></div><div class="error-msg">${e.message}</div>`); return; }
+
+  const wi = whatif?.scenarios||{};
+  const wiKeys = ['worst_case','expected_case','best_case'];
+  const wiCards = wiKeys.map(k=>{
+    const s = wi[k]||{};
+    const label = k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
+    const clr = k==='worst_case'?'var(--error-txt)':k==='best_case'?'var(--success-txt)':'var(--gold-lt)';
+    return `<div class="erp-panel" style="border-color:${clr}20">
+      <div class="erp-panel-title" style="color:${clr}">${label}</div>
+      <div style="font-size:22px;font-family:var(--ff-mono);font-weight:600;color:${clr};margin-bottom:8px">${entFmt.usd(s.profit)}</div>
+      <table class="erp-table"><tbody>
+        <tr><td>Revenue</td><td class="amount">${entFmt.usd(s.revenue)}</td></tr>
+        <tr><td>Expenses</td><td class="amount">${entFmt.usd(s.expenses)}</td></tr>
+        <tr><td>Margin</td><td class="amount">${entFmt.pct(s.margin_pct||0)}</td></tr>
+      </tbody></table>
+    </div>`;
+  }).join('');
+
+  const scRows = (scenarios||[]).map(s=>`<tr>
+    <td>${s.name}</td>
+    <td><span class="badge">${s.scenario_type}</span></td>
+    <td class="amount">${entFmt.pct(s.yield_change_pct||0)}</td>
+    <td class="amount">${entFmt.pct(s.price_change_pct||0)}</td>
+    <td class="amount">${entFmt.pct(s.fuel_change_pct||0)}</td>
+    <td class="amount">${entFmt.pct(s.fertiliser_change_pct||0)}</td>
+    <td class="amount">${entFmt.pct(s.labour_change_pct||0)}</td>
+    <td>
+      <button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="runEntScenario(${s.id})">▶ Run</button>
+    </td>
+  </tr>`).join('');
+
+  entContent(`
+<div class="page-header" style="justify-content:space-between;align-items:flex-start">
+  <div><h1>Scenario Modelling</h1><div class="page-subtitle">Worst / Expected / Best case projections and saved scenarios</div></div>
+  <button class="erp-btn primary" onclick="openEntScenarioForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> New Scenario</button>
+</div>
+<div class="erp-grid-3">${wiCards}</div>
+<div class="erp-panel">
+  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">saved_search</span> Saved Scenarios</div>
+  ${entTable(['Name','Type','Yield Δ%','Price Δ%','Fuel Δ%','Fertiliser Δ%','Labour Δ%',''], scRows)}
+</div>`);
+}
