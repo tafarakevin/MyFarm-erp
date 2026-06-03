@@ -7626,6 +7626,14 @@ async function loadFinance(){
   document.getElementById('finance-income').innerHTML=(income.length?income.map(r=>fmtLine(r,'income')).join('')+`<div class="finance-line" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:14px"><span style="color:var(--text-primary);font-weight:500">Total</span><span class="finance-amount" style="color:var(--text-primary);font-size:16px">$${totalIncome.toLocaleString()}</span></div>`:noIncHtml);
   document.getElementById('finance-expense').innerHTML=(expense.length?expense.map(r=>fmtLine(r,'expense')).join('')+`<div class="finance-line" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:14px"><span style="color:var(--text-primary);font-weight:500">Total</span><span class="finance-amount" style="color:var(--error-txt);font-size:16px">$${totalExpense.toLocaleString()}</span></div>`:noExpHtml);
 
+  // ── Restore active tab immediately after tables are written ──────────────
+  // Done here (not at end of function) so a crash in chart rendering never
+  // leaves the user stranded on the wrong tab.
+  if(_activeTab && _activeTab !== 'overview'){
+    const _tabBtn=document.querySelector(`.fin-tab[data-tab="${_activeTab}"]`);
+    if(_tabBtn) finTab(_tabBtn,_activeTab);
+  }
+
   // ── OVERVIEW: CATEGORY BREAKDOWNS ────────────────────────────────────────
   const catColors=['#c4a068','#7ec46a','#60b0d4','#e0a840','#e07060','#a07898','#70a8b0','#b89060'];
   const renderCatBreakdown=(bycat,total,elId,colorOffset=0)=>{
@@ -7781,12 +7789,6 @@ async function loadFinance(){
   document.getElementById('fin-trend-chart').replaceWith(trendWrap);
   trendWrap.id='fin-trend-chart';trendWrap.className='';
   document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`+(hasRealMonths?'':'&nbsp;&nbsp;<span style="font-size:10px;color:var(--text-faint)">(sample data)</span>');
-
-  // ── Restore active tab — preserve user's tab selection across reloads ──────
-  if(_activeTab && _activeTab !== 'overview'){
-    const tabBtn=document.querySelector(`.fin-tab[data-tab="${_activeTab}"]`);
-    if(tabBtn) finTab(tabBtn,_activeTab);
-  }
 
   // ── MONTH-ON-MONTH TABLE — all months, newest first ───────────────────────
   const momKeys=[...sortedKeys].reverse(); // all months, newest first
