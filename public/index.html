@@ -8413,10 +8413,22 @@ async function modalSave(){
   else if(type==='crop'){body={block:g('f-block'),crop:g('f-crop'),area_ha:parseFloat(g('f-area'))||0,planted:g('f-planted'),est_harvest:g('f-harvest'),status:g('f-status'),irrigation:g('f-irr'),irrigation_pct:parseInt(g('f-irrpct'))||0,est_yield_value:parseFloat(g('f-yval'))||0,notes:g('f-notes')};ep=id?`/crops/${id}`:'/crops';method=id?'PUT':'POST';}
   else if(type==='worker'){body={name:g('f-name'),role:g('f-role'),department:g('f-dept'),status:g('f-status'),salary:parseFloat(g('f-salary'))||0,phone:g('f-phone'),email:g('f-email'),start_date:g('f-start'),notes:g('f-notes')};ep=id?`/workers/${id}`:'/workers';method=id?'PUT':'POST';}
   else if(type==='inventory'){body={name:g('f-name'),category:g('f-cat'),unit:g('f-unit'),on_hand:parseFloat(g('f-onhand'))||0,par_level:parseFloat(g('f-par'))||0,max_level:parseFloat(g('f-max'))||0,unit_cost:parseFloat(g('f-cost'))||0,supplier:g('f-supplier'),notes:g('f-notes')};ep=id?`/inventory/${id}`:'/inventory';method=id?'PUT':'POST';}
-  else if(type==='finance'){body={type:subtype||'income',category:g('f-cat'),description:g('f-desc'),amount:parseFloat(g('f-amount'))||0,date:g('f-date'),notes:g('f-notes')};ep='/finance';method='POST';}
+  else if(type==='finance'){
+    const amt=parseFloat(g('f-amount'));
+    const dt=g('f-date');
+    const desc=g('f-desc')||'';
+    if(!dt){toast('Please enter a date.','error');return;}
+    if(!amt||amt<=0){toast('Please enter a valid amount greater than zero.','error');return;}
+    body={type:subtype||'income',category:g('f-cat')||'Other',description:desc||g('f-cat')||'',amount:amt,date:dt,notes:g('f-notes')||''};
+    ep='/finance';method='POST';
+  }
   else if(type==='compliance'){body={title:g('f-title'),category:g('f-cat'),status:g('f-status'),issued_date:g('f-issued'),expiry_date:g('f-expiry'),issuing_body:g('f-issuer'),notes:g('f-notes')};ep=id?`/compliance/${id}`:'/compliance';method=id?'PUT':'POST';}
   else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id&&!pw){toast('Password is required when creating a new user.','error');return;}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
-  try{await api(ep,method,body);toast(id?'Updated':'Created');closeModal();_invalidateCache('/'+ep.split('/')[1]);loadPage(currentPage);}catch(e){}
+  try{await api(ep,method,body);toast(id?'Updated':'Created');closeModal();_invalidateCache('/'+ep.split('/')[1]);loadPage(currentPage);}catch(e){
+    // Surface the server's error message so the user knows what went wrong
+    const msg = e?.data?.error || e?.message || 'Server error — please try again.';
+    toast('Error: ' + msg, 'error');
+  }
 }
 
 // ─── ESTATE INTELLIGENCE DIGEST ──────────────────────────────────────────────
