@@ -7529,6 +7529,10 @@ function finTab(el,tab){
 async function loadFinance(){
   currentPage='finance';
 
+  // Preserve the active tab so a reload after save doesn't jump back to Overview
+  const _activeTabEl = document.querySelector('.fin-tab.active');
+  const _activeTab = _activeTabEl?.dataset?.tab || 'overview';
+
   // ── Skeleton loaders — render immediately on every panel ─────────────────
   const skelLine=()=>`<div class="skel skel-row" style="margin-bottom:8px"></div>`;
   const skelFin=skelLine()+skelLine()+skelLine();
@@ -7777,6 +7781,12 @@ async function loadFinance(){
   document.getElementById('fin-trend-chart').replaceWith(trendWrap);
   trendWrap.id='fin-trend-chart';trendWrap.className='';
   document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`+(hasRealMonths?'':'&nbsp;&nbsp;<span style="font-size:10px;color:var(--text-faint)">(sample data)</span>');
+
+  // ── Restore active tab — preserve user's tab selection across reloads ──────
+  if(_activeTab && _activeTab !== 'overview'){
+    const tabBtn=document.querySelector(`.fin-tab[data-tab="${_activeTab}"]`);
+    if(tabBtn) finTab(tabBtn,_activeTab);
+  }
 
   // ── MONTH-ON-MONTH TABLE — all months, newest first ───────────────────────
   const momKeys=[...sortedKeys].reverse(); // all months, newest first

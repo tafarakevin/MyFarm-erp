@@ -2059,7 +2059,7 @@ def get_finance():
     limit  = min(int(request.args.get("limit",  500)), 1000)
     offset = max(int(request.args.get("offset", 0)),   0)
     rows = query(
-        "SELECT * FROM finance ORDER BY date DESC, id DESC LIMIT %s OFFSET %s",
+        "SELECT * FROM finance WHERE category NOT LIKE 'VOIDED-%%' ORDER BY date DESC, id DESC LIMIT %s OFFSET %s",
         (limit, offset)
     )
     return jsonify(rows_to_list(rows))
@@ -2068,11 +2068,11 @@ def get_finance():
 @app.route("/api/finance/summary", methods=["GET"])
 @require_auth
 def get_finance_summary():
-    income = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='income'", one=True)
-    expense = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense'", one=True)
+    income = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
+    expense = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'", one=True)
     by_category = query("""
         SELECT type, category, COALESCE(SUM(amount),0) as total
-        FROM finance GROUP BY type, category ORDER BY type, total DESC
+        FROM finance WHERE category NOT LIKE 'VOIDED-%%' GROUP BY type, category ORDER BY type, total DESC
     """)
     total_income = income["total"]
     total_expense = expense["total"]
