@@ -6125,9 +6125,12 @@ const CAN_WRITE_PAGES={owner:['dashboard','assets','livestock','crops','workers'
 // sessionStorage is inaccessible across tabs and cleared on tab close — much safer
 // than localStorage for this purpose.
 function getCSRF(){
+  // Prefer the token issued by the server (stored after login / /auth/me).
+  // Fall back to a client-generated token only when no server token exists yet.
+  const server=sessionStorage.getItem('tf_csrf_server');
+  if(server) return server;
   let t=sessionStorage.getItem('tf_csrf');
   if(!t){
-    // Use crypto.randomUUID when available, fall back to a high-entropy string
     t = (typeof crypto !== 'undefined' && crypto.randomUUID)
       ? crypto.randomUUID()
       : Array.from(crypto.getRandomValues(new Uint8Array(32))).map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -6135,6 +6138,7 @@ function getCSRF(){
   }
   return t;
 }
+function storeCSRF(token){ if(token){ sessionStorage.setItem('tf_csrf_server', token); } }
 
 // ─── LOGIN RATE-LIMIT TRACKER ──────────────────────────────────────────────────
 const _loginTracker={attempts:0,lockedUntil:0};
@@ -6190,12 +6194,9 @@ async function api(path,method='GET',body=null){
     }
   }
 
-  const opts={method,headers:{'Content-Type':'application/json'},credentials:'include'};
+  const opts={method,headers:{'Content-Type':'application/json','X-CSRF-Token':getCSRF()},credentials:'include'};
   // NEVER send Authorization header — auth is via httpOnly cookie (auto-sent by browser)
-  // Attach CSRF token on all state-changing methods
-  if(['POST','PUT','PATCH','DELETE'].includes(method.toUpperCase())){
-    opts.headers['X-CSRF-Token']=getCSRF();
-  }
+  // X-CSRF-Token is sent on ALL requests — some servers validate it on GETs too.
   if(body)opts.body=JSON.stringify(body);
 
   // ── AbortController timeout (30s default, 60s for reports) ────────────────
@@ -6617,6 +6618,9 @@ async function doLogin(){
     }
     _onLoginSuccess();
     // Server sets httpOnly session cookie — we never touch or store the token.
+    // Read and store the csrf_token the server embeds in the response.
+    if(d.csrf_token) storeCSRF(d.csrf_token);
+    else if(d.user && d.user.csrf_token) storeCSRF(d.user.csrf_token);
     // Only store non-sensitive user profile (name, role) for UI use.
     saveUser(d.user);currentUser=d.user;enterApp();
   }catch(e){errEl.textContent='Could not reach server — check your connection.';errEl.classList.add('show');}
@@ -8909,6 +8913,8 @@ function copyInviteCode(){
     const r=await fetch(API+'/auth/me',{credentials:'include'});
     if(r.ok){
       const u=await r.json();
+      // Store the server-issued CSRF token for all subsequent requests
+      if(u.csrf_token) storeCSRF(u.csrf_token);
       currentUser=u;
       saveUser(u);
       enterApp();
