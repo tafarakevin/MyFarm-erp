@@ -418,8 +418,14 @@ def rows_to_list(rows):
 # ─── SECURITY CONFIGURATION ────────────────────────────────────────────────────
 
 # Allowed origins for CORS. In production this must match your exact deployed domain.
-# Set ALLOWED_ORIGIN env var to override (e.g. https://thornfield.yourdomain.com).
-ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "http://localhost:5000")
+# Set ALLOWED_ORIGIN env var to override (e.g. https://yourapp.up.railway.app).
+# Falls back to the Railway-provided public URL if set, then localhost for dev.
+_railway_url = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
+_default_origin = f"https://{_railway_url}" if _railway_url else "http://localhost:5000"
+ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", _default_origin)
+
+# Support comma-separated list of origins for multi-domain setups
+ALLOWED_ORIGINS = set(o.strip() for o in ALLOWED_ORIGIN.split(",") if o.strip())
 
 # Session cookie name
 SESSION_COOKIE = "tf_session"
@@ -761,10 +767,13 @@ def health_check():
 def add_security_headers(response):
     origin = request.headers.get("Origin", "")
 
-    # CORS — only allow the configured origin, never wildcard
-    if origin == ALLOWED_ORIGIN:
-        response.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
+    # CORS — only allow the configured origin(s), never wildcard
+    if origin and origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
+    elif not origin:
+        # Same-origin request (no Origin header) — no CORS headers needed
+        pass
     response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type,X-CSRF-Token"
     # Never expose Authorization in ACAO — tokens live in cookies now
@@ -2112,17 +2121,33 @@ def create_finance_record():
                 (d["type"], d["category"], d["description"], amount,
                  d["date"], d.get("reference"), d.get("notes"))
             )
-            write_audit(cur,
-                action="CREATE",
-                record_type="finance",
-                record_id=new_id,
-                record_label=d["description"],
-                after={"type": d["type"], "amount": amount, "category": d["category"]},
-                user_id=user["id"]
-            )
+            if new_id is None:
+                raise RuntimeError("INSERT did not return a row ID")
+            try:
+                write_audit(cur,
+                    action="CREATE",
+                    record_type="finance",
+                    record_id=new_id,
+                    record_label=d["description"],
+                    after={"type": d["type"], "amount": amount, "category": d["category"]},
+                    user_id=user["id"]
+                )
+            except Exception as audit_err:
+                # Audit failure must never block the primary write
+                app_log.warning("Audit write failed for finance CREATE",
+                    extra={"event": "AUDIT_WARN", "exc": str(audit_err),
+                           "record_id": new_id, "request_id": getattr(g, "request_id", "-")})
     except Exception as e:
-        log_security("FINANCE_CREATE_ERROR", str(e), user_id=user.get("id"))
-        return jsonify({"error": "Finance entry could not be saved"}), 500
+        import traceback as _tb
+        _tb.print_exc()
+        app_log.error("Finance create failed", extra={
+            "event": "FINANCE_CREATE_ERROR", "exc": str(e),
+            "request_id": getattr(g, "request_id", "-"),
+        })
+        return jsonify({"error": f"Finance entry could not be saved: {str(e)}"}), 500
+
+    if new_id is None:
+        return jsonify({"error": "Finance entry was not created — no ID returned"}), 500
 
     row = query("SELECT * FROM finance WHERE id=%s", (new_id,), one=True)
     return jsonify(row_to_dict(row)), 201
@@ -4291,24 +4316,6 @@ import traceback
 
 # Startup — don't log DATABASE_URL as it contains credentials
 print("[startup] Initialising Thornfield ERP...")
-
-try:
-    print("[startup] Running init_db()...")
-    init_db()
-    print("[startup] init_db() OK")
-except Exception:
-    print("[startup] init_db() FAILED:")
-    traceback.print_exc()
-
-try:
-    print("[startup] Running init_erp_db()...")
-    init_erp_db()
-    print("[startup] init_erp_db() OK")
-except Exception:
-    print("[startup] init_erp_db() FAILED:")
-    traceback.print_exc()
-
-# seed_owner() removed — no hardcoded credentials at startup
 
 # ─── APPLICATION STARTUP ───────────────────────────────────────────────────────
 def _on_startup():
