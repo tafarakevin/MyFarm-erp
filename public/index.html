@@ -6213,7 +6213,10 @@ async function api(path,method='GET',body=null){
       // Capture request ID for end-to-end log correlation
       const reqId = r.headers.get('X-Request-ID')||'-';
       window._lastRequestId = reqId;
-      if(r.status===401){doLogout();return null;}
+      if(r.status===401){
+        r.json().then(b=>console.error('[AUTH] 401 response body:', JSON.stringify(b))).catch(()=>{});
+        doLogout();return null;
+      }
       if(!r.ok){
         const e=await r.json().catch(()=>({error:r.statusText}));
         // Report 5xx errors to the backend observability endpoint

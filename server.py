@@ -186,7 +186,17 @@ def require_auth(f):
             return jsonify({"error": "Invalid or missing CSRF token"}), 403
         user = get_current_user()
         if not user:
-            return jsonify({"error": "Unauthorized"}), 401
+            # DIAGNOSTIC — log why 401 is returned
+            cookie_present = bool(request.cookies.get(SESSION_COOKIE))
+            csrf_header = request.headers.get("X-CSRF-Token", "")
+            token = request.cookies.get(SESSION_COOKIE)
+            session_row = query("SELECT id, expires_at FROM sessions WHERE token=%s", (token,), one=True) if token else None
+            user_row = None
+            if session_row:
+                user_row = query("SELECT id, active FROM users WHERE id=(SELECT user_id FROM sessions WHERE token=%s)", (token,), one=True)
+            import sys
+            print(f"[AUTH DEBUG] 401 on {request.method} {request.path} | cookie={cookie_present} | csrf={'present' if csrf_header else 'missing'} | session_found={bool(session_row)} | session={session_row} | user={user_row}", file=sys.stderr, flush=True)
+            return jsonify({"error": "Unauthorized", "debug": {"cookie": cookie_present, "session": bool(session_row), "user": str(user_row)}}), 401
         g.user = user
         return f(*args, **kwargs)
     return decorated
