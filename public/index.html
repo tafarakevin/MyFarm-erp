@@ -1517,22 +1517,18 @@ body {
   display: grid;
   grid-template-columns: 60% 40%;
   gap: 16px;
-  padding: 16px 20px;
+  padding: 16px 20px 24px;
   flex: 1;
-  min-height: 0;
-  overflow: auto;
 }
 .dash-split-left {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  min-height: 0;
 }
 .dash-split-right {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  min-height: 0;
 }
 .dash-chart-card {
   flex: 1;
@@ -1545,18 +1541,14 @@ body {
   padding: 0 !important;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  min-height: calc(100vh - 54px);
 }
 #page-dashboard .dash-split {
-  overflow-y: auto;
+  /* layout only — #content handles all scrolling */
 }
 
-/* ─── MAIN AREA — adjust for collapsed sidebar ───────────────────────────── */
-#app { display: flex; height: 100vh; overflow: hidden; }
-#main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; transition: margin-left 0.28s cubic-bezier(.4,0,.2,1); }
-
-/* ─── MAIN AREA ─────────────────────────────────────────────────────────── */
+/* ─── APP SHELL & MAIN AREA ─────────────────────────────────────────────── */
+#app  { display: flex; height: 100vh; overflow: hidden; }
 #main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100vh; overflow: hidden; }
 
 /* ─── TOPBAR ─────────────────────────────────────────────────────────────── */
@@ -1570,8 +1562,6 @@ body {
   align-items: center;
   padding: 0 32px;
   gap: 16px;
-  position: sticky;
-  top: 0;
   z-index: 50;
 }
 .topbar-title {
@@ -1647,11 +1637,11 @@ body {
 #content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 36px 40px;
   background: var(--bg);
   min-height: 0;
-  overscroll-behavior: contain;   /* Prevent scroll chaining to parent on mobile */
-  scroll-padding-top: 16px;
+  overscroll-behavior: contain;
   /* Enable hardware-accelerated scrolling on iOS */
   -webkit-overflow-scrolling: touch;
 }
@@ -3020,7 +3010,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
   #mob-toggle { display: flex; }
   .topbar-title { font-size: 15px; }
   #main { width: 100%; }
-  #content { padding: 24px 20px; overflow-y: auto; }
+  #content { padding: 24px 20px; overflow-y: auto; overflow-x: hidden; }
 
   /* Grids → 2 columns then stack */
   .stat-grid { grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 18px; }
@@ -3108,7 +3098,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
   #app { overflow: hidden; height: 100dvh; }
   #main { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; margin-left: 0 !important; }
   #topbar { height: 50px; padding: 0 14px; flex-shrink: 0; }
-  #content { padding: 16px 16px 80px; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
+  #content { padding: 16px 16px 80px; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; flex: 1; }
   /* Hide desktop sidebar, show mobile bottom nav */
   #sidebar { display: none !important; }
   .mobile-nav-bar { display: flex !important; }
@@ -4522,7 +4512,12 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 #app.erp-mode #erp-sidebar-nav { display: flex; }
 #app.erp-mode #main-sidebar-nav { display: none; }
 
-/* ERP mode indicator strip at top of sidebar */
+/* ERP/Enterprise dynamic page container */
+.erp-page-container {
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+}
 .erp-mode-strip {
   display: none;
   padding: 8px 24px;
@@ -4585,16 +4580,11 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   flex-direction: column;
 }
 
-/* ── FIX 2: PAGE DISPLAY — dashboard must be flex, not block ─────────────── */
-/* .page.active { display: block } is the global rule (line 1166).            */
-/* #page-dashboard already gets display:flex via the ID rule (line 1056–1061) */
-/* but the global .page.active rule wins due to source order specificity.     */
-/* Lift specificity for the dashboard ID rule so flex wins cleanly.           */
+/* ── FIX: PAGE DISPLAY — dashboard must be flex, not block ─────────────── */
+/* .page.active { display: block } is the global rule.                      */
+/* Lift specificity so flex wins cleanly for dashboard.                     */
 #page-dashboard.active {
   display: flex !important;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
   padding: 0 !important;
 }
 </style>
@@ -5976,8 +5966,17 @@ function renderCmdResults(query) {
 
 function cmdNavigate(page) {
   document.getElementById('cmd-palette-overlay')?.classList.remove('open');
-  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
-  if (navItem) navItem.click();
+  // Try sidebar item first (sb-item), then nav-item
+  const navItem = document.querySelector(`.sb-item[data-page="${page}"]`) ||
+                  document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) { navItem.click(); return; }
+  // Fallback: directly call loadPage for pages not in DOM nav
+  if (ROLE_PAGES[currentUser?.role]?.includes(page)) {
+    currentPage = page;
+    const contentEl = document.getElementById('content');
+    if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; }
+    loadPage(page);
+  }
 }
 
 // Keyboard shortcut Ctrl+K / Cmd+K
@@ -6761,36 +6760,53 @@ async function doLogout(){
   as.scrollTop=0;
 }
 
-const pageLabels={dashboard:'Dashboard',assets:'Assets',livestock:'Livestock',crops:'Crops',workers:'Workers',inventory:'Inventory',finance:'Finance',reports:'Reports',compliance:'Compliance',users:'Users',settings:'Settings'};
+const pageLabels={
+  dashboard:'Dashboard',assets:'Assets',livestock:'Livestock',crops:'Crops',
+  workers:'Workers',inventory:'Inventory',finance:'Finance',reports:'Reports',
+  compliance:'Compliance',users:'Users',settings:'Settings',
+  // ERP Intelligence pages
+  'erp-dashboard':'Farm Overview','erp-profitability':'Profit & Loss',
+  'erp-budgets':'Season Budget','erp-activities':'Farm Activities',
+  'erp-costing':'Cost Breakdown','erp-production':'Harvest & Sales',
+  'erp-depreciation':'Asset Values','erp-units':'Unit Economics',
+  'erp-seasons':'Seasons',
+  // Enterprise Analytics pages
+  'ent-kpi-dashboard':'KPI Dashboard','ent-profitability':'Advanced Profitability',
+  'ent-cogs':'COGS Ledger','ent-cost-accounting':'Cost Accounting',
+  'ent-forecasting':'Forecasting','ent-inventory-opt':'Inventory Optimisation',
+  'ent-livestock-analytics':'Livestock Analytics','ent-crop-analytics':'Crop Analytics',
+  'ent-labour-analytics':'Labour Analytics','ent-asset-analytics':'Asset Analytics',
+  'ent-calculations':'Calculation Registry','ent-scenarios':'Scenario Modelling',
+};
 // ── MOBILE NAV ────────────────────────────────────────────────────────────────
 function mobileNavTo(pg) {
-  // Validate access
   if (!(ROLE_PAGES[currentUser?.role] || []).includes(pg)) return;
 
-  // Update pages
+  // Clear all active states
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const pgEl = document.getElementById('page-' + pg);
-  if (pgEl) pgEl.classList.add('active');
-
-  // Update mobile nav active state
+  document.querySelectorAll('.sb-item[data-page], .nav-item[data-page]').forEach(n =>
+    n.classList.toggle('active', n.dataset.page === pg));
   document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n =>
     n.classList.toggle('active', n.dataset.page === pg));
 
-  // Update desktop sidebar active state too (in case viewport changes)
-  document.querySelectorAll('.sb-item[data-page], .nav-item[data-page]').forEach(n =>
-    n.classList.toggle('active', n.dataset.page === pg));
+  // Handle ERP vs standard page visibility
+  const erpContainer = document.getElementById('erp-page-container');
+  const isErpPage = pg.startsWith('erp-') || pg.startsWith('ent-');
+  if (isErpPage) {
+    if (erpContainer) erpContainer.style.display = 'block';
+  } else {
+    if (erpContainer) erpContainer.style.display = 'none';
+    const pgEl = document.getElementById('page-' + pg);
+    if (pgEl) pgEl.classList.add('active');
+  }
 
   // Update topbar title
   const titleEl = document.getElementById('topbar-title');
   if (titleEl) titleEl.textContent = pageLabels[pg] || pg;
 
-  // Scroll to top
+  // Reset scroll AFTER DOM changes
   const contentEl = document.getElementById('content');
-  if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; }
-
-  // Hide ERP container
-  const erpContainer = document.getElementById('erp-page-container');
-  if (erpContainer) erpContainer.style.display = 'none';
+  if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; contentEl.style.scrollBehavior = ''; }
 
   currentPage = pg;
   loadPage(pg);
@@ -6837,40 +6853,63 @@ document.querySelectorAll('.nav-item[data-page],.sb-item[data-page]').forEach(it
   const activate=()=>{
     const pg=item.dataset.page;
     if(!(ROLE_PAGES[currentUser?.role]||[]).includes(pg))return;
+
+    // 1. Clear all active states
     document.querySelectorAll('.nav-item,.sb-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+
+    // 2. Set new active nav item and sync mobile bar
     item.classList.add('active');
-    // Also sync mobile nav bar
     document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n=>n.classList.toggle('active', n.dataset.page===pg));
-    // Hide ERP container when switching to standard pages
+
+    // 3. Show/hide ERP container vs standard page
     const erpContainer=document.getElementById('erp-page-container');
-    if(erpContainer) erpContainer.style.display='none';
-    const pgEl=document.getElementById('page-'+pg);
-    if(pgEl) pgEl.classList.add('active');
-    document.getElementById('topbar-title').textContent=pageLabels[pg];
-    document.getElementById('content').scrollTop=0;
-    currentPage=pg;loadPage(pg);
+    const isErpPage=pg.startsWith('erp-')||pg.startsWith('ent-');
+    if(isErpPage){
+      // ERP pages render into erp-page-container — standard pages stay hidden
+      if(erpContainer) erpContainer.style.display='block';
+    } else {
+      // Standard page — hide ERP container, show standard page div
+      if(erpContainer) erpContainer.style.display='none';
+      const pgEl=document.getElementById('page-'+pg);
+      if(pgEl) pgEl.classList.add('active');
+    }
+
+    // 4. Update topbar title (safe — pageLabels now covers all pages)
+    const titleEl=document.getElementById('topbar-title');
+    if(titleEl) titleEl.textContent=pageLabels[pg]||pg;
+
+    // 5. Reset scroll AFTER DOM changes are applied
+    const contentEl=document.getElementById('content');
+    if(contentEl){ contentEl.style.scrollBehavior='auto'; contentEl.scrollTop=0; contentEl.style.scrollBehavior=''; }
+
+    currentPage=pg;
+    loadPage(pg);
     if(window.innerWidth<=768)closeMobileNav();
   };
   item.addEventListener('click',activate);
-  // Fix 11 — keyboard activation
   item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}});
 });
 
 function loadPage(pg){
-  // Always scroll content to top on page change — smooth reset
-  const contentEl = document.getElementById('content');
-  if (contentEl) {
-    contentEl.style.scrollBehavior = 'auto';
-    contentEl.scrollTop = 0;
-    contentEl.style.scrollBehavior = '';
-  }
-  // Apply content-visibility optimization — only active page is fully rendered
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-  const activePage = document.getElementById('page-' + pg);
-  if (activePage) activePage.classList.add('active-page');
-
-  const loaders={dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,compliance:loadCompliance,users:loadUsers,settings:loadSettings,'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,'erp-costing':loadErpCosting,'erp-production':loadErpProduction,'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,'erp-seasons':loadErpSeasons,'ent-kpi-dashboard':loadEntKpiDashboard,'ent-profitability':loadEntProfitability,'ent-cogs':loadEntCogs,'ent-cost-accounting':loadEntCostAccounting,'ent-forecasting':loadEntForecasting,'ent-inventory-opt':loadEntInventoryOpt,'ent-livestock-analytics':loadEntLivestockAnalytics,'ent-crop-analytics':loadEntCropAnalytics,'ent-labour-analytics':loadEntLabourAnalytics,'ent-asset-analytics':loadEntAssetAnalytics,'ent-calculations':loadEntCalculations,'ent-scenarios':loadEntScenarios};loaders[pg]?.();}
+  const loaders={
+    dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,
+    workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,
+    compliance:loadCompliance,users:loadUsers,settings:loadSettings,
+    'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,
+    'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,
+    'erp-costing':loadErpCosting,'erp-production':loadErpProduction,
+    'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,
+    'erp-seasons':loadErpSeasons,
+    'ent-kpi-dashboard':loadEntKpiDashboard,'ent-profitability':loadEntProfitability,
+    'ent-cogs':loadEntCogs,'ent-cost-accounting':loadEntCostAccounting,
+    'ent-forecasting':loadEntForecasting,'ent-inventory-opt':loadEntInventoryOpt,
+    'ent-livestock-analytics':loadEntLivestockAnalytics,'ent-crop-analytics':loadEntCropAnalytics,
+    'ent-labour-analytics':loadEntLabourAnalytics,'ent-asset-analytics':loadEntAssetAnalytics,
+    'ent-calculations':loadEntCalculations,'ent-scenarios':loadEntScenarios,
+  };
+  loaders[pg]?.();
+}
 
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
 function rpill(r){const m={owner:'gold',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
@@ -9104,18 +9143,21 @@ const erpFmt = {
 };
 
 function erpContent(html){
-  // Hide all standard page divs
+  // Ensure standard page divs are hidden
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  // Get or create the ERP container
+  // Get or create the ERP container (lazy creation — only built once)
   let erp = document.getElementById('erp-page-container');
   if(!erp){
     erp = document.createElement('div');
     erp.id = 'erp-page-container';
-    erp.style.cssText = 'padding:0;min-height:100%';
+    erp.className = 'erp-page-container';
     document.getElementById('content').appendChild(erp);
   }
   erp.style.display = 'block';
   erp.innerHTML = html;
+  // Ensure #content scrolls to top after new content is injected
+  const contentEl = document.getElementById('content');
+  if(contentEl){ contentEl.style.scrollBehavior='auto'; contentEl.scrollTop=0; contentEl.style.scrollBehavior=''; }
 }
 
 
