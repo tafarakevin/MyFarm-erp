@@ -8441,18 +8441,41 @@ async function modalSave(){
     toast(id?'Updated':'Record added');
     closeModal();
     _invalidateCache('/'+ep.split('/')[1]);
-    // For finance, call loadFinance directly to guarantee the page refreshes.
-    // Also re-navigate to the correct tab so the new record is visible.
-    if(type==='finance'){
+    if(type==='finance' && saved && saved.id){
+      // Optimistic update: inject the new record directly into the correct table
+      // so it's visible immediately, regardless of how long the reload takes.
       const tabToShow = subtype||'income';
-      await loadFinance();
-      const tabBtn = document.querySelector(`.fin-tab[data-tab="${tabToShow==='income'?'income':'expenses'}"]`);
-      if(tabBtn) finTab(tabBtn, tabToShow==='income'?'income':'expenses');
+      const isIncome  = tabToShow==='income';
+      const tableId   = isIncome?'finance-income':'finance-expense';
+      const tableEl   = document.getElementById(tableId);
+      if(tableEl){
+        const cw=['owner','finance'].includes(currentUser?.role);
+        const cls=isIncome?'amount-pos':'amount-neg';
+        const sign=isIncome?'+':'−';
+        const newRow=`<div class="finance-line" data-id="${saved.id}">
+          <div style="flex:1">
+            <div>${saved.description||saved.category||'—'}</div>
+            <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">${saved.category||'—'} · ${saved.date||'—'}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="finance-amount ${cls}">${sign} $${(saved.amount||0).toLocaleString()}</span>
+            ${cw?`<button class="btn btn-danger btn-sm" onclick="delRec('finance',${saved.id})">✕</button>`:''}
+          </div>
+        </div>`;
+        // Remove empty-state placeholder if present, prepend new row
+        const isEmpty=tableEl.querySelector('[style*="padding:48px"]')||tableEl.innerHTML.includes('No income')||tableEl.innerHTML.includes('No expense');
+        if(isEmpty) tableEl.innerHTML=newRow;
+        else tableEl.insertAdjacentHTML('afterbegin',newRow);
+      }
+      // Switch to the correct tab so the user sees their new record
+      const tabBtn=document.querySelector(`.fin-tab[data-tab="${isIncome?'income':'expenses'}"]`);
+      if(tabBtn) finTab(tabBtn,isIncome?'income':'expenses');
+      // Background reload to get accurate totals and sort order
+      loadFinance();
     } else {
       loadPage(currentPage);
     }
   }catch(e){
-    // Surface the server's error message so the user knows what went wrong
     const msg = e?.data?.error || e?.message || 'Server error — please try again.';
     toast('Error: ' + msg, 'error');
   }
