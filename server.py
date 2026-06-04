@@ -186,17 +186,7 @@ def require_auth(f):
             return jsonify({"error": "Invalid or missing CSRF token"}), 403
         user = get_current_user()
         if not user:
-            # DIAGNOSTIC — log why 401 is returned
-            cookie_present = bool(request.cookies.get(SESSION_COOKIE))
-            csrf_header = request.headers.get("X-CSRF-Token", "")
-            token = request.cookies.get(SESSION_COOKIE)
-            session_row = query("SELECT id, expires_at FROM sessions WHERE token=%s", (token,), one=True) if token else None
-            user_row = None
-            if session_row:
-                user_row = query("SELECT id, active FROM users WHERE id=(SELECT user_id FROM sessions WHERE token=%s)", (token,), one=True)
-            import sys
-            print(f"[AUTH DEBUG] 401 on {request.method} {request.path} | cookie={cookie_present} | csrf={'present' if csrf_header else 'missing'} | session_found={bool(session_row)} | session={session_row} | user={user_row}", file=sys.stderr, flush=True)
-            return jsonify({"error": "Unauthorized", "debug": {"cookie": cookie_present, "session": bool(session_row), "user": str(user_row)}}), 401
+            return jsonify({"error": "Unauthorized"}), 401
         g.user = user
         return f(*args, **kwargs)
     return decorated
@@ -339,45 +329,38 @@ def write_audit(cur, action, record_type, record_id=None, record_label="",
                 before=None, after=None, user_id=None, reason=None):
     """
     Write an immutable audit entry inside an existing transaction cursor.
-
-    Fields stored:
-      action        — CREATE / UPDATE / DELETE / SOFT_DELETE / LOGIN / etc.
-      record_type   — table / module name (e.g. "finance", "livestock")
-      record_id     — PK of the affected row
-      record_label  — human-readable label for the record
-      before_state  — full previous state as JSONB (for UPDATE/DELETE)
-      after_state   — full new state as JSONB (for CREATE/UPDATE)
-      performed_by  — user ID of the actor
-      request_ip    — IP address at time of change
-      session_id    — session token prefix (first 8 chars, never full token)
-      request_id    — X-Request-ID for correlating with API access logs
-      reason        — optional free-text justification (e.g. for manual adjustments)
-
-    IMMUTABILITY: the audit_log table has NO UPDATE or DELETE routes.
-    The /api/audit-log POST endpoint is kept only for legacy clients;
-    new server-side code always calls this function inside a transaction.
+    Uses a SAVEPOINT so a schema mismatch or other audit failure never
+    aborts the caller's primary transaction.
     """
     ip         = request.remote_addr or "unknown"
     request_id = getattr(g, "request_id", "-")
-    # Store only the first 8 chars of the session token — enough for correlation
-    # without exposing the full secret
     cookie = request.cookies.get("tf_session", "") or ""
     session_prefix = cookie[:8] if cookie else "-"
 
     _inc("audit_writes")
-    cur.execute(
-        """INSERT INTO audit_log
-               (action, record_type, record_id, record_label,
-                before_state, after_state, performed_by,
-                request_ip, session_id, request_id, reason)
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-        (
-            action, record_type, record_id, record_label,
-            json.dumps(before) if before else None,
-            json.dumps(after)  if after  else None,
-            user_id, ip, session_prefix, request_id, reason,
+    try:
+        cur.execute("SAVEPOINT _audit_write")
+        cur.execute(
+            """INSERT INTO audit_log
+                   (action, record_type, record_id, record_label,
+                    before_state, after_state, performed_by,
+                    request_ip, session_id, request_id, reason)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                action, record_type, record_id, record_label,
+                json.dumps(before) if before else None,
+                json.dumps(after)  if after  else None,
+                user_id, ip, session_prefix, request_id, reason,
+            )
         )
-    )
+        cur.execute("RELEASE SAVEPOINT _audit_write")
+    except Exception as e:
+        cur.execute("ROLLBACK TO SAVEPOINT _audit_write")
+        app_log.warning(
+            f"Audit write failed for {action} {record_type}#{record_id}",
+            extra={"event": "AUDIT_WARN", "exc": str(e), "request_id": request_id}
+        )
+        return  # audit failure must never block primary write
     # Emit a structured log entry so audit events appear in the application log
     app_log.info(
         f"AUDIT {action} {record_type}#{record_id}",
@@ -1049,9 +1032,11 @@ def init_db():
     ]
     for sql in migrations:
         try:
+            cur.execute("SAVEPOINT mig")
             cur.execute(sql)
+            cur.execute("RELEASE SAVEPOINT mig")
         except Exception:
-            pass  # Constraint/column already exists
+            cur.execute("ROLLBACK TO SAVEPOINT mig")  # isolate failure, keep tx alive
     db.commit()
     db.close()
 # seed_owner() removed — create your owner account via the /api/auth/register

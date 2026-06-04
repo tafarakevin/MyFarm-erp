@@ -6213,10 +6213,7 @@ async function api(path,method='GET',body=null){
       // Capture request ID for end-to-end log correlation
       const reqId = r.headers.get('X-Request-ID')||'-';
       window._lastRequestId = reqId;
-      if(r.status===401){
-        r.json().then(b=>console.error('[AUTH] 401 response body:', JSON.stringify(b))).catch(()=>{});
-        doLogout();return null;
-      }
+      if(r.status===401){doLogout();return null;}
       if(!r.ok){
         const e=await r.json().catch(()=>({error:r.statusText}));
         // Report 5xx errors to the backend observability endpoint
@@ -7563,9 +7560,6 @@ async function loadFinance(){
     ]);
     records=Array.isArray(rec)?rec:[];
     summary=(sum&&typeof sum==='object')?sum:{};
-    // DIAGNOSTIC — remove after confirming fix
-    console.log('[Finance] GET /finance returned', records.length, 'records', records);
-    console.log('[Finance] income:', records.filter(r=>r?.type==='income').length, 'expense:', records.filter(r=>r?.type==='expense').length);
   }catch(e){
     // Total failure — render a consistent error state via errInline on the primary container
     const {title,sub,code}=classifyError(e);
@@ -8439,13 +8433,11 @@ async function modalSave(){
     if(!amt||amt<=0){toast('Please enter a valid amount greater than zero.','error');return;}
     body={type:subtype||'income',category:g('f-cat')||'Other',description:desc||g('f-cat')||'',amount:amt,date:dt,notes:g('f-notes')||''};
     ep='/finance';method='POST';
-    console.log('[Finance] POSTing body:', JSON.stringify(body));
   }
   else if(type==='compliance'){body={title:g('f-title'),category:g('f-cat'),status:g('f-status'),issued_date:g('f-issued'),expiry_date:g('f-expiry'),issuing_body:g('f-issuer'),notes:g('f-notes')};ep=id?`/compliance/${id}`:'/compliance';method=id?'PUT':'POST';}
   else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id&&!pw){toast('Password is required when creating a new user.','error');return;}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
   try{
     const saved = await api(ep,method,body);
-    console.log('[Finance] POST response:', JSON.stringify(saved));
     toast(id?'Updated':'Record added');
     closeModal();
     _invalidateCache('/'+ep.split('/')[1]);
