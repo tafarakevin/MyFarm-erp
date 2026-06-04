@@ -2118,23 +2118,15 @@ def create_finance_record():
             )
             if new_id is None:
                 raise RuntimeError("INSERT did not return a row ID")
-            try:
-                write_audit(cur,
-                    action="CREATE",
-                    record_type="finance",
-                    record_id=new_id,
-                    record_label=d["description"],
-                    after={"type": d["type"], "amount": amount, "category": d["category"]},
-                    user_id=user["id"]
-                )
-            except Exception as audit_err:
-                # Audit failure must never block the primary write
-                app_log.warning("Audit write failed for finance CREATE",
-                    extra={"event": "AUDIT_WARN", "exc": str(audit_err),
-                           "record_id": new_id, "request_id": getattr(g, "request_id", "-")})
+            write_audit(cur,
+                action="CREATE",
+                record_type="finance",
+                record_id=new_id,
+                record_label=d["description"],
+                after={"type": d["type"], "amount": amount, "category": d["category"]},
+                user_id=user["id"]
+            )
     except Exception as e:
-        import traceback as _tb
-        _tb.print_exc()
         app_log.error("Finance create failed", extra={
             "event": "FINANCE_CREATE_ERROR", "exc": str(e),
             "request_id": getattr(g, "request_id", "-"),
@@ -2275,8 +2267,8 @@ def get_dashboard():
     workers_total = query("SELECT COUNT(*) as total FROM workers", one=True)
     workers_on_site = query("SELECT COUNT(*) as total FROM workers WHERE status='Present'", one=True)
     # Finance
-    income = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='income'", one=True)
-    expense = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense'", one=True)
+    income = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
+    expense = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'", one=True)
     # Crops
     crops = query("SELECT COALESCE(SUM(area_ha),0) as total FROM crops", one=True)
     # Low inventory
@@ -2325,6 +2317,7 @@ def get_finance_monthly():
             SUM(CASE WHEN type='expense' THEN amount ELSE 0 END) as expense
         FROM finance
         WHERE TO_DATE(date, 'YYYY-MM-DD') >= CURRENT_DATE - INTERVAL '12 months'
+          AND category NOT LIKE 'VOIDED-%%'
         GROUP BY to_char(TO_DATE(date, 'YYYY-MM-DD'), 'YYYY-MM')
         ORDER BY month ASC
     """)
@@ -2442,8 +2435,8 @@ def finance_transactions():
     if request.method == "GET":
         t = request.args.get("type")
         if t:
-            return jsonify(rows_to_list(query("SELECT * FROM finance WHERE type=%s ORDER BY date DESC", (t,))))
-        return jsonify(rows_to_list(query("SELECT * FROM finance ORDER BY date DESC")))
+            return jsonify(rows_to_list(query("SELECT * FROM finance WHERE type=%s AND category NOT LIKE 'VOIDED-%%' ORDER BY date DESC", (t,))))
+        return jsonify(rows_to_list(query("SELECT * FROM finance WHERE category NOT LIKE 'VOIDED-%%' ORDER BY date DESC")))
     d = request.get_json() or {}
     rid = mutate(
         "INSERT INTO finance(type,category,description,amount,date,reference,notes) VALUES(%s,%s,%s,%s,%s,%s,%s)",
@@ -3129,7 +3122,7 @@ def get_budgets():
     result = []
     for b in rows_to_list(rows):
         actual = query(
-            "SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category ILIKE %s",
+            "SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category ILIKE %s AND category NOT LIKE 'VOIDED-%%'",
             (f"%{b['category']}%",), one=True
         )
         b["actual_amount"] = float(actual["total"])
@@ -3252,9 +3245,9 @@ def get_profitability():
     season_id = request.args.get("season_id")
 
     # Total actual revenue (finance table income)
-    actual_rev = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='income'", one=True)
+    actual_rev = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
     # Total actual expenses (finance table + operational activities)
-    actual_exp = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense'", one=True)
+    actual_exp = query("SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'", one=True)
     op_costs = query("SELECT COALESCE(SUM(total_cost),0) as total FROM operational_activities WHERE status='Completed'", one=True)
     labor_costs = query("SELECT COALESCE(SUM(hours * hourly_rate),0) as total FROM labor_allocations", one=True)
 
@@ -4095,7 +4088,7 @@ def get_budget_variance():
     result = []
     for b in rows_to_list(budgets_q):
         actual = query(
-            "SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category ILIKE %s",
+            "SELECT COALESCE(SUM(amount),0) as total FROM finance WHERE type='expense' AND category ILIKE %s AND category NOT LIKE 'VOIDED-%%'",
             (f"%{b['category']}%",), one=True
         )
         planned = float(b["planned_amount"])
@@ -4122,6 +4115,7 @@ def get_cash_flow():
             SUM(CASE WHEN type='expense' THEN amount ELSE 0 END) as outflows
         FROM finance
         WHERE TO_DATE(date, 'YYYY-MM-DD') >= CURRENT_DATE - INTERVAL '18 months'
+          AND category NOT LIKE 'VOIDED-%%'
         GROUP BY to_char(TO_DATE(date, 'YYYY-MM-DD'), 'YYYY-MM')
         ORDER BY month ASC
     """)
@@ -4141,12 +4135,12 @@ def get_pl_summary():
     """Full P&L summary grouped by category."""
     income_cats = query("""
         SELECT category, COALESCE(SUM(amount),0) as total
-        FROM finance WHERE type='income'
+        FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'
         GROUP BY category ORDER BY total DESC
     """)
     expense_cats = query("""
         SELECT category, COALESCE(SUM(amount),0) as total
-        FROM finance WHERE type='expense'
+        FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'
         GROUP BY category ORDER BY total DESC
     """)
     total_income = sum(float(r["total"]) for r in income_cats)
@@ -4208,6 +4202,7 @@ def get_erp_dashboard():
                 COALESCE(SUM(CASE WHEN type='income'  THEN amount ELSE 0 END), 0) AS total_income,
                 COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END), 0) AS total_expense
             FROM finance
+            WHERE category NOT LIKE 'VOIDED-%%'
         ),
         op AS (SELECT COALESCE(SUM(total_cost),0) AS total FROM operational_activities WHERE status='Completed'),
         proj AS (SELECT COALESCE(SUM(projected_amount),0) AS total FROM revenue_projections),
@@ -4265,6 +4260,7 @@ def get_erp_dashboard():
             SUM(CASE WHEN type='expense' THEN amount ELSE 0 END) as expense
         FROM finance
         WHERE TO_DATE(date, 'YYYY-MM-DD') >= CURRENT_DATE - INTERVAL '6 months'
+          AND category NOT LIKE 'VOIDED-%%'
         GROUP BY to_char(TO_DATE(date, 'YYYY-MM-DD'), 'Mon YY'),
                  to_char(TO_DATE(date, 'YYYY-MM-DD'), 'YYYY-MM')
         ORDER BY to_char(TO_DATE(date, 'YYYY-MM-DD'), 'YYYY-MM') ASC

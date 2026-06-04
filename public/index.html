@@ -8282,21 +8282,7 @@ async function executeDelete(){
 
   try{
     await api(ep, 'DELETE');
-
-    // ── Server-side audit log ──────────────────────────────────────────────
-    // Best-effort: fire and forget. Never block the UI on audit log failure.
-    api('/audit-log', 'POST', {
-      action:    'DELETE',
-      record_type: type,
-      record_id:   id,
-      record_label: label,
-      performed_by: currentUser?.id,
-      performed_by_name: currentUser?.name,
-      timestamp:   new Date().toISOString(),
-    }).catch(() => {}); // Silently swallow if endpoint doesn't exist yet
-
     closeDelConfirm();
-    // Also close the edit modal if it was open (deletion triggered from within it)
     closeModal();
     toast(`${_delTypeLabel[type] || 'Record'} deleted`, 'success');
     loadPage(currentPage);
@@ -8438,6 +8424,11 @@ async function modalSave(){
   else if(type==='user'){body={name:g('f-name'),email:g('f-email'),role:g('f-role'),active:document.getElementById('f-active')?.checked?1:0};const pw=g('f-password');if(pw)body.password=pw;if(!id&&!pw){toast('Password is required when creating a new user.','error');return;}ep=id?`/users/${id}`:'/auth/register';method=id?'PUT':'POST';}
   try{
     const saved = await api(ep,method,body);
+    // api() returns null on 401 (session expired) — treat as failure
+    if(saved === null && method !== 'DELETE'){
+      toast('Session expired — please refresh the page.', 'error');
+      return;
+    }
     toast(id?'Updated':'Record added');
     closeModal();
     _invalidateCache('/'+ep.split('/')[1]);

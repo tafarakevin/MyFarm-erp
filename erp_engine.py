@@ -996,7 +996,7 @@ def cogs_summary():
         f"SELECT COALESCE(SUM(amount),0) AS total FROM cogs_entries {filter_sql}", args, one=True
     )
     total_revenue = _q(
-        "SELECT COALESCE(SUM(amount),0) AS total FROM finance WHERE type='income'", one=True
+        "SELECT COALESCE(SUM(amount),0) AS total FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True
     )
     total_cogs = _float(total_cogs_row["total"])
     rev = _float(total_revenue["total"])
@@ -1027,7 +1027,7 @@ def advanced_profitability():
     season_id = request.args.get("season_id")
 
     # ── Revenue ──────────────────────────────────────────────────────────────
-    rev_row = _q("SELECT COALESCE(SUM(amount),0) AS total FROM finance WHERE type='income'", one=True)
+    rev_row = _q("SELECT COALESCE(SUM(amount),0) AS total FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
     revenue = _float(rev_row["total"])
 
     # ── COGS ─────────────────────────────────────────────────────────────────
@@ -1037,7 +1037,7 @@ def advanced_profitability():
     cogs = _float(cogs_row["total"])
 
     # ── Operating expenses ────────────────────────────────────────────────────
-    opex_row = _q("SELECT COALESCE(SUM(amount),0) AS total FROM finance WHERE type='expense'", one=True)
+    opex_row = _q("SELECT COALESCE(SUM(amount),0) AS total FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'", one=True)
     opex = _float(opex_row["total"])
 
     # ── Activity costs ────────────────────────────────────────────────────────
@@ -1227,10 +1227,10 @@ def run_scenario(sid):
     base_exp = _float(sc["base_expenses"])
 
     if not base_rev:
-        rev_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income'", one=True)
+        rev_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
         base_rev = _float(rev_row["t"])
     if not base_exp:
-        exp_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='expense'", one=True)
+        exp_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'", one=True)
         base_exp = _float(exp_row["t"])
 
     projected_revenue = ForecastCalculator.scenario_revenue(
@@ -1274,10 +1274,10 @@ def what_if_analysis():
 
     # Fall back to actual figures if base not supplied
     if not d.get("base_revenue"):
-        r = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income'", one=True)
+        r = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
         d["base_revenue"] = _float(r["t"])
     if not d.get("base_expenses"):
-        e = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='expense'", one=True)
+        e = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%'", one=True)
         d["base_expenses"] = _float(e["t"])
 
     scenarios = {}
@@ -1346,12 +1346,13 @@ def cashflow_forecast():
             AVG(CASE WHEN type='expense' THEN amount END) AS avg_monthly_expense
         FROM finance
         WHERE TO_DATE(date,'YYYY-MM-DD') >= CURRENT_DATE - INTERVAL '6 months'
+          AND category NOT LIKE 'VOIDED-%%'
     """, one=True)
     avg_income = _float(hist["avg_monthly_income"]) if hist else 0.0
     avg_expense = _float(hist["avg_monthly_expense"]) if hist else 0.0
 
     # Current bank balance proxy
-    bal_row = _q("SELECT COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE -amount END),0) AS bal FROM finance", one=True)
+    bal_row = _q("SELECT COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE -amount END),0) AS bal FROM finance WHERE category NOT LIKE 'VOIDED-%%'", one=True)
     opening = _float(bal_row["bal"])
 
     forecast_months = []
@@ -1781,7 +1782,7 @@ def labour_analytics():
     total_ha = _float(ha_row["ha"]) or 1
 
     # Total production value (revenue proxy for productivity)
-    rev_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income'", one=True)
+    rev_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
     total_revenue = _float(rev_row["t"])
 
     result = []
@@ -1933,7 +1934,7 @@ def asset_analytics():
 
         # Maintenance cost from finance records
         maint = _q(
-            "SELECT COALESCE(SUM(amount),0) AS mc FROM finance WHERE type='expense' AND category='Maintenance' AND description ILIKE %s",
+            "SELECT COALESCE(SUM(amount),0) AS mc FROM finance WHERE type='expense' AND category NOT LIKE 'VOIDED-%%' AND category='Maintenance' AND description ILIKE %s",
             (f"%{asset['asset_id']}%",), one=True
         )
         maint_cost = _float(maint["mc"]) if maint else 0.0
@@ -1942,7 +1943,7 @@ def asset_analytics():
 
         book_value = AssetCalculator.asset_book_value(cost, accum_dep)
         # ROI: assume asset generates revenue proportional to its cost share
-        rev_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income'", one=True)
+        rev_row = _q("SELECT COALESCE(SUM(amount),0) AS t FROM finance WHERE type='income' AND category NOT LIKE 'VOIDED-%%'", one=True)
         total_rev = _float(rev_row["t"])
         total_asset_val = _q("SELECT COALESCE(SUM(value),0) AS t FROM assets", one=True)
         asset_rev_share = total_rev * (cost / max(_float(total_asset_val["t"]), 1))
@@ -2079,7 +2080,8 @@ def enterprise_kpi_dashboard():
         fin  AS (SELECT
                     COALESCE(SUM(CASE WHEN type='income'  THEN amount ELSE 0 END),0) AS revenue,
                     COALESCE(SUM(CASE WHEN type='expense' THEN amount ELSE 0 END),0) AS expenses
-                 FROM finance),
+                 FROM finance
+                 WHERE category NOT LIKE 'VOIDED-%%'),
         cogs AS (SELECT COALESCE(SUM(amount),0) AS total FROM cogs_entries),
         act  AS (SELECT COALESCE(SUM(total_cost),0) AS total FROM operational_activities WHERE status='Completed'),
         lab  AS (SELECT COALESCE(SUM(hours*hourly_rate),0) AS cost,
