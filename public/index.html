@@ -5551,10 +5551,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
               <!-- Actions -->
               <div class="rep-actions-row">
                 <button class="btn btn-primary" id="rep-generate-btn" onclick="generateReport()">
-                  <span class="nav-icon" style="font-size:14px;opacity:1;color:inherit">auto_awesome</span>
+                  <span class="nav-icon" style="font-size:14px;opacity:1;color:inherit">summarize</span>
                   Generate Report
                 </button>
-                <span style="font-size:11px;color:var(--text-faint);line-height:1.55">Powered by AI · typically takes 10–20 seconds</span>
+                <span style="font-size:11px;color:var(--text-faint);line-height:1.55">Compiled from live estate data · instant</span>
               </div>
             </div>
           </div>
@@ -7877,7 +7877,7 @@ async function loadFinance(){
   trendWrap.appendChild(trendTip);
   document.getElementById('fin-trend-chart').replaceWith(trendWrap);
   trendWrap.id='fin-trend-chart';trendWrap.className='';
-  document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`+(hasRealMonths?'':'&nbsp;&nbsp;<span style="font-size:10px;color:var(--text-faint)">(sample data)</span>');
+  document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`;
 
   // ── MONTH-ON-MONTH TABLE — all months, newest first ───────────────────────
   const momKeys=[...sortedKeys].reverse(); // all months, newest first
@@ -7972,104 +7972,194 @@ async function _gatherFarmData(){
   return results;
 }
 
-// ─── GENERATE REPORT ─────────────────────────────────────────────────────────
+// ─── GENERATE REPORT — pure data-driven, no AI required ─────────────────────
 async function generateReport(){
   const btn = document.getElementById('rep-generate-btn');
-  btn.disabled = true; btn.innerHTML = '<span style="animation:spin 0.8s linear infinite;display:inline-block">⟳</span> Generating…';
+  btn.disabled = true; btn.textContent = '⟳ Building report…';
 
-  // Show preview card with spinner
   const previewCard = document.getElementById('report-preview-card');
   const previewBody = document.getElementById('report-preview-body');
   previewCard.classList.remove('hidden');
   previewCard.scrollIntoView({behavior:'smooth', block:'nearest'});
-  previewBody.innerHTML = `<div class="rep-generating">
-    <div class="rep-generating-spinner"></div>
-    <div class="rep-generating-label">Compiling report…</div>
-    <div class="rep-generating-sub">Gathering farm data and generating your ${_repTypeName().toLowerCase()}. This usually takes 10–20 seconds.</div>
-  </div>`;
+  previewBody.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted)">Gathering data…</div>`;
 
-  try {
-    // 1. Gather live data from your own backend endpoints
-    const farmData = await _gatherFarmData();
-
-    // 2. Build prompt
+  try{
     const period   = _repPeriodLabel();
     const typeName = _repTypeName();
     const notes    = document.getElementById('rep-notes').value.trim();
-    const estate   = currentUser?.estate || 'Thornfield Estate';
-    const dataBlob = JSON.stringify(farmData, null, 2).slice(0, 6000);
+    const estate   = currentUser?.name ? `${currentUser.name}'s Farm` : 'Thornfield Estate';
+    const now      = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
 
-    const prompt = `You are an expert agricultural estate reporting system for ${estate}, a premium Sub-Saharan African farm operation.
+    // Fetch all data in parallel
+    const [dash, finance, livestock, crops, workers, compliance, monthly] = await Promise.all([
+      api('/dashboard').catch(()=>({})),
+      api('/finance?limit=500').catch(()=>[]),
+      api('/livestock').catch(()=>[]),
+      api('/crops').catch(()=>[]),
+      api('/workers').catch(()=>[]),
+      api('/compliance').catch(()=>[]),
+      api('/finance/monthly').catch(()=>[]),
+    ]);
 
-Generate a professional, data-driven "${typeName}" for the period: ${period}.
+    const income  = Array.isArray(finance)?finance.filter(r=>r.type==='income'):[];
+    const expense = Array.isArray(finance)?finance.filter(r=>r.type==='expense'):[];
+    const totalIncome  = income.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+    const totalExpense = expense.reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+    const netProfit    = totalIncome - totalExpense;
+    const margin       = totalIncome>0?Math.round(netProfit/totalIncome*100):0;
+    const marginTarget = parseFloat(window._cachedMarginTarget||20);
 
-Farm data snapshot (may be partial if some endpoints are unavailable):
-${dataBlob}
+    // ── Helper renderers ──────────────────────────────────────────────────────
+    const h1  = t => `<div class="rep-preview-h1">${t}</div>`;
+    const h2  = t => `<div class="rep-preview-h2">${t}</div>`;
+    const p   = t => `<div class="rep-preview-p">${t}</div>`;
+    const sec = (title,body) => `<div class="rep-preview-section">${h2(title)}${body}</div>`;
+    const kpi = (label,val,sub='') => `<div class="rep-preview-kpi"><div class="rep-preview-kpi-label">${label}</div><div class="rep-preview-kpi-val">${val}</div>${sub?`<div class="rep-preview-kpi-sub">${sub}</div>`:''}</div>`;
+    const kpiGrid = items => `<div class="rep-preview-kpi-grid">${items.map(([l,v,s])=>kpi(l,v,s)).join('')}</div>`;
+    const table = (heads,rows) => `<table class="rep-preview-table"><thead><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    const usd  = v => '$'+(parseFloat(v)||0).toLocaleString(undefined,{minimumFractionDigits:0,maximumFractionDigits:0});
+    const pct  = v => (parseFloat(v)||0).toFixed(1)+'%';
 
-${notes ? `Manager's notes: ${notes}` : ''}
+    // ── Group finance by category ─────────────────────────────────────────────
+    const byCat = (arr) => Object.entries(arr.reduce((m,r)=>{
+      const c=r.category||'Other'; m[c]=(m[c]||0)+(parseFloat(r.amount)||0); return m;
+    },{})).sort((a,b)=>b[1]-a[1]);
 
-Output a complete HTML report body using ONLY these CSS classes (already defined):
-- .rep-preview-estate, .rep-preview-h1, .rep-preview-meta (header block)
-- .rep-preview-section > .rep-preview-h2 + content
-- .rep-preview-kpi-grid > .rep-preview-kpi > .rep-preview-kpi-label + .rep-preview-kpi-val + .rep-preview-kpi-sub
-- .rep-preview-p for paragraphs
-- .rep-preview-table with thead/tbody for tabular data
-- .rep-preview-disclaimer at the end
+    // ── Header ────────────────────────────────────────────────────────────────
+    let html = `
+      <div class="rep-preview-estate">${estate}</div>
+      ${h1(typeName)}
+      <div class="rep-preview-meta">Period: ${period} &nbsp;·&nbsp; Generated: ${now}${notes?` &nbsp;·&nbsp; Note: ${notes}`:''}</div>`;
 
-Rules:
-1. Use actual numbers from the data where available; make reasonable estimates with "(est.)" label where data is missing.
-2. Be specific and actionable — no generic filler. Every paragraph should reference actual estate conditions.
-3. Include an executive summary, key metrics KPI grid, 2-4 sections relevant to the report type, and a brief recommendation section.
-4. End with a disclaimer noting AI-assisted generation.
-5. Output ONLY the HTML content — no markdown, no code fences, no explanation.`;
+    // ── Build sections per report type ────────────────────────────────────────
+    const type = _repState.type;
 
-    // 3. Call backend report generation endpoint (required — no local fallback)
-    const proxyRes = await fetch(API + '/reports/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': getCSRF(),
-      },
-      credentials: 'include',
-      body: JSON.stringify({ prompt, type: _repState.type, period, estate })
-    });
+    if(type==='executive_summary'||type==='financial'){
+      html += sec('Financial Overview', kpiGrid([
+        ['YTD Revenue',    usd(totalIncome),  income.length+' transactions'],
+        ['YTD Expenses',   usd(totalExpense), expense.length+' categories'],
+        ['Net Profit',     usd(netProfit),    (margin>=0?'▲':'▼')+' '+margin+'% margin'],
+        ['Return on Cost', totalExpense>0?pct(netProfit/totalExpense*100):'—', 'profit ÷ spend'],
+      ]));
 
-    if(!proxyRes.ok){
-      if(proxyRes.status === 404 || proxyRes.status === 501)
-        throw new Error('Report generation endpoint not yet configured on the server (/api/reports/generate).');
-      throw new Error('Server error ' + proxyRes.status);
+      if(income.length){
+        const iCats = byCat(income);
+        html += sec('Revenue by Category', table(
+          ['Category','Amount','% of Total'],
+          iCats.map(([cat,amt])=>[cat, usd(amt), pct(totalIncome>0?amt/totalIncome*100:0)])
+        ));
+      }
+      if(expense.length){
+        const eCats = byCat(expense);
+        html += sec('Expenses by Category', table(
+          ['Category','Amount','% of Total'],
+          eCats.map(([cat,amt])=>[cat, usd(amt), pct(totalExpense>0?amt/totalExpense*100:0)])
+        ));
+      }
+      if(monthly.length){
+        html += sec('Monthly Trend', table(
+          ['Month','Revenue','Expenses','Net'],
+          monthly.slice(-6).map(m=>[
+            m.month,
+            usd(m.income||m.inflows||0),
+            usd(m.expense||m.outflows||0),
+            usd((parseFloat(m.income||m.inflows||0))-(parseFloat(m.expense||m.outflows||0)))
+          ])
+        ));
+      }
+      const marginOk = margin >= marginTarget;
+      html += sec('Assessment', p(
+        `Net profit of ${usd(netProfit)} represents a ${margin}% margin — `+
+        (marginOk ? `above the ${marginTarget}% target. Estate is operating profitably.`
+                  : `below the ${marginTarget}% target. Review expense categories for savings opportunities.`)+
+        (totalExpense>0 ? ` Largest cost category: ${byCat(expense)[0]?.[0]||'—'}.` : '')
+      ));
     }
 
-    const repData = await proxyRes.json();
-    const clean = (repData.html || repData.content || '').replace(/^```[\w]*\n?/gm,'').replace(/```$/gm,'').trim();
-    if(!clean) throw new Error('Report content was empty — please try again.');
+    if(type==='livestock'){
+      const healthCounts = livestock.reduce((m,h)=>{m[h.health||'Unknown']=(m[h.health||'Unknown']||0)+1;return m;},{});
+      const totalHead = livestock.reduce((s,h)=>s+(parseInt(h.count)||0),0);
+      html += sec('Herd Overview', kpiGrid([
+        ['Total Herds',   livestock.length, ''],
+        ['Total Head',    totalHead, 'across all herds'],
+        ['Healthy',       healthCounts['Good']||0, 'herds in good health'],
+        ['Under Monitor', (healthCounts['Monitor']||0)+(healthCounts['Poor']||0), 'need attention'],
+      ]));
+      if(livestock.length){
+        html += sec('Herd Details', table(
+          ['Herd','Breed','Head','Avg Weight','Health','Location'],
+          livestock.map(h=>[h.herd_name||'—',h.breed||'—',h.count||0,(h.avg_weight||0)+'kg',h.health||'—',h.location||'—'])
+        ));
+      }
+    }
 
-    _repState.lastHtml  = clean;
+    if(type==='crop'){
+      const activeFields = crops.filter(c=>c.status!=='Fallow'&&c.status!=='Harvested');
+      const totalHa = crops.reduce((s,c)=>s+(parseFloat(c.area_ha)||0),0);
+      const yieldVal = crops.reduce((s,c)=>s+(parseFloat(c.est_yield_value)||0),0);
+      html += sec('Crop Overview', kpiGrid([
+        ['Total Fields', crops.length, ''],
+        ['Active Fields', activeFields.length, 'in production'],
+        ['Total Area', totalHa.toFixed(1)+' ha', ''],
+        ['Est. Yield Value', usd(yieldVal), ''],
+      ]));
+      if(crops.length){
+        html += sec('Field Status', table(
+          ['Block','Crop','Area (ha)','Status','Planted','Est. Harvest'],
+          crops.map(c=>[c.block||'—',c.crop||'—',(parseFloat(c.area_ha)||0).toFixed(1),c.status||'—',c.planted||'—',c.est_harvest||'—'])
+        ));
+      }
+    }
+
+    if(type==='workforce'){
+      const onSite  = workers.filter(w=>w.status==='Present').length;
+      const depts   = [...new Set(workers.map(w=>w.department).filter(Boolean))];
+      const totalPayroll = workers.reduce((s,w)=>s+(parseFloat(w.salary)||0),0);
+      html += sec('Workforce Overview', kpiGrid([
+        ['Total Workers', workers.length, ''],
+        ['On Site Today', onSite, pct(workers.length?onSite/workers.length*100:0)+' attendance'],
+        ['Departments', depts.length, depts.slice(0,3).join(', ')||'—'],
+        ['Total Payroll', usd(totalPayroll), 'per period'],
+      ]));
+      if(workers.length){
+        html += sec('Workforce Register', table(
+          ['Name','Role','Department','Status','Start Date'],
+          workers.map(w=>[w.name||'—',w.role||'—',w.department||'—',w.status||'—',w.start_date||'—'])
+        ));
+      }
+    }
+
+    if(type==='compliance'){
+      const bySt = compliance.reduce((m,c)=>{m[c.status||'Unknown']=(m[c.status||'Unknown']||0)+1;return m;},{});
+      html += sec('Compliance Overview', kpiGrid([
+        ['Total Items',  compliance.length, ''],
+        ['Compliant',    bySt['Compliant']||0, ''],
+        ['Due Soon',     bySt['Due Soon']||0, ''],
+        ['Overdue',      bySt['Overdue']||0, bySt['Overdue']>0?'⚠ Action required':''],
+      ]));
+      if(compliance.length){
+        html += sec('Compliance Register', table(
+          ['Item','Status','Expiry Date','Issuing Body'],
+          compliance.map(c=>[c.title||'—',c.status||'—',c.expiry_date||'—',c.issuing_body||'—'])
+        ));
+      }
+    }
+
+    html += `<div class="rep-preview-disclaimer">Generated ${now} from live estate data. Figures are based on records entered in the system.</div>`;
+
+    _repState.lastHtml  = html;
     _repState.lastTitle = `${typeName} — ${period}`;
     document.getElementById('rep-preview-title').textContent = _repState.lastTitle;
-    previewBody.innerHTML = clean;
+    previewBody.innerHTML = html;
 
-    // Save to history
-    _saveReportToHistory({
-      title:  _repState.lastTitle,
-      type:   _repState.type,
-      fmt:    _repState.fmt,
-      period,
-      ts:     Date.now(),
-      html:   clean,
-    });
+    _saveReportToHistory({ title:_repState.lastTitle, type:_repState.type, fmt:_repState.fmt, period, ts:Date.now(), html });
     renderReportHistory();
-    toast('Report generated successfully', 'success');
+    toast('Report generated', 'success');
 
-  } catch(err) {
-    previewBody.innerHTML = `<div class="page-error">
-      <div class="page-error-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">cloud_off</span></div>
-      <div class="page-error-title">Report generation failed</div>
-      <div class="page-error-sub">${err.message || 'An unexpected error occurred. Please try again.'}</div>
-      <button class="page-error-btn" onclick="generateReport()">↻ Retry</button>
-    </div>`;
+  }catch(err){
+    previewBody.innerHTML = `<div style="padding:32px;text-align:center;color:var(--error-txt)">Failed to generate report: ${err.message}</div>`;
     toast('Report generation failed', 'error');
-  } finally {
+  }finally{
     btn.disabled = false;
     btn.innerHTML = '<span class="nav-icon" style="font-size:14px;opacity:1;color:inherit">auto_awesome</span> Generate Report';
   }
@@ -8160,14 +8250,12 @@ function _downloadHistoryReport(i){
 
 // ─── FINANCE BUDGET TARGETS ────────────────────────────────────────────────────
 async function openBudgetEditor(){
-  // Load current settings
   let sett={};
   try{ sett=await api('/settings')||{}; }catch{}
   const rv=parseFloat(sett.finance_revenue_target||0)||'';
   const eb=parseFloat(sett.finance_expense_budget||0)||'';
   const mt=parseFloat(sett.finance_margin_target||20)||20;
 
-  // Build a simple inline modal using existing openModal infrastructure
   const html=`
     <div class="form-group">
       <label class="form-label">Annual Revenue Target (USD $)</label>
@@ -8185,14 +8273,14 @@ async function openBudgetEditor(){
       <div style="font-size:11px;color:var(--text-faint);margin-top:4px">Minimum acceptable profit margin. Used in insights and alerts.</div>
     </div>`;
 
-  const overlay=document.getElementById('modal-overlay');
-  const modalEl=overlay.querySelector('.modal');
-  document.getElementById('modal-title').textContent='Set Budget & Targets';
-  document.getElementById('modal-body').innerHTML=html;
-  document.getElementById('modal-del-btn').style.display='none';
-  document.getElementById('modal-save-btn').onclick=saveBudgetTargets;
+  // Use the standard modal — set a special type so modalSave() routes to saveBudgetTargets()
+  modalCtx = { type: 'budget_targets', subtype: null, data: {}, id: null };
+  document.getElementById('modal-title').textContent = 'Set Budget & Targets';
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-del-btn').style.display = 'none';
+  const overlay = document.getElementById('modal-overlay');
   overlay.classList.add('open');
-  trapFocus(modalEl);
+  trapFocus(overlay.querySelector('.modal'));
   document.getElementById('bt-revenue').focus();
 }
 
@@ -8550,6 +8638,8 @@ function closeModalOutside(e){if(e.target.id==='modal-overlay')closeModal();}
 
 async function modalSave(){
   const{type,subtype,id}=modalCtx;
+  // Budget targets are handled by their own save function
+  if(type==='budget_targets'){ await saveBudgetTargets(); return; }
   const g=s=>document.getElementById(s)?.value;
   let body,ep,method;
   if(type==='asset'){body={description:g('f-desc'),category:g('f-cat'),location:g('f-loc'),status:g('f-status'),last_service:g('f-service'),value:parseFloat(g('f-value'))||0,notes:g('f-notes')};if(!id)body.asset_id=g('f-assetid');ep=id?`/assets/${id}`:'/assets';method=id?'PUT':'POST';}
