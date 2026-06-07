@@ -2723,6 +2723,56 @@ Respond ONLY with a JSON object (no markdown, no backticks):
         return jsonify({"error": "Could not generate digest. Please try again."}), 502
 
 
+@app.route("/api/reports/generate", methods=["POST"])
+@require_auth
+def generate_report():
+    """
+    Generate a full HTML estate report using Claude.
+    Accepts a prompt from the frontend and returns { html: "..." }.
+    Requires ANTHROPIC_API_KEY env var.
+    """
+    if g.user["role"] not in ("owner", "manager", "finance"):
+        return jsonify({"error": "Forbidden"}), 403
+
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return jsonify({"error": "Report generation is not configured on this server (ANTHROPIC_API_KEY not set)"}), 501
+
+    d = request.get_json() or {}
+    prompt = str(d.get("prompt", ""))[:12000]  # hard cap — never forward unbounded input
+    if not prompt:
+        return jsonify({"error": "prompt is required"}), 400
+
+    import urllib.request as urlreq
+    payload = json.dumps({
+        "model": "claude-sonnet-4-20250514",
+        "max_tokens": 4096,
+        "messages": [{"role": "user", "content": prompt}]
+    }).encode("utf-8")
+
+    req = urlreq.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+        },
+        method="POST"
+    )
+    try:
+        with urlreq.urlopen(req, timeout=55) as resp:
+            result = json.loads(resp.read().decode())
+        html = "".join(b.get("text", "") for b in result.get("content", []))
+        # Strip any markdown code fences the model may have added
+        html = html.replace("```html", "").replace("```", "").strip()
+        log_security("REPORT_GENERATED", f"type={d.get('type','?')}", user_id=g.user["id"])
+        return jsonify({"html": html})
+    except Exception as e:
+        app_log.error("Report generation failed", extra={"event": "REPORT_ERROR", "exc": str(e)})
+        return jsonify({"error": "Could not generate report. Please try again."}), 502
+
+
 # ─── STATIC / FRONTEND ────────────────────────────────────────────────────────
 
 @app.route("/")

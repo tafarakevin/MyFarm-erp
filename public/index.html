@@ -5372,6 +5372,14 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="card-title">Cost Efficiency Metrics</div>
             <div class="fin-metrics-grid" id="fin-metrics"></div>
           </div>
+          <!-- BUDGET TARGETS -->
+          <div class="card" id="fin-budget-card">
+            <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+              <span>Budget &amp; Targets</span>
+              <button class="btn btn-primary btn-sm" onclick="openBudgetEditor()">Edit Targets</button>
+            </div>
+            <div id="fin-budget-targets" style="padding:8px 0"></div>
+          </div>
         </div>
 
         <!-- INCOME TAB -->
@@ -7170,12 +7178,13 @@ async function loadDashboard(){
       msg:`Only <strong>${d.workers_on_site||0} of ${d.workers_total||0} workers are on-site</strong> today (${_atPct}%). This may affect operational capacity.`,
       action:'View workforce',page:'workers'});
   }
-  // Below-target profit margin
+  // Below-target profit margin — use user's configured target if available
   const _profPct=d.revenue_ytd>0?Math.round(((d.revenue_ytd-(d.expenses_ytd||0))/d.revenue_ytd)*100):0;
-  if(d.revenue_ytd>0&&_profPct<10&&_profPct>=0){
+  const _dashMarginTarget=parseFloat(window._cachedMarginTarget||20);
+  if(d.revenue_ytd>0&&_profPct<_dashMarginTarget*0.5&&_profPct>=0){
     _af.push({cls:'af-warning',icon:'trending_down',
       label:'Thin profit margin',
-      msg:`YTD profit margin is <strong>${_profPct}%</strong> — below the 20% target. Review expense categories for cost reduction opportunities.`,
+      msg:`YTD profit margin is <strong>${_profPct}%</strong> — below the ${_dashMarginTarget}% target. Review expense categories for cost reduction opportunities.`,
       action:'Open finance P&L',page:'finance'});
   }
 
@@ -7589,16 +7598,17 @@ async function loadFinance(){
   document.getElementById('fin-trend-chart').innerHTML=`<div class="skel skel-bar"></div>`;
   document.getElementById('fin-mom-table').innerHTML=skelFin;
 
-  // ── Fetch finance data — paginated (up to 1000 records) ───────────────────
-  let records=[],summary={};
+  // ── Fetch finance data + budget targets ──────────────────────────────────
+  let records=[],summary={},finSettings={};
   try{
-    // Paginated to prevent unbounded loads on large datasets
-    const [rec,sum]=await Promise.all([
+    const [rec,sum,sett]=await Promise.all([
       api('/finance?limit=1000&offset=0'),
-      api('/finance/summary').catch(()=>({}))
+      api('/finance/summary').catch(()=>({})),
+      api('/settings').catch(()=>({}))
     ]);
     records=Array.isArray(rec)?rec:[];
     summary=(sum&&typeof sum==='object')?sum:{};
+    finSettings=(sett&&typeof sett==='object')?sett:{};
   }catch(e){
     // Total failure — render a consistent error state via errInline on the primary container
     const {title,sub,code}=classifyError(e);
@@ -7619,6 +7629,14 @@ async function loadFinance(){
   const netProfit=summary.net_profit??(totalIncome-totalExpense);
   const margin=totalIncome>0?Math.round(netProfit/totalIncome*100):0;
   const cw=['owner','finance'].includes(currentUser?.role);
+
+  // ── Budget targets — user-defined, stored in /api/settings ───────────────
+  const revenueTarget = parseFloat(finSettings.finance_revenue_target||0);
+  const expenseBudget = parseFloat(finSettings.finance_expense_budget||0);
+  const marginTarget  = parseFloat(finSettings.finance_margin_target||20);
+  // Cache for dashboard use (no need for a second /settings fetch there)
+  window._cachedMarginTarget = marginTarget;
+
   // ── Finance Module Narrative ─────────────────────────────────────────────
   const _finNarEl=document.getElementById('finance-narrative');
   if(_finNarEl){
@@ -7626,18 +7644,20 @@ async function loadFinance(){
     const topExp=Object.entries(expense.reduce((m,r)=>{const c=r.category||'Other';m[c]=(m[c]||0)+(r.amount||0);return m;},{})).sort((a,b)=>b[1]-a[1])[0];
     let narText=`YTD revenue <strong>${fmtCurrency(totalIncome)}</strong> against expenses of <strong>${fmtCurrency(totalExpense)}</strong> — net profit <strong>${fmtCurrency(netProfit)}</strong>.`;
     if(topInc) narText+=` Top income source: <strong>${topInc[0]}</strong> at ${fmtCurrency(topInc[1],true)}.`;
-    if(margin>=20) narText+=` <span class="good">Profit margin at ${margin}% — above the 20% target.</span>`;
-    else if(margin>0) narText+=` <span class="flag">Margin at ${margin}% — below the 20% target.</span>`;
+    if(margin>=marginTarget) narText+=` <span class="good">Profit margin at ${margin}% — above the ${marginTarget}% target.</span>`;
+    else if(margin>0) narText+=` <span class="flag">Margin at ${margin}% — below the ${marginTarget}% target.</span>`;
     if(topExp) narText+=` Largest cost driver: <strong>${topExp[0]}</strong>.`;
     _finNarEl.querySelector('.module-narrative-text').innerHTML=narText;
   }
 
   // ── KPI STATS ─────────────────────────────────────────────────────────────
   const roi=totalExpense>0?Math.round((netProfit/totalExpense)*100):0;
+  const revPct=revenueTarget>0?Math.min(100,Math.round(totalIncome/revenueTarget*100)):null;
+  const expPct=expenseBudget>0?Math.min(100,Math.round(totalExpense/expenseBudget*100)):null;
   document.getElementById('finance-stats').innerHTML=`
-    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">YTD Revenue</div><div class="stat-value">$${totalIncome.toLocaleString()}</div><div class="stat-delta delta-up">▲ ${income.length} transaction${income.length!==1?'s':''}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon red"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_down</span></div><div class="stat-card-body"><div class="stat-label">YTD Expenses</div><div class="stat-value">$${totalExpense.toLocaleString()}</div><div class="stat-delta delta-down">${expense.length} categor${expense.length!==1?'ies':'y'}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${netProfit>=0?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="stat-card-body"><div class="stat-label">Net Profit</div><div class="stat-value">$${netProfit.toLocaleString()}</div><div class="stat-delta ${margin>=20?'delta-up':'delta-down'}">${margin>=20?'▲':'▼'} ${margin}% margin</div></div></div></div>
+    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">YTD Revenue</div><div class="stat-value">$${totalIncome.toLocaleString()}</div><div class="stat-delta ${revPct!==null?(revPct>=100?'delta-up':'delta-down'):''}">▲ ${revPct!==null?`${revPct}% of $${revenueTarget.toLocaleString()} target`:income.length+' transaction'+(income.length!==1?'s':'')}</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon red"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_down</span></div><div class="stat-card-body"><div class="stat-label">YTD Expenses</div><div class="stat-value">$${totalExpense.toLocaleString()}</div><div class="stat-delta ${expPct!==null?(expPct>=100?'delta-down':'delta-up'):'delta-down'}">${expPct!==null?`${expPct}% of $${expenseBudget.toLocaleString()} budget`:expense.length+' categor'+(expense.length!==1?'ies':'y')}</div></div></div></div>
+    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${netProfit>=0?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="stat-card-body"><div class="stat-label">Net Profit</div><div class="stat-value">$${netProfit.toLocaleString()}</div><div class="stat-delta ${margin>=marginTarget?'delta-up':'delta-down'}">${margin>=marginTarget?'▲':'▼'} ${margin}% of ${marginTarget}% target</div></div></div></div>
     <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${roi>=30?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">gps_fixed</span></div><div class="stat-card-body"><div class="stat-label">Return on Cost</div><div class="stat-value">${roi}%</div><div class="stat-delta" style="color:var(--text-faint)">profit ÷ expenses</div></div></div></div>`;
 
   // ── SMART INSIGHTS STRIP ──────────────────────────────────────────────────
@@ -7650,13 +7670,43 @@ async function loadFinance(){
   const insights=[];
   if(topIncCat)insights.push({icon:'emoji_events',label:'Top Revenue Source',val:`<strong>${topIncCat[0]}</strong> leads at $${topIncCat[1].toLocaleString()} — ${totalIncome>0?Math.round(topIncCat[1]/totalIncome*100):0}% of all income`,cls:''});
   if(topExpCat)insights.push({icon:'warning',label:'Largest Cost Driver',val:`<strong>${topExpCat[0]}</strong> is your biggest expense at $${topExpCat[1].toLocaleString()} (${totalExpense>0?Math.round(topExpCat[1]/totalExpense*100):0}% of spend)`,cls:topExpCat[1]>totalExpense*0.5?'warn':''});
-  if(margin<20&&totalIncome>0)insights.push({icon:'trending_down',label:'Margin Alert',val:`Profit margin at <strong>${margin}%</strong> — below the 20% target. Review ${topExpCat?topExpCat[0]+' costs':'major expenses'}.`,cls:'bad'});
-  else if(margin>=20)insights.push({icon:'check_circle',label:'Margin On Target',val:`▲ <strong>${margin}%</strong> profit margin — above the 20% benchmark.`,cls:'good'});
+  if(margin<marginTarget&&totalIncome>0)insights.push({icon:'trending_down',label:'Margin Alert',val:`Profit margin at <strong>${margin}%</strong> — below your ${marginTarget}% target. Review ${topExpCat?topExpCat[0]+' costs':'major expenses'}.`,cls:'bad'});
+  else if(margin>=marginTarget)insights.push({icon:'check_circle',label:'Margin On Target',val:`▲ <strong>${margin}%</strong> profit margin — above your ${marginTarget}% target.`,cls:'good'});
+  if(revenueTarget>0&&totalIncome<revenueTarget*0.5&&income.length>0)insights.push({icon:'flag',label:'Revenue Behind Target',val:`At $${totalIncome.toLocaleString()} you're at ${revPct}% of your $${revenueTarget.toLocaleString()} revenue target.`,cls:'warn'});
+  if(expenseBudget>0&&totalExpense>expenseBudget)insights.push({icon:'error_outline',label:'Over Budget',val:`Expenses ($${totalExpense.toLocaleString()}) have exceeded your $${expenseBudget.toLocaleString()} budget by $${(totalExpense-expenseBudget).toLocaleString()}.`,cls:'bad'});
   if(labourPct>40)insights.push({icon:'groups',label:'Labour Cost Warning',val:`Labour is <strong>${labourPct}%</strong> of total expenses ($${labourCost.toLocaleString()}). Consider seasonal vs permanent staffing.`,cls:'warn'});
   document.getElementById('finance-insights-strip').innerHTML=insights.length
     ?`<div class="fin-insights-strip">${insights.slice(0,3).map(i=>`<div class="fin-insight-card"><div class="fin-insight-icon"><span style="font-family:'Material Symbols Outlined';font-size:18px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">${i.icon}</span></div><div class="fin-insight-body"><div class="fin-insight-label">${i.label}</div><div class="fin-insight-value ${i.cls}">${i.val}</div></div></div>`).join('')}</div>`:'';
 
-  // ── INCOME & EXPENSE RECORD TABLES ───────────────────────────────────────
+  // ── BUDGET TARGETS CARD ───────────────────────────────────────────────────
+  const budgetEl=document.getElementById('fin-budget-targets');
+  if(budgetEl){
+    const _bar=(pct,over)=>`<div style="background:var(--s4);border-radius:4px;height:6px;width:100%;margin-top:4px"><div style="width:${Math.min(100,pct)}%;height:6px;border-radius:4px;background:${over?'var(--error-txt)':'var(--gold)'};transition:width 0.6s ease"></div></div>`;
+    const _row=(label,val,target,pct,over,note)=>`<div style="display:flex;align-items:flex-start;gap:16px;padding:10px 0;border-bottom:1px solid var(--bdr)">
+      <div style="flex:1"><div style="font-size:12.5px;color:var(--text-secondary);font-weight:500">${label}</div>
+      ${target?_bar(pct,over):'<div style="font-size:11px;color:var(--text-faint);margin-top:4px">No target set</div>'}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:14px;font-weight:600;color:${over?'var(--error-txt)':'var(--text-primary)'}">${val}</div>
+        ${target?`<div style="font-size:10.5px;color:var(--text-faint)">of $${parseFloat(target).toLocaleString()} · ${pct}%${over?' ⚠ over':''}</div>`:''}
+        ${note?`<div style="font-size:10.5px;color:var(--text-faint)">${note}</div>`:''}
+      </div>
+    </div>`;
+    const revPctRaw=revenueTarget>0?Math.round(totalIncome/revenueTarget*100):0;
+    const expPctRaw=expenseBudget>0?Math.round(totalExpense/expenseBudget*100):0;
+    budgetEl.innerHTML=`
+      ${_row('Revenue Target','$'+totalIncome.toLocaleString(),revenueTarget,revPctRaw,false,null)}
+      ${_row('Expense Budget','$'+totalExpense.toLocaleString(),expenseBudget,expPctRaw,expenseBudget>0&&totalExpense>expenseBudget,null)}
+      <div style="padding:10px 0;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:12.5px;color:var(--text-secondary);font-weight:500">Profit Margin Target</div>
+          <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">Current: <strong style="color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin}%</strong> vs ${marginTarget}% target</div>
+        </div>
+        <div style="font-size:14px;font-weight:600;color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin>=marginTarget?'▲ On Target':'▼ Below Target'}</div>
+      </div>
+      ${!cw?'':''}
+    `;
+  }
   document.getElementById('income-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','income')">+ Add Income</button>`:'';
   document.getElementById('expense-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','expense')">+ Add Expense</button>`:'';
   const fmtLine=(r,type)=>`<div class="finance-line"><div style="flex:1"><div>${r.description||r.category||'—'}</div><div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">${r.category||'—'} · ${r.date||'—'}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="finance-amount ${type==='income'?'amount-pos':'amount-neg'}">${type==='income'?'+':'−'} $${(r.amount||0).toLocaleString()}</span>${cw?`<button class="btn btn-danger btn-sm" onclick="delRec('finance',${r.id})">✕</button>`:''}</div></div>`;
@@ -8106,6 +8156,64 @@ function _downloadHistoryReport(i){
   _repState.lastTitle = r.title;
   _repState.fmt       = r.fmt || 'pdf';
   downloadReport();
+}
+
+// ─── FINANCE BUDGET TARGETS ────────────────────────────────────────────────────
+async function openBudgetEditor(){
+  // Load current settings
+  let sett={};
+  try{ sett=await api('/settings')||{}; }catch{}
+  const rv=parseFloat(sett.finance_revenue_target||0)||'';
+  const eb=parseFloat(sett.finance_expense_budget||0)||'';
+  const mt=parseFloat(sett.finance_margin_target||20)||20;
+
+  // Build a simple inline modal using existing openModal infrastructure
+  const html=`
+    <div class="form-group">
+      <label class="form-label">Annual Revenue Target (USD $)</label>
+      <input class="form-input" id="bt-revenue" type="number" min="0" step="100" value="${rv}" placeholder="e.g. 250000">
+      <div style="font-size:11px;color:var(--text-faint);margin-top:4px">The total income you aim to achieve this year.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Annual Expense Budget (USD $)</label>
+      <input class="form-input" id="bt-expense" type="number" min="0" step="100" value="${eb}" placeholder="e.g. 180000">
+      <div style="font-size:11px;color:var(--text-faint);margin-top:4px">Maximum spend allowed before triggering an over-budget alert.</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Profit Margin Target (%)</label>
+      <input class="form-input" id="bt-margin" type="number" min="0" max="100" step="1" value="${mt}" placeholder="e.g. 20">
+      <div style="font-size:11px;color:var(--text-faint);margin-top:4px">Minimum acceptable profit margin. Used in insights and alerts.</div>
+    </div>`;
+
+  const overlay=document.getElementById('modal-overlay');
+  const modalEl=overlay.querySelector('.modal');
+  document.getElementById('modal-title').textContent='Set Budget & Targets';
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal-del-btn').style.display='none';
+  document.getElementById('modal-save-btn').onclick=saveBudgetTargets;
+  overlay.classList.add('open');
+  trapFocus(modalEl);
+  document.getElementById('bt-revenue').focus();
+}
+
+async function saveBudgetTargets(){
+  const rv=parseFloat(document.getElementById('bt-revenue')?.value)||0;
+  const eb=parseFloat(document.getElementById('bt-expense')?.value)||0;
+  const mt=parseFloat(document.getElementById('bt-margin')?.value)||20;
+  try{
+    await api('/settings','PUT',{
+      finance_revenue_target: rv,
+      finance_expense_budget: eb,
+      finance_margin_target:  mt,
+    });
+    toast('Budget targets saved');
+    closeModal();
+    _invalidateCache('/finance');
+    _invalidateCache('/settings');
+    loadFinance();
+  }catch(e){
+    toast('Failed to save targets', 'error');
+  }
 }
 
 async function loadCompliance(){
@@ -8792,10 +8900,11 @@ async function loadAIInsights(){
   const margin=finance.margin||0;
   const net=finance.net||0;
   const ytd=finance.income||dash.revenue_ytd||0;
-  if(margin>=25){
-    insights.push({type:'finance',priority:5,text:`▲ Profit margin at <strong>${margin}%</strong> — above the 20% target. Net profit YTD: <strong>$${net.toLocaleString()}</strong>.`,action:'View finance',page:'finance'});
+  const _aiMarginTarget=parseFloat(window._cachedMarginTarget||20);
+  if(margin>=_aiMarginTarget){
+    insights.push({type:'finance',priority:5,text:`▲ Profit margin at <strong>${margin}%</strong> — above the ${_aiMarginTarget}% target. Net profit YTD: <strong>$${net.toLocaleString()}</strong>.`,action:'View finance',page:'finance'});
   } else if(margin>0){
-    insights.push({type:'finance',priority:3,text:`▼ Profit margin at <strong>${margin}%</strong> — below the 20% target. Review expense categories to find savings.`,action:'View finance',page:'finance'});
+    insights.push({type:'finance',priority:3,text:`▼ Profit margin at <strong>${margin}%</strong> — below the ${_aiMarginTarget}% target. Review expense categories to find savings.`,action:'View finance',page:'finance'});
   } else if(ytd>0){
     insights.push({type:'finance',priority:4,text:`Revenue YTD: <strong>$${ytd.toLocaleString()}</strong>. Add income and expense records to track your profit margin.`,action:'View finance',page:'finance'});
   }
