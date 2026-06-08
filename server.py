@@ -2773,6 +2773,72 @@ def generate_report():
         return jsonify({"error": "Could not generate report. Please try again."}), 502
 
 
+@app.route("/api/finance/budget-summary", methods=["GET"])
+@require_auth
+def get_finance_budget_summary():
+    """
+    Unified budget summary for the finance module.
+    Aggregates ERP season budget lines and revenue projections for the active
+    season, plus the finance_margin_target from settings.
+    Falls back to the settings keys if no active season exists.
+    """
+    # Active season
+    active_season = query(
+        "SELECT * FROM seasons WHERE status='Active' ORDER BY start_date DESC LIMIT 1",
+        one=True
+    )
+    sid = active_season["id"] if active_season else None
+
+    # Expense budget — sum of all planned_amount in budgets table for active season
+    if sid:
+        exp_row = query(
+            "SELECT COALESCE(SUM(planned_amount),0) as total FROM budgets WHERE season_id=%s",
+            (sid,), one=True
+        )
+        rev_row = query(
+            "SELECT COALESCE(SUM(projected_amount),0) as total FROM revenue_projections WHERE season_id=%s",
+            (sid,), one=True
+        )
+        budget_lines = query(
+            "SELECT category, planned_amount FROM budgets WHERE season_id=%s ORDER BY planned_amount DESC",
+            (sid,)
+        )
+        rev_lines = query(
+            "SELECT description, projected_amount FROM revenue_projections WHERE season_id=%s ORDER BY projected_amount DESC",
+            (sid,)
+        )
+    else:
+        exp_row = {"total": 0}
+        rev_row = {"total": 0}
+        budget_lines = []
+        rev_lines = []
+
+    expense_budget  = float(exp_row["total"])
+    revenue_target  = float(rev_row["total"])
+
+    # Margin target — always from settings (ERP doesn't track this separately)
+    settings_rows = query("SELECT key, value FROM settings WHERE key IN ('finance_margin_target','finance_revenue_target','finance_expense_budget')")
+    sett = {r["key"]: r["value"] for r in (settings_rows or [])}
+    margin_target = float(sett.get("finance_margin_target") or 20)
+
+    # If no ERP data, fall back to settings
+    if revenue_target == 0:
+        revenue_target = float(sett.get("finance_revenue_target") or 0)
+    if expense_budget == 0:
+        expense_budget = float(sett.get("finance_expense_budget") or 0)
+
+    return jsonify({
+        "season_id":      sid,
+        "season_name":    active_season["name"] if active_season else None,
+        "revenue_target": revenue_target,
+        "expense_budget": expense_budget,
+        "margin_target":  margin_target,
+        "has_erp_data":   sid is not None,
+        "budget_lines":   rows_to_list(budget_lines),
+        "revenue_lines":  rows_to_list(rev_lines),
+    })
+
+
 # ─── STATIC / FRONTEND ────────────────────────────────────────────────────────
 
 @app.route("/")

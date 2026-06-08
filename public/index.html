@@ -1681,6 +1681,11 @@ body {
   flex-shrink: 0;
 }
 .page-header p { font-size: 12px; color: var(--text-muted); font-weight: 300; letter-spacing: 0.02em; }
+.related-bar { display:flex; flex-wrap:wrap; gap:6px; margin: -4px 0 18px; align-items:center; }
+.related-bar-label { font-size:10px; color:var(--text-faint); letter-spacing:0.06em; text-transform:uppercase; margin-right:2px; }
+.related-link { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; border:1px solid var(--bdr); background:var(--s2); font-size:11px; color:var(--text-secondary); cursor:pointer; transition:background 0.15s, color 0.15s; white-space:nowrap; }
+.related-link:hover { background:var(--s3); color:var(--text-primary); border-color:var(--gold); }
+.related-link .rel-icon { font-family:'Material Symbols Outlined'; font-size:13px; font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; font-style:normal; line-height:1; letter-spacing:normal; text-transform:none; color:var(--gold); }
 
 /* Module accent colors */
 #page-assets    { --module-accent: var(--gold); }
@@ -5271,6 +5276,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-assets">
         <div class="page-header"><h1><span class="ph-icon">construction</span>Assets</h1><p>Equipment, vehicles and infrastructure</p></div>
+        <div id="assets-related"></div>
         <div class="stat-grid" id="assets-stats"></div>
         <div class="card">
           <div class="card-title">Asset Register <span id="assets-add-btn"></span></div>
@@ -5280,6 +5286,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-livestock">
         <div class="page-header"><h1><span class="ph-icon">pets</span>Livestock</h1><p>Herd management, health records and movement logs</p></div>
+        <div id="livestock-related"></div>
         <div class="module-narrative" id="livestock-narrative">
           <div class="module-narrative-badge">&#9679; Live Summary</div>
           <div class="module-narrative-text"><div class="skel skel-row" style="max-width:90%"></div></div>
@@ -5293,6 +5300,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-crops">
         <div class="page-header"><h1><span class="ph-icon">grass</span>Crops</h1><p>Field management, planting schedules and yield tracking</p></div>
+        <div id="crops-related"></div>
         <div class="module-narrative" id="crops-narrative">
           <div class="module-narrative-badge">&#9679; Live Summary</div>
           <div class="module-narrative-text"><div class="skel skel-row" style="max-width:90%"></div></div>
@@ -5314,6 +5322,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-workers">
         <div class="page-header"><h1><span class="ph-icon">groups</span>Workers</h1><p>Staff records, roles, attendance and payroll</p></div>
+        <div id="workers-related"></div>
         <div class="module-narrative" id="workers-narrative">
           <div class="module-narrative-badge">&#9679; Live Summary</div>
           <div class="module-narrative-text"><div class="skel skel-row" style="max-width:90%"></div></div>
@@ -5324,6 +5333,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-inventory">
         <div class="page-header"><h1><span class="ph-icon">inventory_2</span>Inventory</h1><p>Inputs, fuel, feed and supplies stock levels</p></div>
+        <div id="inventory-related"></div>
         <div class="stat-grid" id="inventory-stats"></div>
         <div class="two-col">
           <div class="card"><div class="card-title">Stock Levels <span id="inv-add-btn"></span></div><div id="inventory-levels"></div></div>
@@ -5336,6 +5346,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-finance">
         <div class="page-header"><h1><span class="ph-icon">account_balance</span>Finance</h1><p>Revenue, expenses, profitability and smart insights</p></div>
+        <div id="finance-related"></div>
         <div class="module-narrative" id="finance-narrative" style="--module-accent:var(--gold-lt)">
           <div class="module-narrative-badge">&#9679; Live Summary</div>
           <div class="module-narrative-text"><div class="skel skel-row" style="max-width:90%"></div></div>
@@ -5376,7 +5387,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
           <div class="card" id="fin-budget-card">
             <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
               <span>Budget &amp; Targets</span>
-              <button class="btn btn-primary btn-sm" onclick="openBudgetEditor()">Edit Targets</button>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" onclick="loadPage('erp-budgets')">ERP Budgets →</button>
+                <button class="btn btn-primary btn-sm" onclick="openMarginTargetEditor()">Set Margin Target</button>
+              </div>
             </div>
             <div id="fin-budget-targets" style="padding:8px 0"></div>
           </div>
@@ -5430,8 +5444,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
           <h1><span class="ph-icon">summarize</span>Reports</h1>
           <p>Generate, export and schedule estate intelligence reports</p>
         </div>
-
-        <!-- ESTATE INTELLIGENCE DIGEST — THE SIGNATURE FEATURE -->
+        <div id="reports-related"></div>
         <div class="card" style="border-color:var(--gold-border);background:linear-gradient(135deg,var(--s2),var(--s3));margin-bottom:18px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
             <div style="flex:1;min-width:0">
@@ -5585,6 +5598,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <div class="page" id="page-compliance">
         <div class="page-header"><h1><span class="ph-icon">verified_user</span>Compliance</h1><p>Regulatory requirements, certifications and audit status</p></div>
+        <div id="compliance-related"></div>
         <div class="stat-grid" id="compliance-stats"></div>
         <div class="card"><div class="card-title">Compliance Register <span id="comp-add-btn"></span></div><div id="compliance-list"></div></div>
       </div>
@@ -5974,17 +5988,7 @@ function renderCmdResults(query) {
 
 function cmdNavigate(page) {
   document.getElementById('cmd-palette-overlay')?.classList.remove('open');
-  // Try sidebar item first (sb-item), then nav-item
-  const navItem = document.querySelector(`.sb-item[data-page="${page}"]`) ||
-                  document.querySelector(`.nav-item[data-page="${page}"]`);
-  if (navItem) { navItem.click(); return; }
-  // Fallback: directly call loadPage for pages not in DOM nav
-  if (ROLE_PAGES[currentUser?.role]?.includes(page)) {
-    currentPage = page;
-    const contentEl = document.getElementById('content');
-    if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; }
-    loadPage(page);
-  }
+  navigateTo(page);
 }
 
 // Keyboard shortcut Ctrl+K / Cmd+K
@@ -6788,36 +6792,7 @@ const pageLabels={
 };
 // ── MOBILE NAV ────────────────────────────────────────────────────────────────
 function mobileNavTo(pg) {
-  if (!(ROLE_PAGES[currentUser?.role] || []).includes(pg)) return;
-
-  // Clear all active states
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.sb-item[data-page], .nav-item[data-page]').forEach(n =>
-    n.classList.toggle('active', n.dataset.page === pg));
-  document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n =>
-    n.classList.toggle('active', n.dataset.page === pg));
-
-  // Handle ERP vs standard page visibility
-  const erpContainer = document.getElementById('erp-page-container');
-  const isErpPage = pg.startsWith('erp-') || pg.startsWith('ent-');
-  if (isErpPage) {
-    if (erpContainer) erpContainer.style.display = 'block';
-  } else {
-    if (erpContainer) erpContainer.style.display = 'none';
-    const pgEl = document.getElementById('page-' + pg);
-    if (pgEl) pgEl.classList.add('active');
-  }
-
-  // Update topbar title
-  const titleEl = document.getElementById('topbar-title');
-  if (titleEl) titleEl.textContent = pageLabels[pg] || pg;
-
-  // Reset scroll AFTER DOM changes
-  const contentEl = document.getElementById('content');
-  if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; contentEl.style.scrollBehavior = ''; }
-
-  currentPage = pg;
-  loadPage(pg);
+  navigateTo(pg);
 }
 
 function toggleMobileNav(){
@@ -6938,6 +6913,156 @@ function fmtCurrency(n,short=false){
 }
 // Keep backwards-compatible fmt alias
 const fmt=v=>fmtCurrency(v);
+
+// ─── RELATED MODULE LINKS ─────────────────────────────────────────────────────
+// Each link: { icon, label, page } or { icon, label, fn } for ERP sub-pages
+const _REL = {
+  // Core operational modules
+  finance:          { icon:'account_balance', label:'Finance'            , page:'finance' },
+  livestock:        { icon:'pets',            label:'Livestock'          , page:'livestock' },
+  crops:            { icon:'grass',           label:'Crops'              , page:'crops' },
+  workers:          { icon:'groups',          label:'Workers'            , page:'workers' },
+  inventory:        { icon:'inventory_2',     label:'Inventory'          , page:'inventory' },
+  assets:           { icon:'construction',    label:'Assets'             , page:'assets' },
+  compliance:       { icon:'verified_user',   label:'Compliance'         , page:'compliance' },
+  reports:          { icon:'summarize',       label:'Reports'            , page:'reports' },
+  // ERP Intelligence modules
+  erpDashboard:     { icon:'insights',        label:'Farm Overview'      , page:'erp-dashboard' },
+  erpBudgets:       { icon:'savings',         label:'Season Budget'      , page:'erp-budgets' },
+  erpProfitability: { icon:'trending_up',     label:'P&L Analysis'       , page:'erp-profitability' },
+  erpActivities:    { icon:'event_note',      label:'Farm Activities'    , page:'erp-activities' },
+  erpDepreciation:  { icon:'waterfall_chart', label:'Depreciation'       , page:'erp-depreciation' },
+  erpCosting:       { icon:'calculate',       label:'Cost Analysis'      , page:'erp-costing' },
+  erpProduction:    { icon:'agriculture',     label:'Production'         , page:'erp-production' },
+  // Enterprise Analytics modules
+  entKpi:           { icon:'analytics',       label:'KPI Dashboard'      , page:'ent-kpi-dashboard' },
+  entProfitability: { icon:'show_chart',      label:'Adv. Profitability' , page:'ent-profitability' },
+  entCogs:          { icon:'receipt_long',    label:'COGS Ledger'        , page:'ent-cogs' },
+  entCostAccounting:{ icon:'calculate',       label:'Cost Accounting'    , page:'ent-cost-accounting' },
+  entForecasting:   { icon:'timeline',        label:'Forecasting'        , page:'ent-forecasting' },
+  entInventoryOpt:  { icon:'inventory_2',     label:'Inventory Opt.'     , page:'ent-inventory-opt' },
+  entLivestock:     { icon:'pets',            label:'Livestock Analytics', page:'ent-livestock-analytics' },
+  entCrops:         { icon:'eco',             label:'Crop Analytics'     , page:'ent-crop-analytics' },
+  entLabour:        { icon:'engineering',     label:'Labour Analytics'   , page:'ent-labour-analytics' },
+  entAssets:        { icon:'precision_manufacturing', label:'Asset Analytics', page:'ent-asset-analytics' },
+  entScenarios:     { icon:'alt_route',       label:'Scenario Modelling' , page:'ent-scenarios' },
+  entCalculations:  { icon:'functions',       label:'Calc. Registry'     , page:'ent-calculations' },
+};
+
+// Per-page related links map (used by auto-injection in erpContent and explicit calls)
+const _PAGE_RELATED = {
+  'dashboard':                ['livestock','crops','finance','assets','inventory','workers'],
+  'assets':                   ['erpDepreciation','finance','erpCosting','entAssets'],
+  'livestock':                ['finance','workers','inventory','erpActivities','entLivestock'],
+  'crops':                    ['finance','inventory','workers','erpProduction','entCrops'],
+  'workers':                  ['finance','erpActivities','entLabour','compliance'],
+  'inventory':                ['finance','crops','erpCosting','entInventoryOpt'],
+  'finance':                  ['erpProfitability','erpBudgets','reports','entKpi','entCogs'],
+  'reports':                  ['finance','erpProfitability','entKpi','compliance'],
+  'compliance':               ['finance','reports','workers'],
+  'erp-dashboard':            ['erpProfitability','erpBudgets','erpActivities','entKpi'],
+  'erp-profitability':        ['erpDashboard','erpBudgets','erpCosting','entProfitability','finance'],
+  'erp-budgets':              ['erpProfitability','erpActivities','finance','entForecasting'],
+  'erp-activities':           ['erpProduction','erpCosting','livestock','crops','workers','inventory'],
+  'erp-costing':              ['erpProfitability','inventory','assets','erpActivities','entCogs'],
+  'erp-production':           ['erpProfitability','crops','livestock','erpActivities','entCrops'],
+  'erp-depreciation':         ['assets','erpCosting','finance','entAssets'],
+  'ent-kpi-dashboard':        ['erpDashboard','entProfitability','entCogs','finance','reports'],
+  'ent-profitability':        ['erpProfitability','entKpi','entCogs','entCostAccounting','finance'],
+  'ent-cogs':                 ['entProfitability','erpCosting','inventory','entCostAccounting'],
+  'ent-cost-accounting':      ['entCogs','erpCosting','erpActivities','finance'],
+  'ent-forecasting':          ['erpBudgets','erpProfitability','entScenarios','finance'],
+  'ent-inventory-opt':        ['inventory','erpCosting','entCogs','crops','livestock'],
+  'ent-livestock-analytics':  ['livestock','erpActivities','erpProduction','entLabour'],
+  'ent-crop-analytics':       ['crops','erpProduction','erpActivities','entInventoryOpt'],
+  'ent-labour-analytics':     ['workers','erpActivities','erpCosting','entCostAccounting'],
+  'ent-asset-analytics':      ['assets','erpDepreciation','erpCosting','finance'],
+  'ent-calculations':         ['entKpi','entProfitability','erpCosting'],
+  'ent-scenarios':            ['entForecasting','erpBudgets','erpProfitability','entKpi'],
+};
+
+// ── UNIFIED NAVIGATION ──────────────────────────────────────────────────────
+// Single source of truth for programmatic navigation — syncs nav active state,
+// ERP container visibility, topbar title, scroll and calls loadPage().
+function navigateTo(page) {
+  if (!page) return;
+  const role = currentUser?.role;
+  if (role && !(ROLE_PAGES[role] || []).includes(page)) return;
+
+  // Prefer clicking the real nav item so all active-state logic fires once
+  const navItem = document.querySelector(`.sb-item[data-page="${page}"]`) ||
+                  document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) { navItem.click(); return; }
+
+  // Fallback for pages not in current DOM nav (e.g. role-gated ERP/ENT items)
+  document.querySelectorAll('.nav-item,.sb-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n =>
+    n.classList.toggle('active', n.dataset.page === page));
+
+  const erpContainer = document.getElementById('erp-page-container');
+  const isErpPage = page.startsWith('erp-') || page.startsWith('ent-');
+  if (isErpPage) {
+    if (erpContainer) erpContainer.style.display = 'block';
+  } else {
+    if (erpContainer) erpContainer.style.display = 'none';
+    const pgEl = document.getElementById('page-' + page);
+    if (pgEl) pgEl.classList.add('active');
+  }
+
+  const titleEl = document.getElementById('topbar-title');
+  if (titleEl) titleEl.textContent = pageLabels[page] || page;
+
+  const contentEl = document.getElementById('content');
+  if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; contentEl.style.scrollBehavior = ''; }
+
+  currentPage = page;
+  loadPage(page);
+  if (window.innerWidth <= 768) closeMobileNav();
+}
+
+// ── RELATED BAR RENDERER ────────────────────────────────────────────────────
+// Renders a "See also" pill-bar into a container element.
+// Uses navigateTo() so active state always syncs when user clicks a pill.
+function _renderRelatedBar(containerId, keys) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const allowed = currentUser ? (ROLE_PAGES[currentUser.role] || []) : [];
+  const links = keys
+    .filter(k => _REL[k] && (!allowed.length || allowed.includes(_REL[k].page)))
+    .map(k => {
+      const r = _REL[k];
+      return `<span class="related-link" onclick="navigateTo('${r.page}')" title="Go to ${r.label}">` +
+             `<span class="rel-icon">${r.icon}</span>${r.label}</span>`;
+    }).join('');
+  if (!links) return;
+  el.innerHTML = `<div class="related-bar"><span class="related-bar-label">See also</span>${links}</div>`;
+}
+
+// Injects a related bar directly into an ERP/ENT page's rendered HTML container.
+// Called automatically by erpContent() after each page render.
+function _injectErpRelatedBar(page) {
+  const keys = _PAGE_RELATED[page];
+  if (!keys || !keys.length) return;
+  const erp = document.getElementById('erp-page-container');
+  if (!erp) return;
+  const header = erp.querySelector('.page-header');
+  if (!header) return;
+  // Avoid duplicate bars
+  if (erp.querySelector('.related-bar')) return;
+  const allowed = currentUser ? (ROLE_PAGES[currentUser.role] || []) : [];
+  const links = keys
+    .filter(k => _REL[k] && (!allowed.length || allowed.includes(_REL[k].page)))
+    .map(k => {
+      const r = _REL[k];
+      return `<span class="related-link" onclick="navigateTo('${r.page}')" title="Go to ${r.label}">` +
+             `<span class="rel-icon">${r.icon}</span>${r.label}</span>`;
+    }).join('');
+  if (!links) return;
+  const bar = document.createElement('div');
+  bar.innerHTML = `<div class="related-bar"><span class="related-bar-label">See also</span>${links}</div>`;
+  header.insertAdjacentElement('afterend', bar.firstChild);
+}
 
 async function loadDashboard(){
   currentPage='dashboard';
@@ -7126,21 +7251,21 @@ async function loadDashboard(){
   _populateESB(d);
   _populatePulse(d.recent_events||[]);
 
-  // ── Render stat cards ─────────────────────────────────────────────────────
+  // ── Render stat cards — all clickable, navigate to module ────────────────
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
-    <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
+    <div class="stat-card stat-accent" onclick="loadPage('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
+    <div class="stat-card" onclick="loadPage('livestock')" style="cursor:pointer" title="Open Livestock"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
+    <div class="stat-card" onclick="loadPage('crops')" style="cursor:pointer" title="Open Crops"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
+    <div class="stat-card" onclick="loadPage('workers')" style="cursor:pointer" title="Open Workers"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
 
-  // ── Summary strip ─────────────────────────────────────────────────────────
+  // ── Summary strip — clickable ─────────────────────────────────────────────
   const profitPct=d.revenue_ytd>0?Math.round(d.net_profit/d.revenue_ytd*100):0;
   const compOk=d.compliance_overdue===0;
   const stockOk=d.low_stock_items===0;
   document.getElementById('dash-summary').innerHTML=`
-    <div class="summary-card"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
-    <div class="summary-card"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
-    <div class="summary-card"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
+    <div class="summary-card" onclick="loadPage('finance')" style="cursor:pointer" title="Open Finance"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
+    <div class="summary-card" onclick="loadPage('compliance')" style="cursor:pointer" title="Open Compliance"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
+    <div class="summary-card" onclick="loadPage('inventory')" style="cursor:pointer" title="Open Inventory"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
 
   // ── Alert Feed — cross-module exception summary ────────────────────────────
   document.getElementById('dash-ytd').textContent=fmt(d.revenue_ytd||0)+' YTD';
@@ -7386,6 +7511,7 @@ async function loadDashboard(){
 
 async function loadAssets(){
   currentPage='assets';
+  _renderRelatedBar('assets-related', _PAGE_RELATED['assets'] || []);
   document.getElementById('assets-stats').innerHTML=`<div class="skel-card">${'<div class="skel skel-text short" style="margin-bottom:10px"></div><div class="skel skel-val"></div>'.repeat(1)}</div>`.repeat(4);
   document.getElementById('assets-tbody').innerHTML=`<tr><td colspan="7"><div class="skel skel-row" style="margin:8px 0"></div><div class="skel skel-row"></div></td></tr>`;
   let rows;
@@ -7402,8 +7528,7 @@ async function loadAssets(){
   document.getElementById('assets-stats').innerHTML=`<div class="stat-card"><div class="stat-label">Total Assets</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">registered</div></div><div class="stat-card stat-accent"><div class="stat-label">Operational</div><div class="stat-value">${ops}</div><div class="stat-delta delta-up">▲ ${rows.length?Math.round(ops/rows.length*100):0}% uptime</div></div><div class="stat-card"><div class="stat-label">In Maintenance</div><div class="stat-value">${maint}</div><div class="stat-delta ${maint>0?'delta-down':'delta-up'}">${maint>0?'▼ needs attention':'▲ all clear'}</div></div><div class="stat-card"><div class="stat-label">Asset Value</div><div class="stat-value">${fmtCurrency(val,true)}</div><div class="stat-delta" style="color:var(--text-muted)">total register</div></div>`;
   const cw=canWrite();
   document.getElementById('assets-add-btn').innerHTML=cw
-    ?`<button class="btn btn-primary btn-sm" onclick="openModal('asset')">+ Add Asset</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadErpDepreciation()" style="margin-left:8px" title="Track asset depreciation"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">waterfall_chart</span> Asset Values</button>`
+    ?`<button class="btn btn-primary btn-sm" onclick="openModal('asset')">+ Add Asset</button>`
     :'';
   document.getElementById('assets-tbody').innerHTML=rows.length
     ?rows.map(r=>`<tr onclick="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}</td><td>${r.description}</td><td>${r.category}</td><td>${r.location}</td><td>${spill(r.status)}</td><td>${r.last_service||'—'}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
@@ -7412,6 +7537,7 @@ async function loadAssets(){
 
 async function loadLivestock(){
   currentPage='livestock';
+  _renderRelatedBar('livestock-related', _PAGE_RELATED['livestock'] || []);
   document.getElementById('livestock-stats').innerHTML=`<div class="skel-card"></div>`.repeat(4);
   document.getElementById('livestock-tbody').innerHTML=`<tr><td colspan="6"><div class="skel skel-row" style="margin:8px 0"></div></td></tr>`;
   let herds,events;
@@ -7457,6 +7583,7 @@ async function loadLivestock(){
 
 async function loadCrops(){
   currentPage='crops';
+  _renderRelatedBar('crops-related', _PAGE_RELATED['crops'] || []);
   document.getElementById('crops-stats').innerHTML=`<div class="skel-card"></div>`.repeat(4);
   document.getElementById('crops-tbody').innerHTML=`<tr><td colspan="7"><div class="skel skel-row" style="margin:8px 0"></div></td></tr>`;
   let rows;
@@ -7504,6 +7631,7 @@ async function loadCrops(){
 
 async function loadWorkers(){
   currentPage='workers';
+  _renderRelatedBar('workers-related', _PAGE_RELATED['workers'] || []);
   document.getElementById('workers-stats').innerHTML=`<div class="skel-card"></div>`.repeat(4);
   document.getElementById('workers-grid').innerHTML=`<div class="skel-card" style="height:72px"></div>`.repeat(6);
   let rows;
@@ -7539,6 +7667,7 @@ async function loadWorkers(){
 
 async function loadInventory(){
   currentPage='inventory';
+  _renderRelatedBar('inventory-related', _PAGE_RELATED['inventory'] || []);
   document.getElementById('inventory-stats').innerHTML=`<div class="skel-card"></div>`.repeat(4);
   document.getElementById('inventory-levels').innerHTML=`<div class="skel skel-row" style="margin-bottom:8px"></div>`.repeat(4);
   let rows;
@@ -7576,6 +7705,7 @@ function finTab(el,tab){
 
 async function loadFinance(){
   currentPage='finance';
+  _renderRelatedBar('finance-related', _PAGE_RELATED['finance'] || []);
 
   // Preserve the active tab so a reload after save doesn't jump back to Overview
   const _activeTabEl = document.querySelector('.fin-tab.active');
@@ -7598,17 +7728,17 @@ async function loadFinance(){
   document.getElementById('fin-trend-chart').innerHTML=`<div class="skel skel-bar"></div>`;
   document.getElementById('fin-mom-table').innerHTML=skelFin;
 
-  // ── Fetch finance data + budget targets ──────────────────────────────────
-  let records=[],summary={},finSettings={};
+  // ── Fetch finance data + unified budget summary ───────────────────────────
+  let records=[],summary={},budgetSummary={};
   try{
-    const [rec,sum,sett]=await Promise.all([
+    const [rec,sum,bsum]=await Promise.all([
       api('/finance?limit=1000&offset=0'),
       api('/finance/summary').catch(()=>({})),
-      api('/settings').catch(()=>({}))
+      api('/finance/budget-summary').catch(()=>({}))
     ]);
     records=Array.isArray(rec)?rec:[];
     summary=(sum&&typeof sum==='object')?sum:{};
-    finSettings=(sett&&typeof sett==='object')?sett:{};
+    budgetSummary=(bsum&&typeof bsum==='object')?bsum:{};
   }catch(e){
     // Total failure — render a consistent error state via errInline on the primary container
     const {title,sub,code}=classifyError(e);
@@ -7630,11 +7760,13 @@ async function loadFinance(){
   const margin=totalIncome>0?Math.round(netProfit/totalIncome*100):0;
   const cw=['owner','finance'].includes(currentUser?.role);
 
-  // ── Budget targets — user-defined, stored in /api/settings ───────────────
-  const revenueTarget = parseFloat(finSettings.finance_revenue_target||0);
-  const expenseBudget = parseFloat(finSettings.finance_expense_budget||0);
-  const marginTarget  = parseFloat(finSettings.finance_margin_target||20);
-  // Cache for dashboard use (no need for a second /settings fetch there)
+  // ── Budget targets — sourced from ERP active season, fallback to settings ──
+  const revenueTarget = parseFloat(budgetSummary.revenue_target||0);
+  const expenseBudget = parseFloat(budgetSummary.expense_budget||0);
+  const marginTarget  = parseFloat(budgetSummary.margin_target||20);
+  const hasErpBudget  = !!budgetSummary.has_erp_data;
+  const seasonName    = budgetSummary.season_name||null;
+  // Cache for dashboard/AI panels that don't fetch budget separately
   window._cachedMarginTarget = marginTarget;
 
   // ── Finance Module Narrative ─────────────────────────────────────────────
@@ -7681,30 +7813,64 @@ async function loadFinance(){
   // ── BUDGET TARGETS CARD ───────────────────────────────────────────────────
   const budgetEl=document.getElementById('fin-budget-targets');
   if(budgetEl){
-    const _bar=(pct,over)=>`<div style="background:var(--s4);border-radius:4px;height:6px;width:100%;margin-top:4px"><div style="width:${Math.min(100,pct)}%;height:6px;border-radius:4px;background:${over?'var(--error-txt)':'var(--gold)'};transition:width 0.6s ease"></div></div>`;
-    const _row=(label,val,target,pct,over,note)=>`<div style="display:flex;align-items:flex-start;gap:16px;padding:10px 0;border-bottom:1px solid var(--bdr)">
-      <div style="flex:1"><div style="font-size:12.5px;color:var(--text-secondary);font-weight:500">${label}</div>
-      ${target?_bar(pct,over):'<div style="font-size:11px;color:var(--text-faint);margin-top:4px">No target set</div>'}
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:14px;font-weight:600;color:${over?'var(--error-txt)':'var(--text-primary)'}">${val}</div>
-        ${target?`<div style="font-size:10.5px;color:var(--text-faint)">of $${parseFloat(target).toLocaleString()} · ${pct}%${over?' ⚠ over':''}</div>`:''}
-        ${note?`<div style="font-size:10.5px;color:var(--text-faint)">${note}</div>`:''}
-      </div>
-    </div>`;
-    const revPctRaw=revenueTarget>0?Math.round(totalIncome/revenueTarget*100):0;
-    const expPctRaw=expenseBudget>0?Math.round(totalExpense/expenseBudget*100):0;
+    const _bar=(pct,over)=>`<div style="background:var(--s4);border-radius:4px;height:5px;width:100%;margin-top:5px"><div style="width:${Math.min(100,pct)}%;height:5px;border-radius:4px;background:${over?'var(--error-txt)':'var(--gold)'};transition:width 0.7s ease"></div></div>`;
+    const _row=(label,val,target,pct,over,sub)=>`
+      <div style="padding:10px 0;border-bottom:1px solid var(--bdr)">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span style="font-size:12.5px;color:var(--text-secondary);font-weight:500">${label}</span>
+          <span style="font-size:13px;font-weight:600;color:${over?'var(--error-txt)':'var(--text-primary)'}">$${parseFloat(val).toLocaleString()}</span>
+        </div>
+        ${target?_bar(pct,over):''}
+        <div style="font-size:10.5px;color:var(--text-faint);margin-top:3px">${sub}</div>
+      </div>`;
+
+    const revPctRaw = revenueTarget>0?Math.round(totalIncome/revenueTarget*100):0;
+    const expPctRaw = expenseBudget>0?Math.round(totalExpense/expenseBudget*100):0;
+    const budgetLines = budgetSummary.budget_lines||[];
+    const revLines    = budgetSummary.revenue_lines||[];
+
+    // Category breakdown — top 4 ERP budget lines vs actual spend
+    const catRows = budgetLines.slice(0,4).map(b=>{
+      const actual = expense.filter(r=>(r.category||'').toLowerCase().includes((b.category||'').toLowerCase())).reduce((s,r)=>s+(parseFloat(r.amount)||0),0);
+      const bpct   = parseFloat(b.planned_amount)>0?Math.round(actual/parseFloat(b.planned_amount)*100):0;
+      const bover  = actual > parseFloat(b.planned_amount) && parseFloat(b.planned_amount)>0;
+      return _row(b.category, actual, parseFloat(b.planned_amount), bpct, bover,
+        parseFloat(b.planned_amount)>0
+          ? `$${actual.toLocaleString()} of $${parseFloat(b.planned_amount).toLocaleString()} budget · ${bpct}%${bover?' ⚠ over':''}`
+          : 'No budget set for this category');
+    }).join('');
+
     budgetEl.innerHTML=`
-      ${_row('Revenue Target','$'+totalIncome.toLocaleString(),revenueTarget,revPctRaw,false,null)}
-      ${_row('Expense Budget','$'+totalExpense.toLocaleString(),expenseBudget,expPctRaw,expenseBudget>0&&totalExpense>expenseBudget,null)}
+      <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-size:11.5px;color:var(--text-faint)">
+          ${hasErpBudget
+            ? `<span style="color:var(--gold);font-weight:500">● </span>Linked to ERP season: <strong>${seasonName}</strong>`
+            : `<span style="color:var(--text-faint)">○ </span>No active ERP season — using manual targets`}
+        </div>
+        <button class="btn btn-sm btn-secondary" onclick="loadPage('erp-budgets')" style="font-size:11px">
+          Manage in ERP →
+        </button>
+      </div>
+      ${_row('Revenue Target', totalIncome, revenueTarget, revPctRaw, false,
+        revenueTarget>0
+          ? `$${totalIncome.toLocaleString()} of $${revenueTarget.toLocaleString()} target · ${revPctRaw}%`
+          : 'No revenue target set — add one in ERP → Revenue Projections')}
+      ${_row('Expense Budget', totalExpense, expenseBudget, expPctRaw, expenseBudget>0&&totalExpense>expenseBudget,
+        expenseBudget>0
+          ? `$${totalExpense.toLocaleString()} of $${expenseBudget.toLocaleString()} budget · ${expPctRaw}%${totalExpense>expenseBudget?' ⚠ OVER BUDGET':''}`
+          : 'No expense budget set — add lines in ERP → Season Budget')}
+      ${catRows?`<div style="margin-top:4px;font-size:11px;color:var(--text-faint);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;padding-top:8px">Category Breakdown (from ERP)</div>${catRows}`:''}
       <div style="padding:10px 0;display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-size:12.5px;color:var(--text-secondary);font-weight:500">Profit Margin Target</div>
-          <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">Current: <strong style="color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin}%</strong> vs ${marginTarget}% target</div>
+          <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">Current <strong style="color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin}%</strong> vs ${marginTarget}% target</div>
         </div>
-        <div style="font-size:14px;font-weight:600;color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin>=marginTarget?'▲ On Target':'▼ Below Target'}</div>
+        <div style="font-size:13px;font-weight:600;color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin>=marginTarget?'▲ On Target':'▼ Below Target'}</div>
       </div>
-      ${!cw?'':''}
+      ${cw?`<div style="padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-sm btn-secondary" onclick="openMarginTargetEditor()">Set Margin Target</button>
+        <button class="btn btn-sm btn-primary" onclick="loadPage('erp-budgets')">Add Budget Line</button>
+      </div>`:''}
     `;
   }
   document.getElementById('income-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','income')">+ Add Income</button>`:'';
@@ -7901,6 +8067,8 @@ const _repState = {
 };
 
 async function loadReports(){
+  currentPage = 'reports';
+  _renderRelatedBar('reports-related', _PAGE_RELATED['reports'] || []);
   // Restore digest schedule toggle state
   try {
     const toggle = document.getElementById('digest-schedule-toggle');
@@ -7913,7 +8081,6 @@ async function loadReports(){
       if (emailInput && savedEmail) emailInput.value = savedEmail;
     }
   } catch(e) {}
-  currentPage = 'reports';
   renderReportHistory();
   // Set today as max for date inputs
   const today = new Date().toISOString().slice(0,10);
@@ -8249,63 +8416,49 @@ function _downloadHistoryReport(i){
 }
 
 // ─── FINANCE BUDGET TARGETS ────────────────────────────────────────────────────
-async function openBudgetEditor(){
-  let sett={};
-  try{ sett=await api('/settings')||{}; }catch{}
-  const rv=parseFloat(sett.finance_revenue_target||0)||'';
-  const eb=parseFloat(sett.finance_expense_budget||0)||'';
-  const mt=parseFloat(sett.finance_margin_target||20)||20;
+// Budget lines (expense categories + revenue projections) are managed in the
+// ERP module → Season Budget page. The only setting that lives purely in the
+// finance module is the profit margin target.
 
-  const html=`
-    <div class="form-group">
-      <label class="form-label">Annual Revenue Target (USD $)</label>
-      <input class="form-input" id="bt-revenue" type="number" min="0" step="100" value="${rv}" placeholder="e.g. 250000">
-      <div style="font-size:11px;color:var(--text-faint);margin-top:4px">The total income you aim to achieve this year.</div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Annual Expense Budget (USD $)</label>
-      <input class="form-input" id="bt-expense" type="number" min="0" step="100" value="${eb}" placeholder="e.g. 180000">
-      <div style="font-size:11px;color:var(--text-faint);margin-top:4px">Maximum spend allowed before triggering an over-budget alert.</div>
-    </div>
+function openMarginTargetEditor(){
+  const current = parseFloat(window._cachedMarginTarget||20);
+  modalCtx = { type:'margin_target', subtype:null, data:{}, id:null };
+  document.getElementById('modal-title').textContent = 'Set Profit Margin Target';
+  document.getElementById('modal-body').innerHTML = `
     <div class="form-group">
       <label class="form-label">Profit Margin Target (%)</label>
-      <input class="form-input" id="bt-margin" type="number" min="0" max="100" step="1" value="${mt}" placeholder="e.g. 20">
-      <div style="font-size:11px;color:var(--text-faint);margin-top:4px">Minimum acceptable profit margin. Used in insights and alerts.</div>
+      <input class="form-input" id="mt-margin" type="number" min="0" max="100" step="1" value="${current}" placeholder="e.g. 20">
+      <div style="font-size:11px;color:var(--text-faint);margin-top:6px">
+        The minimum profit margin you want to achieve.<br>
+        Revenue &amp; expense budgets are set in <strong>ERP → Season Budget</strong>.
+      </div>
     </div>`;
-
-  // Use the standard modal — set a special type so modalSave() routes to saveBudgetTargets()
-  modalCtx = { type: 'budget_targets', subtype: null, data: {}, id: null };
-  document.getElementById('modal-title').textContent = 'Set Budget & Targets';
-  document.getElementById('modal-body').innerHTML = html;
   document.getElementById('modal-del-btn').style.display = 'none';
   const overlay = document.getElementById('modal-overlay');
   overlay.classList.add('open');
   trapFocus(overlay.querySelector('.modal'));
-  document.getElementById('bt-revenue').focus();
+  document.getElementById('mt-margin').focus();
 }
 
-async function saveBudgetTargets(){
-  const rv=parseFloat(document.getElementById('bt-revenue')?.value)||0;
-  const eb=parseFloat(document.getElementById('bt-expense')?.value)||0;
-  const mt=parseFloat(document.getElementById('bt-margin')?.value)||20;
+async function saveMarginTarget(){
+  const mt = parseFloat(document.getElementById('mt-margin')?.value);
+  if(isNaN(mt)||mt<0||mt>100){ toast('Enter a valid percentage (0–100)','error'); return; }
   try{
-    await api('/settings','PUT',{
-      finance_revenue_target: rv,
-      finance_expense_budget: eb,
-      finance_margin_target:  mt,
-    });
-    toast('Budget targets saved');
+    await api('/settings','PUT',{ finance_margin_target: mt });
+    window._cachedMarginTarget = mt;
+    toast('Margin target saved');
     closeModal();
-    _invalidateCache('/finance');
-    _invalidateCache('/settings');
+    _invalidateCache('/finance/budget-summary');
     loadFinance();
-  }catch(e){
-    toast('Failed to save targets', 'error');
-  }
+  }catch(e){ toast('Failed to save','error'); }
 }
+
+// Keep openBudgetEditor as an alias that navigates to ERP budgets
+function openBudgetEditor(){ loadPage('erp-budgets'); }
 
 async function loadCompliance(){
   currentPage='compliance';
+  _renderRelatedBar('compliance-related', _PAGE_RELATED['compliance'] || []);
   document.getElementById('compliance-stats').innerHTML=`<div class="skel-card"></div>`.repeat(4);
   document.getElementById('compliance-list').innerHTML=`<div class="skel skel-row" style="margin-bottom:8px"></div>`.repeat(3);
   let rows;
@@ -8638,8 +8791,7 @@ function closeModalOutside(e){if(e.target.id==='modal-overlay')closeModal();}
 
 async function modalSave(){
   const{type,subtype,id}=modalCtx;
-  // Budget targets are handled by their own save function
-  if(type==='budget_targets'){ await saveBudgetTargets(); return; }
+  if(type==='budget_targets'||type==='margin_target'){ await saveMarginTarget(); return; }
   const g=s=>document.getElementById(s)?.value;
   let body,ep,method;
   if(type==='asset'){body={description:g('f-desc'),category:g('f-cat'),location:g('f-loc'),status:g('f-status'),last_service:g('f-service'),value:parseFloat(g('f-value'))||0,notes:g('f-notes')};if(!id)body.asset_id=g('f-assetid');ep=id?`/assets/${id}`:'/assets';method=id?'PUT':'POST';}
@@ -9354,6 +9506,8 @@ function erpContent(html){
   }
   erp.style.display = 'block';
   erp.innerHTML = html;
+  // Auto-inject related bar for ERP/ENT pages
+  _injectErpRelatedBar(currentPage);
   // Ensure #content scrolls to top after new content is injected
   const contentEl = document.getElementById('content');
   if(contentEl){ contentEl.style.scrollBehavior='auto'; contentEl.scrollTop=0; contentEl.style.scrollBehavior=''; }
@@ -9868,6 +10022,9 @@ async function loadErpBudgets(){
   <div><h1>Budgets &amp; Variance</h1><p class="page-sub">${activeSeason?.name||'All Seasons'}</p></div>
   <button class="erp-btn primary" onclick="openAddBudgetForm(${seasonId||'null'})">+ Add Budget Line</button>
 </div>
+<div style="padding:8px 0 16px;font-size:11.5px;color:var(--text-faint)">
+  <span style="color:var(--gold)">●</span> Budget lines set here feed directly into the Finance module's Budget &amp; Targets card. Actual spend is pulled live from finance transactions.
+</div>
 
 <div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
   <div class="kpi-card">
@@ -9949,6 +10106,7 @@ async function openAddBudgetForm(seasonId){
       if(!vals['bg-amt'] || parseFloat(vals['bg-amt']) <= 0){ erpModalError('Please enter an amount'); return false; }
       await erpFetch('/erp/budgets','POST',{season_id:seasonId, category:vals['bg-cat'], planned_amount:parseFloat(vals['bg-amt'])});
       toast('Budget line added');
+      _invalidateCache('/finance/budget-summary');
       loadErpBudgets();
       return true;
     }
