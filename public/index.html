@@ -1136,31 +1136,6 @@ body {
 }
 
 /* ERP MODE STRIP */
-.erp-mode-strip {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  background: rgba(184,146,74,0.08);
-  border-bottom: 1px solid rgba(184,146,74,0.14);
-  font-size: 11px;
-  color: #d4aa60;
-  letter-spacing: 0.06em;
-  flex-shrink: 0;
-}
-.erp-mode-strip.active { display: flex; }
-.erp-mode-back {
-  margin-left: auto;
-  font-size: 10.5px;
-  color: #a08040;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-family: var(--ff-ui);
-  transition: color 0.15s;
-  padding: 0;
-}
-.erp-mode-back:hover { color: #d4aa60; }
 
 /* COLLAPSED STATE — hide text, show icons only */
 #sidebar.collapsed .sb-brand-text,
@@ -2232,25 +2207,6 @@ body {
 .list-sub  { font-size: 10.5px; color: var(--text-muted); margin-top: 2px; }
 .list-right{ margin-left: auto; flex-shrink: 0; }
 
-/* ─── WEATHER ROW ─────────────────────────────────────────────────────────── */
-.weather-row {
-  display: flex;
-  gap: 4px;
-  justify-content: space-between;
-}
-.weather-day {
-  flex: 1;
-  text-align: center;
-  padding: 10px 4px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--bdr2);
-  transition: all var(--tr);
-}
-.weather-day:hover { background: rgba(255,255,255,0.04); border-color: var(--bdr); }
-.weather-icon  { font-size: 16px; margin-bottom: 4px; }
-.weather-temp  { font-family: var(--ff-mono); font-size: 13px; color: var(--text-primary); font-weight: 400; }
-.weather-label { font-size: 9px; color: var(--text-muted); margin-top: 3px; letter-spacing: 0.10em; text-transform: uppercase; }
 
 /* ─── OPERATIONAL HEALTH ─────────────────────────────────────────────────── */
 .op-item {
@@ -2370,8 +2326,6 @@ body {
 .ai-insight-type.recommendation .ai-insight-dot { background: var(--info-txt); }
 .ai-insight-type.alert { color: var(--error-txt); }
 .ai-insight-type.alert .ai-insight-dot { background: var(--error-txt); }
-.ai-insight-type.weather { color: var(--info-txt); }
-.ai-insight-type.weather .ai-insight-dot { background: var(--info-lt); }
 
 .ai-insight-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
 .ai-insight-text strong { color: var(--text-primary); font-weight: 500; }
@@ -3083,11 +3037,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
   .modal-actions .btn { width: 100%; justify-content: center; }
 
   /* Misc */
-  .weather-row { gap: 4px; }
-  .weather-day { padding: 8px 3px; }
-  .weather-temp { font-size: 12px; }
-  .weather-label { font-size: 8.5px; }
-  .weather-icon { font-size: 15px; }
+
   .report-actions { flex-direction: column; gap: 4px; }
   .comp-right { gap: 4px; }
   #toast-container { bottom: 16px; right: 12px; left: 12px; }
@@ -3201,12 +3151,6 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
   /* Inventory */
   .inv-header { font-size: 11.5px; }
 
-  /* Weather */
-  .weather-row { gap: 3px; }
-  .weather-day { padding: 8px 2px; border-radius: 6px; }
-  .weather-temp { font-size: 11.5px; }
-  .weather-label { font-size: 8px; }
-  .weather-icon { font-size: 14px; }
 
   /* Topbar */
   .topbar-badge { display: none; }
@@ -3483,15 +3427,7 @@ body.light-mode .progress-fill.moss { background: rgba(44,100,40,0.55); }
 body.light-mode .progress-fill.info-fill { background: rgba(26,72,96,0.55); }
 body.light-mode .progress-fill.low { background: rgba(138,32,32,0.55); }
 
-/* Weather */
-body.light-mode .weather-day {
-  background: var(--s2);
-  border-color: var(--bdr);
-}
-body.light-mode .weather-day:hover {
-  background: var(--s3);
-  border-color: var(--bdr-hv);
-}
+
 
 /* Modal */
 body.light-mode .modal { background: var(--s1); border-color: var(--bdr); }
@@ -3641,915 +3577,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero .hero-subtext,
 .auth-hero .hero-features,
 .auth-hero .hero-ctas { position: relative; z-index: 3; }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   ENTERPRISE NAV SYSTEM v2 — Mission control navigation architecture
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── SIDEBAR BASE — premium dark intelligence surface ───────────────────── */
-#sidebar {
-  background: var(--s1);
-  border-right: 1px solid rgba(255,255,255,0.045);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-/* Subtle vertical accent line */
-#sidebar::before {
-  content: '';
-  position: absolute;
-  top: 0; right: 0; bottom: 0;
-  width: 1px;
-  background: linear-gradient(180deg,
-    transparent 0%,
-    rgba(184,146,74,0.18) 20%,
-    rgba(184,146,74,0.08) 60%,
-    transparent 100%);
-  pointer-events: none; z-index: 1;
-}
-
-/* ── LOGO ZONE ──────────────────────────────────────────────────────────── */
-.sidebar-logo {
-  padding: 20px 18px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  display: flex; align-items: center; gap: 10px;
-  flex-shrink: 0;
-}
-.logo-mark {
-  font-family: var(--ff-display);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--gold-lt);
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  display: flex; align-items: center; gap: 8px;
-}
-.logo-mark::before {
-  content: '';
-  width: 5px; height: 5px;
-  background: var(--gold);
-  border-radius: 1px;
-  transform: rotate(45deg);
-  flex-shrink: 0; opacity: 0.9;
-}
-.logo-sub {
-  font-size: 8px;
-  color: var(--text-faint);
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  margin-top: 5px;
-  padding-left: 0;
-  font-weight: 500;
-}
-.sidebar-pin-btn {
-  margin-left: auto; flex-shrink: 0;
-  font-family: 'Material Symbols Outlined'; font-size: 14px;
-  color: var(--text-faint); background: none; border: none; cursor: pointer;
-  padding: 4px; border-radius: 5px; transition: all var(--tr);
-  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-}
-.sidebar-pin-btn:hover { color: var(--text-secondary); background: rgba(255,255,255,0.05); }
-
-/* ── SIDEBAR SEARCH ─────────────────────────────────────────────────────── */
-.sidebar-search {
-  padding: 10px 14px 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  flex-shrink: 0;
-}
-.sidebar-search-inner {
-  display: flex; align-items: center; gap: 9px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 8px;
-  padding: 8px 12px; cursor: pointer;
-  transition: all var(--tr);
-}
-.sidebar-search-inner:hover {
-  border-color: rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
-}
-.sidebar-search-icon {
-  font-family: 'Material Symbols Outlined'; font-size: 13px;
-  color: var(--text-faint); flex-shrink: 0; font-style: normal; line-height: 1;
-  letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-.sidebar-search-text {
-  font-size: 11px; color: var(--text-faint); flex: 1; letter-spacing: 0.03em;
-}
-.sidebar-search-shortcut {
-  font-family: var(--ff-mono); font-size: 8.5px; color: var(--text-faint);
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 4px; padding: 2px 6px; letter-spacing: 0.05em;
-}
-
-/* ── NAV SECTION LABEL (standalone, outside groups) ─────────────────────── */
-.nav-section-label {
-  font-size: 7.5px;
-  letter-spacing: 0.30em;
-  text-transform: uppercase;
-  color: var(--text-faint);
-  font-weight: 700;
-  display: block;
-  line-height: 1;
-  opacity: 0.65;
-}
-
-/* ── NAV GROUP CONTAINER ────────────────────────────────────────────────── */
-.nav-group {
-  overflow: hidden;
-  position: relative;
-}
-
-/* Group toggle — the clickable section header */
-.nav-group-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 18px 5px 20px;
-  cursor: pointer;
-  transition: opacity var(--tr);
-  background: none;
-  border: none;
-  width: 100%;
-  font-family: var(--ff-ui);
-}
-.nav-group-toggle:hover { opacity: 0.8; }
-.nav-group-toggle:hover .nav-section-label { opacity: 0.9; }
-.nav-group-toggle .nav-section-label { pointer-events: none; }
-
-.nav-group-chevron {
-  font-family: 'Material Symbols Outlined';
-  font-size: 13px;
-  color: var(--text-faint);
-  transition: transform 0.25s cubic-bezier(0.4,0,0.2,1), color var(--tr);
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-  opacity: 0.5;
-}
-.nav-group.collapsed .nav-group-chevron { transform: rotate(-90deg); }
-.nav-group-toggle:hover .nav-group-chevron { color: var(--text-muted); opacity: 0.8; }
-
-/* Group body — animated collapse */
-.nav-group-body {
-  overflow: hidden;
-  max-height: 600px;
-  transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.25s ease;
-  opacity: 1;
-}
-.nav-group.collapsed .nav-group-body { max-height: 0; opacity: 0; }
-
-/* ── PRIMARY NAV ITEM ───────────────────────────────────────────────────── */
-.nav-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px 8px 20px;
-  font-size: 12px;
-  font-weight: 300;
-  color: var(--text-muted);
-  cursor: pointer;
-  border-left: 2px solid transparent;
-  transition: all 0.16s ease;
-  user-select: none;
-  letter-spacing: 0.02em;
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  position: relative;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.nav-item::after {
-  content: '';
-  position: absolute;
-  inset: 0; right: auto;
-  width: 0;
-  background: linear-gradient(90deg, rgba(184,146,74,0.08), transparent);
-  transition: width 0.2s ease;
-  pointer-events: none;
-}
-
-.nav-item:hover {
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.02);
-  border-left-color: rgba(255,255,255,0.07);
-}
-.nav-item:hover::after { width: 100%; }
-
-/* Premium active state — gold glow bar + background wash */
-.nav-item.active {
-  color: var(--gold-lt);
-  border-left-color: var(--gold);
-  background: linear-gradient(90deg, rgba(184,146,74,0.10) 0%, rgba(184,146,74,0.03) 60%, transparent 100%);
-  font-weight: 400;
-}
-.nav-item.active::after { width: 100%; }
-.nav-item.active .nav-icon {
-  opacity: 1;
-  color: var(--gold);
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-}
-.nav-item.active .nav-label {
-  letter-spacing: 0.025em;
-}
-
-/* ── NAV ICON ───────────────────────────────────────────────────────────── */
-.nav-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 15px;
-  width: 18px; min-width: 18px;
-  text-align: center;
-  flex-shrink: 0;
-  opacity: 0.45;
-  transition: all 0.16s ease;
-  font-weight: 300;
-  font-style: normal;
-  line-height: 1; letter-spacing: 0; text-transform: none;
-  white-space: nowrap; direction: ltr;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-}
-.nav-item:hover .nav-icon { opacity: 0.7; }
-
-/* ── SUBNAV CHEVRON ON PARENT ITEMS ─────────────────────────────────────── */
-.nav-item.has-subnav .nav-chevron {
-  font-family: 'Material Symbols Outlined';
-  font-size: 12px; color: var(--text-faint); margin-left: auto; flex-shrink: 0;
-  transition: transform 0.22s ease, color var(--tr), opacity var(--tr);
-  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-  opacity: 0.4;
-}
-.nav-item.has-subnav:hover .nav-chevron { opacity: 0.7; color: var(--text-muted); }
-.nav-item.has-subnav.subnav-open .nav-chevron {
-  transform: rotate(180deg);
-  color: var(--gold); opacity: 0.8;
-}
-
-/* ── CONTEXTUAL SUBNAV PANEL ────────────────────────────────────────────── */
-.nav-subnav {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.30s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease;
-  opacity: 0;
-}
-.nav-subnav.open { max-height: 500px; opacity: 1; }
-
-/* Sub-item track line */
-.nav-subnav-inner {
-  margin: 0 0 4px 36px;
-  border-left: 1px solid rgba(255,255,255,0.06);
-  padding: 2px 0;
-}
-
-.nav-sub-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 16px 6px 12px;
-  font-size: 11.5px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  border-left: 2px solid transparent;
-  margin-left: -1px;
-  letter-spacing: 0.01em;
-  white-space: nowrap;
-  overflow: hidden;
-  font-weight: 300;
-}
-.nav-sub-item:hover {
-  color: var(--text-secondary);
-  background: rgba(255,255,255,0.02);
-  border-left-color: rgba(255,255,255,0.08);
-}
-.nav-sub-item.active {
-  color: var(--gold-lt);
-  border-left-color: var(--gold);
-  background: rgba(184,146,74,0.07);
-  font-weight: 400;
-}
-
-.nav-sub-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 12px; width: 13px; min-width: 13px; text-align: center; flex-shrink: 0;
-  opacity: 0.45; transition: opacity 0.15s ease;
-  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-.nav-sub-item:hover .nav-sub-icon { opacity: 0.7; }
-.nav-sub-item.active .nav-sub-icon {
-  opacity: 1; color: var(--gold);
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-}
-
-/* ── SIDEBAR FOOTER ─────────────────────────────────────────────────────── */
-.sidebar-footer {
-  padding: 14px 16px;
-  border-top: 1px solid rgba(255,255,255,0.045);
-  margin-top: auto;
-  flex-shrink: 0;
-  background: linear-gradient(0deg, rgba(0,0,0,0.15) 0%, transparent 100%);
-}
-.sf-user {
-  display: flex; align-items: center; gap: 10px;
-  margin-bottom: 10px; min-width: 0;
-  padding: 8px 10px; border-radius: 8px;
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(255,255,255,0.04);
-  cursor: pointer; transition: background var(--tr);
-}
-.sf-user:hover { background: rgba(255,255,255,0.04); }
-.sf-avatar {
-  width: 28px; height: 28px; border-radius: 7px;
-  background: linear-gradient(135deg, rgba(184,146,74,0.25), rgba(184,146,74,0.08));
-  border: 1px solid var(--gold-border);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 600; color: var(--gold-lt);
-  flex-shrink: 0; letter-spacing: 0.04em;
-}
-.sf-text { min-width: 0; flex: 1; }
-.sf-name {
-  font-size: 12px; font-weight: 400; color: var(--text-secondary);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.sf-role {
-  font-size: 8.5px; color: var(--gold); text-transform: uppercase;
-  letter-spacing: 0.18em; margin-top: 1px; white-space: nowrap;
-}
-.logout-btn {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 11px; color: var(--text-faint); white-space: nowrap;
-  background: none; border: none; font-family: var(--ff-ui);
-  padding: 6px 10px; cursor: pointer; border-radius: 6px;
-  transition: all var(--tr); width: 100%; letter-spacing: 0.02em;
-}
-.logout-btn:hover { color: var(--error-txt); background: var(--error-bg); }
-
-/* ── ACTIVE STATE PULSE DOT ─────────────────────────────────────────────── */
-.nav-item.active .nav-icon::before {
-  content: '';
-  position: absolute;
-  left: 6px; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 3px;
-  background: var(--gold);
-  border-radius: 50%;
-  box-shadow: 0 0 6px var(--gold);
-}
-
-/* ── LOCKED NAV ITEMS ───────────────────────────────────────────────────── */
-.nav-item.nav-locked {
-  opacity: 0.32; cursor: not-allowed; position: relative;
-}
-.nav-item.nav-locked:hover { opacity: 0.45; background: transparent; border-left-color: transparent; }
-.nav-item.nav-locked::after {
-  content: attr(data-lock-tip);
-  position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%);
-  background: var(--s3); border: 1px solid var(--bdr-hv); border-radius: 7px;
-  padding: 7px 12px; font-size: 11px; color: var(--text-secondary);
-  white-space: normal; pointer-events: none; opacity: 0;
-  transition: opacity 0.15s ease; z-index: 200; box-shadow: var(--sh-md); max-width: 220px;
-  width: auto; height: auto; background-image: none;
-}
-.nav-item.nav-locked:hover::after { opacity: 1; }
-
-/* ── COMMAND PALETTE ────────────────────────────────────────────────────── */
-#cmd-palette-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.72);
-  z-index: 9000;
-  display: none; align-items: flex-start; justify-content: center;
-  padding-top: 14vh; backdrop-filter: blur(12px);
-}
-#cmd-palette-overlay.open { display: flex; animation: scaleIn 0.18s var(--tr-spr) both; }
-#cmd-palette {
-  background: var(--s2);
-  border: 1px solid rgba(255,255,255,0.09);
-  border-radius: 16px;
-  width: min(580px, 94vw);
-  box-shadow:
-    0 48px 96px rgba(0,0,0,0.75),
-    0 0 0 1px rgba(184,146,74,0.06),
-    inset 0 1px 0 rgba(255,255,255,0.06);
-  overflow: hidden;
-}
-.cmd-header {
-  display: flex; align-items: center; gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.055);
-  background: rgba(255,255,255,0.015);
-}
-.cmd-search-icon {
-  font-family: 'Material Symbols Outlined'; font-size: 19px;
-  color: var(--text-muted); flex-shrink: 0; font-style: normal; line-height: 1;
-  letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-#cmd-input {
-  flex: 1; background: none; border: none; outline: none;
-  color: var(--text-primary); font-family: var(--ff-ui);
-  font-size: 15px; font-weight: 300; letter-spacing: 0.015em;
-  caret-color: var(--gold);
-}
-#cmd-input::placeholder { color: var(--text-faint); }
-.cmd-kbd {
-  font-family: var(--ff-mono); font-size: 10px; color: var(--text-faint);
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 5px; padding: 3px 7px; flex-shrink: 0;
-}
-#cmd-results { max-height: 400px; overflow-y: auto; padding: 8px 0; }
-#cmd-results::-webkit-scrollbar { width: 4px; }
-#cmd-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-.cmd-section-label {
-  font-size: 8.5px; text-transform: uppercase; letter-spacing: 0.26em;
-  color: var(--text-faint); padding: 12px 20px 5px; font-weight: 700;
-  opacity: 0.65;
-}
-.cmd-item {
-  display: flex; align-items: center; gap: 13px;
-  padding: 10px 20px; cursor: pointer;
-  transition: background 0.12s ease;
-}
-.cmd-item:hover { background: rgba(255,255,255,0.035); }
-.cmd-item.selected { background: rgba(184,146,74,0.09); }
-.cmd-item-icon {
-  font-family: 'Material Symbols Outlined'; font-size: 16px;
-  color: var(--text-muted); width: 20px; text-align: center; flex-shrink: 0;
-  font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-.cmd-item.selected .cmd-item-icon { color: var(--gold); font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; }
-.cmd-item-label { font-size: 13px; color: var(--text-primary); flex: 1; letter-spacing: 0.01em; }
-.cmd-item-group {
-  font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase;
-  background: rgba(255,255,255,0.04); padding: 2px 7px; border-radius: 4px;
-}
-.cmd-footer {
-  padding: 10px 20px; border-top: 1px solid rgba(255,255,255,0.05);
-  display: flex; gap: 18px; align-items: center;
-  background: rgba(0,0,0,0.15);
-}
-.cmd-hint { font-size: 10px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
-
-/* ── QUICK CREATE FAB ───────────────────────────────────────────────────── */
-#fab-btn {
-  position: fixed; bottom: 28px; right: 28px; z-index: 200;
-  width: 46px; height: 46px; border-radius: 50%;
-  background: linear-gradient(145deg, var(--gold-lt), var(--gold-dk));
-  color: #0d0e10; border: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow:
-    0 4px 20px rgba(184,146,74,0.50),
-    0 2px 6px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.2);
-  transition: transform 0.22s var(--tr-spr), box-shadow 0.22s ease;
-  font-family: 'Material Symbols Outlined';
-  font-size: 20px; font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-}
-#fab-btn:hover {
-  transform: scale(1.08) rotate(45deg);
-  box-shadow: 0 8px 32px rgba(184,146,74,0.6), 0 4px 10px rgba(0,0,0,0.4);
-}
-#fab-menu {
-  position: fixed; bottom: 82px; right: 28px; z-index: 200;
-  background: var(--s2); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px; padding: 6px 0;
-  box-shadow: 0 24px 56px rgba(0,0,0,0.65), 0 0 0 1px rgba(184,146,74,0.06);
-  min-width: 210px; display: none; animation: fadeUp 0.18s ease;
-}
-#fab-menu.open { display: block; }
-.fab-item {
-  display: flex; align-items: center; gap: 11px;
-  padding: 10px 18px; cursor: pointer; font-size: 12.5px;
-  color: var(--text-secondary); transition: all 0.13s ease; font-weight: 300;
-}
-.fab-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
-.fab-item-icon {
-  font-family: 'Material Symbols Outlined'; font-size: 15px;
-  color: var(--gold); font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-  -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
-  width: 16px; text-align: center;
-}
-
-/* ── Locked nav items — dimmed, show tooltip on hover ──────────────────── */
-.nav-item.nav-locked {
-  opacity: 0.38;
-  cursor: not-allowed;
-  position: relative;
-}
-.nav-item.nav-locked:hover { opacity: 0.5; background: transparent; }
-.nav-item.nav-locked::after {
-  content: attr(data-lock-tip);
-  position: absolute;
-  left: calc(100% + 10px);
-  top: 50%;
-  transform: translateY(-50%);
-  background: var(--s3);
-  border: 1px solid var(--bdr-hv);
-  border-radius: 7px;
-  padding: 7px 12px;
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-  z-index: 200;
-  box-shadow: var(--sh-md);
-  max-width: 220px;
-  white-space: normal;
-}
-.nav-item.nav-locked:hover::after { opacity: 1; }
-
-/* ── "Unlock" progress pill at bottom of advanced section ──────────────── */
-.nav-unlock-hint {
-  margin: 8px 20px 4px;
-  padding: 10px 14px;
-  background: rgba(184,146,74,0.05);
-  border: 1px solid var(--gold-border);
-  border-radius: 8px;
-  font-size: 10.5px;
-  color: var(--text-muted);
-  line-height: 1.55;
-  letter-spacing: 0.01em;
-}
-.nav-unlock-hint strong { color: var(--gold); font-weight: 500; }
-.nav-unlock-bar {
-  height: 2px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 2px;
-  margin-top: 8px;
-  overflow: hidden;
-}
-.nav-unlock-bar-fill {
-  height: 100%;
-  background: var(--gold);
-  border-radius: 2px;
-  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* ─── FEATURE CARD ICON — Material Symbol based ──────────────────────────── */
-.lp-feat-icon-wrap {
-  width: 42px;
-  height: 42px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 16px;
-  flex-shrink: 0;
-}
-.lp-feat-icon-wrap .ms-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 20px;
-  font-style: normal;
-  line-height: 1;
-  letter-spacing: 0;
-  text-transform: none;
-  -webkit-font-feature-settings: 'liga';
-  font-feature-settings: 'liga';
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;
-}
-
-
-/* ─── HERO BACKGROUND IMAGE ──────────────────────────────────────────────── */
-.lp-hero-section {
-  position: relative;
-  overflow: hidden;
-  background: var(--bg);
-}
-.lp-hero-bg {
-  position: absolute;
-  inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1800&q=80&fit=crop&auto=format');
-  background-size: cover;
-  background-position: center 40%;
-  opacity: 0.18;
-  transform: scale(1.04);
-  transition: opacity 1s ease;
-  filter: saturate(0.7);
-}
-.lp-hero-bg-overlay {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(13,14,16,0.97) 0%, rgba(13,14,16,0.75) 55%, rgba(13,14,16,0.45) 100%),
-    linear-gradient(180deg, rgba(13,14,16,0.4) 0%, rgba(13,14,16,0) 30%, rgba(13,14,16,0) 60%, rgba(13,14,16,0.9) 100%);
-}
-.lp-hero-section .lp-hero { position: relative; z-index: 1; }
-
-/* ─── FEATURES MIDPOINT IMAGE STRIP ──────────────────────────────────────── */
-.lp-field-image-strip {
-  width: 100%;
-  height: 420px;
-  position: relative;
-  overflow: hidden;
-  margin: 0;
-}
-.lp-field-image-strip img {
-  width: 100%; height: 100%;
-  object-fit: cover; object-position: center 35%;
-  display: block;
-  filter: brightness(0.55) saturate(0.8);
-}
-.lp-field-image-strip-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, var(--bg) 0%, transparent 18%, transparent 78%, var(--bg) 100%);
-}
-.lp-field-caption {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  padding: 32px 64px;
-  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
-}
-.lp-field-caption-text {
-  font-family: var(--ff-display); font-size: 26px; font-weight: 600;
-  color: var(--text-primary); line-height: 1.25; max-width: 480px; letter-spacing: -0.01em;
-}
-.lp-field-caption-text span { color: var(--gold-lt); }
-.lp-field-caption-tag {
-  font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em;
-  color: var(--gold); opacity: 0.75; white-space: nowrap; font-weight: 500;
-}
-
-/* ─── PROOF SECTION IMAGE BACKGROUND ─────────────────────────────────────── */
-.lp-proof { position: relative; overflow: hidden; }
-.lp-proof-bg {
-  position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=1800&q=80&fit=crop&auto=format');
-  background-size: cover; background-position: center 30%;
-  opacity: 0.08; filter: saturate(0.5) brightness(1.1);
-}
-.lp-proof-inner { position: relative; z-index: 1; }
-
-/* ─── CTA SECTION IMAGE BACKGROUND ───────────────────────────────────────── */
-.lp-cta-section { position: relative; overflow: hidden; }
-.lp-cta-bg {
-  position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1800&q=80&fit=crop&auto=format');
-  background-size: cover; background-position: center 60%;
-  opacity: 0.12; filter: saturate(0.7);
-}
-.lp-cta-bg-overlay {
-  position: absolute; inset: 0;
-  background: radial-gradient(ellipse at center, transparent 20%, var(--bg) 80%);
-}
-.lp-cta-section > *:not(.lp-cta-bg):not(.lp-cta-bg-overlay) { position: relative; z-index: 1; }
-
-/* ─── STATS BAND GOLD RULES ───────────────────────────────────────────────── */
-.lp-stats-band { position: relative; overflow: hidden; }
-.lp-stats-band::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(184,146,74,0.3), transparent);
-}
-.lp-stats-band::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(184,146,74,0.3), transparent);
-}
-
-/* ─── FEATURE IMAGE PAIR ──────────────────────────────────────────────────── */
-.lp-feat-image-row {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 0; border-radius: 14px; overflow: hidden;
-  border: 1px solid var(--bdr); margin: 40px 0 0;
-}
-.lp-feat-image-side { height: 320px; overflow: hidden; position: relative; }
-.lp-feat-image-side img {
-  width: 100%; height: 100%; object-fit: cover; object-position: center;
-  filter: brightness(0.6) saturate(0.75);
-  transition: transform 0.7s ease, filter 0.4s ease;
-}
-.lp-feat-image-side:hover img { transform: scale(1.04); filter: brightness(0.7) saturate(0.85); }
-.lp-feat-image-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(13,14,16,0.7) 0%, rgba(13,14,16,0.2) 60%, rgba(13,14,16,0.5) 100%);
-  display: flex; flex-direction: column; justify-content: flex-end; padding: 28px 30px;
-}
-.lp-feat-image-tag {
-  font-size: 9px; text-transform: uppercase; letter-spacing: 0.24em;
-  color: var(--gold); font-weight: 500; margin-bottom: 8px; opacity: 0.85;
-}
-.lp-feat-image-title {
-  font-family: var(--ff-display); font-size: 22px; font-weight: 600;
-  color: var(--text-primary); line-height: 1.2; margin-bottom: 6px;
-}
-.lp-feat-image-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.6; max-width: 280px; }
-
-/* ─── LANDING IMAGE RESPONSIVE ────────────────────────────────────────────── */
-@media (max-width: 900px) {
-  .lp-field-image-strip { height: 280px; }
-  .lp-field-caption { padding: 20px 24px; flex-direction: column; align-items: flex-start; gap: 8px; }
-  .lp-field-caption-text { font-size: 20px; }
-  .lp-feat-image-row { grid-template-columns: 1fr; }
-  .lp-feat-image-side { height: 220px; }
-  .lp-hero-bg { opacity: 0.12; }
-}
-@media (max-width: 600px) {
-  .lp-field-image-strip { height: 220px; }
-  .lp-field-caption-text { font-size: 17px; }
-  .lp-hero-bg { opacity: 0.09; }
-}
-
-
-/* ─── ALERT FEED ──────────────────────────────────────────────────────────── */
-.alert-feed {
-  margin-bottom: 20px;
-}
-.alert-feed-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-.alert-feed-title {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.alert-feed-count {
-  background: var(--error-bg);
-  border: 1px solid var(--error-bdr);
-  color: var(--error-txt);
-  font-size: 10px;
-  font-weight: 600;
-  padding: 1px 7px;
-  border-radius: 5px;
-  letter-spacing: 0.04em;
-}
-.alert-feed-count.warn { background: var(--warn-bg); border-color: var(--warn-bdr); color: var(--warn-txt); }
-.alert-feed-count.clear { background: var(--success-bg); border-color: var(--success-bdr); color: var(--success-txt); }
-.alert-feed-dismiss { font-size: 11px; color: var(--text-faint); cursor: pointer; transition: color var(--tr); background: none; border: none; font-family: var(--ff-ui); }
-.alert-feed-dismiss:hover { color: var(--text-muted); }
-
-.af-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid;
-  margin-bottom: 7px;
-  transition: all var(--tr);
-  cursor: pointer;
-  position: relative;
-  border-left-width: 3px;
-}
-.af-item:hover { transform: translateX(2px); }
-.af-item:last-child { margin-bottom: 0; }
-
-.af-item.af-critical { background: var(--error-bg); border-color: var(--error-bdr); }
-.af-item.af-warning  { background: var(--warn-bg);  border-color: var(--warn-bdr); }
-.af-item.af-info     { background: var(--info-bg);  border-color: var(--info-bdr); }
-.af-item.af-ok       { background: var(--success-bg); border-color: var(--success-bdr); }
-
-.af-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 18px;
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-  font-style: normal; line-height: 1;
-  letter-spacing: normal; text-transform: none;
-  flex-shrink: 0; margin-top: 1px;
-}
-.af-item.af-critical .af-icon { color: var(--error-txt); }
-.af-item.af-warning  .af-icon { color: var(--warn-txt); }
-.af-item.af-info     .af-icon { color: var(--info-txt); }
-.af-item.af-ok       .af-icon { color: var(--success-txt); }
-
-.af-body { flex: 1; min-width: 0; }
-.af-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 3px; }
-.af-item.af-critical .af-label { color: var(--error-txt); }
-.af-item.af-warning  .af-label { color: var(--warn-txt); }
-.af-item.af-info     .af-label { color: var(--info-txt); }
-.af-item.af-ok       .af-label { color: var(--success-txt); }
-
-.af-msg  { font-size: 12.5px; color: var(--text-secondary); line-height: 1.5; }
-.af-msg strong { color: var(--text-primary); font-weight: 500; }
-.af-action {
-  font-size: 10.5px;
-  font-weight: 500;
-  color: var(--gold);
-  margin-top: 5px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  transition: color var(--tr);
-}
-.af-action:hover { color: var(--gold-lt); }
-.af-arrow { font-size: 12px; }
-
-.af-all-clear {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--success-bg);
-  border: 1px solid var(--success-bdr);
-  border-left: 3px solid var(--success-bdr);
-  border-radius: var(--radius-sm);
-  font-size: 12.5px;
-  color: var(--success-txt);
-}
-.af-all-clear .af-icon { color: var(--success-txt); }
-
-
-/* ─── ERP MODE TOGGLE ─────────────────────────────────────────────────────── */
-#erp-mode-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--s2);
-  border: 1px solid var(--bdr);
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-family: var(--ff-ui);
-  font-size: 10px;
-  font-weight: 500;
-  padding: 5px 11px;
-  cursor: pointer;
-  transition: all var(--tr);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-#erp-mode-btn:hover {
-  border-color: var(--gold-border);
-  color: var(--gold-lt);
-  background: var(--gold-dim);
-}
-#erp-mode-btn.erp-active {
-  background: var(--gold-dim);
-  border-color: var(--gold-border);
-  color: var(--gold-lt);
-}
-#erp-mode-btn .erp-btn-icon {
-  font-family: 'Material Symbols Outlined';
-  font-size: 14px;
-  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
-  font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none;
-  display: inline-block; vertical-align: middle;
-}
-
-/* ERP sidebar overlay — shown when ERP mode is active */
-#erp-sidebar-nav {
-  display: none;
-  flex-direction: column;
-  animation: navSlide 0.2s ease both;
-}
-#app.erp-mode #erp-sidebar-nav { display: flex; }
-#app.erp-mode #main-sidebar-nav { display: none; }
-
-/* ERP/Enterprise dynamic page container */
-.erp-page-container {
-  padding: 0;
-  min-width: 0;
-  width: 100%;
-}
-.erp-mode-strip {
-  display: none;
-  padding: 8px 24px;
-  background: linear-gradient(90deg, rgba(184,146,74,0.08), transparent);
-  border-bottom: 1px solid var(--gold-border);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--gold);
-  align-items: center;
-  gap: 8px;
-}
-#app.erp-mode #erp-mode-strip { display: flex; }
-#app.erp-mode .erp-mode-strip { display: flex; }
-.erp-mode-back {
-  margin-left: auto;
-  cursor: pointer;
-  font-size: 10px;
-  color: var(--text-muted);
-  transition: color var(--tr);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  font-family: var(--ff-ui);
-}
-.erp-mode-back:hover { color: var(--text-secondary); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    LAYOUT & VISUAL FIX PATCH
@@ -5242,9 +4269,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
               <div class="bar-chart" id="rev-chart"></div>
             </div>
           </div>
-          <!-- Right 40%: Weather + Compliance + AI Insight -->
+          <!-- Right 40%: Compliance + AI Insight -->
           <div class="dash-split-right">
-            <div class="card"><div class="card-title" style="display:flex;align-items:center;justify-content:space-between">7-Day Forecast</div><div class="weather-row" id="weather-row"></div></div>
             <div class="card" id="compliance-countdown-card">
               <div class="card-title">Compliance Countdown</div>
               <div id="dash-compliance-countdown"><div class="skel skel-row"></div></div>
@@ -5871,7 +4897,7 @@ function initNavGroups() {
   });
 
   // Track module visits
-  document.querySelectorAll('.nav-item[data-page],.sb-item[data-page]').forEach(item => {
+  document.querySelectorAll('.sb-item[data-page]').forEach(item => {
     item.addEventListener('click', () => {
       const page = item.dataset.page;
       if (['crops','livestock','finance','workers','assets','inventory'].includes(page)) {
@@ -6042,8 +5068,7 @@ function toggleFabMenu() {
 function fabAction(page) {
   document.getElementById('fab-menu')?.classList.remove('open');
   _fabOpen = false;
-  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
-  if (navItem) navItem.click();
+  navigateTo(page);
   // Trigger add button if present
   setTimeout(() => {
     const addBtn = document.querySelector('#page-' + page + ' .btn.primary, #page-' + page + ' [onclick*="openModal"]');
@@ -6084,24 +5109,7 @@ function toggleErpMode(forceOn) {
   }
 }
 
-// Auto-enter ERP mode if an ERP page is navigated to directly
-function checkErpModeForPage(pg) {
-  const isErpPage = pg.startsWith('erp-');
-  if (isErpPage && !_erpModeActive) {
-    toggleErpMode(true);
-    // Re-navigate since toggleErpMode navigated to erp-dashboard
-    setTimeout(() => loadPage(pg), 50);
-  } else if (!isErpPage && _erpModeActive) {
-    // Leaving ERP — switch sidebar back but don't auto-navigate
-    const app = document.getElementById('app');
-    const btn = document.getElementById('erp-mode-btn');
-    const label = document.getElementById('erp-btn-label');
-    _erpModeActive = false;
-    app.classList.remove('erp-mode');
-    btn.classList.remove('erp-active');
-    if (label) label.textContent = 'Intelligence';
-  }
-}
+
 
 const API=window.location.origin+'/api';
 var currentPage='dashboard',modalCtx={};
@@ -6115,13 +5123,16 @@ var currentUser=null; // var hoists to window scope, accessible across <script> 
   }
 })();
 
+// Clean up stale weather cache from previous version
+localStorage.removeItem('tf_weather_v2');
+
 const _ENT_OWNER=['ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting','ent-forecasting','ent-inventory-opt','ent-livestock-analytics','ent-crop-analytics','ent-labour-analytics','ent-asset-analytics','ent-calculations','ent-scenarios'];
 const _ENT_MANAGER=['ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting','ent-forecasting','ent-inventory-opt','ent-livestock-analytics','ent-crop-analytics','ent-labour-analytics','ent-asset-analytics','ent-scenarios'];
 const _ENT_FINANCE=['ent-kpi-dashboard','ent-profitability','ent-cogs','ent-cost-accounting','ent-forecasting','ent-scenarios'];
 const _ENT_FIELD=['ent-crop-analytics','ent-livestock-analytics'];
 const ROLE_PAGES=window.ROLE_PAGES={
-  owner:  ['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','users','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons',..._ENT_OWNER],
-  manager:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation','erp-units','erp-seasons',..._ENT_MANAGER],
+  owner:  ['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','users','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation',..._ENT_OWNER],
+  manager:['dashboard','assets','livestock','crops','workers','inventory','finance','reports','compliance','settings','erp-dashboard','erp-profitability','erp-budgets','erp-activities','erp-costing','erp-production','erp-depreciation',..._ENT_MANAGER],
   finance:['dashboard','finance','reports','erp-dashboard','erp-profitability','erp-budgets','erp-costing',..._ENT_FINANCE],
   field:  ['dashboard','assets','livestock','crops',..._ENT_FIELD],
 };
@@ -6671,7 +5682,7 @@ function enterApp(){
   document.getElementById('app').classList.remove('hidden');
   const u=currentUser;
   const allowed=ROLE_PAGES[u.role]||[];
-  document.querySelectorAll('.nav-item[data-page],.sb-item[data-page]').forEach(item=>{item.classList.toggle('nav-hidden',!allowed.includes(item.dataset.page));});
+  document.querySelectorAll('.sb-item[data-page]').forEach(item=>{item.classList.toggle('nav-hidden',!allowed.includes(item.dataset.page));});
   initNavGroups();
   document.getElementById('sf-name').textContent=u.name;
   document.getElementById('sf-role').textContent=u.role.charAt(0).toUpperCase()+u.role.slice(1);
@@ -6780,9 +5791,8 @@ const pageLabels={
   'erp-dashboard':'Farm Overview','erp-profitability':'Profit & Loss',
   'erp-budgets':'Season Budget','erp-activities':'Farm Activities',
   'erp-costing':'Cost Breakdown','erp-production':'Harvest & Sales',
-  'erp-depreciation':'Asset Values','erp-units':'Unit Economics',
-  'erp-seasons':'Seasons',
-  // Enterprise Analytics pages
+  'erp-depreciation':'Asset Values',
+    // Enterprise Analytics pages
   'ent-kpi-dashboard':'KPI Dashboard','ent-profitability':'Advanced Profitability',
   'ent-cogs':'COGS Ledger','ent-cost-accounting':'Cost Accounting',
   'ent-forecasting':'Forecasting','ent-inventory-opt':'Inventory Optimisation',
@@ -6832,13 +5842,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileNav();});
   });
 })();
 
-document.querySelectorAll('.nav-item[data-page],.sb-item[data-page]').forEach(item=>{
+document.querySelectorAll('.sb-item[data-page]').forEach(item=>{
   const activate=()=>{
     const pg=item.dataset.page;
     if(!(ROLE_PAGES[currentUser?.role]||[]).includes(pg))return;
 
     // 1. Clear all active states
-    document.querySelectorAll('.nav-item,.sb-item').forEach(n=>n.classList.remove('active'));
+    document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
 
     // 2. Set new active nav item and sync mobile bar
@@ -6882,8 +5892,7 @@ function loadPage(pg){
     'erp-dashboard':loadErpDashboard,'erp-profitability':loadErpProfitability,
     'erp-budgets':loadErpBudgets,'erp-activities':loadErpActivities,
     'erp-costing':loadErpCosting,'erp-production':loadErpProduction,
-    'erp-depreciation':loadErpDepreciation,'erp-units':loadErpUnits,
-    'erp-seasons':loadErpSeasons,
+    'erp-depreciation':loadErpDepreciation,
     'ent-kpi-dashboard':loadEntKpiDashboard,'ent-profitability':loadEntProfitability,
     'ent-cogs':loadEntCogs,'ent-cost-accounting':loadEntCostAccounting,
     'ent-forecasting':loadEntForecasting,'ent-inventory-opt':loadEntInventoryOpt,
@@ -6990,12 +5999,11 @@ function navigateTo(page) {
   if (role && !(ROLE_PAGES[role] || []).includes(page)) return;
 
   // Prefer clicking the real nav item so all active-state logic fires once
-  const navItem = document.querySelector(`.sb-item[data-page="${page}"]`) ||
-                  document.querySelector(`.nav-item[data-page="${page}"]`);
+  const navItem = document.querySelector(`.sb-item[data-page="${page}"]`);
   if (navItem) { navItem.click(); return; }
 
   // Fallback for pages not in current DOM nav (e.g. role-gated ERP/ENT items)
-  document.querySelectorAll('.nav-item,.sb-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n =>
     n.classList.toggle('active', n.dataset.page === page));
@@ -7094,7 +6102,6 @@ async function loadDashboard(){
   document.getElementById('op-health').innerHTML=`<div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div>`;
   document.getElementById('rev-chart').innerHTML=`<div class="skel skel-bar" style="align-self:flex-end"></div>`;
   document.getElementById('dash-activity').innerHTML=`<div class="skel skel-row"></div><div class="skel skel-row"></div>`;
-  document.getElementById('weather-row').innerHTML=[1,2,3,4,5,6,7].map(()=>`<div class="weather-day"><div class="skel" style="height:22px;border-radius:4px;margin-bottom:6px"></div><div class="skel skel-text short" style="margin:0 auto"></div></div>`).join('');
 
   // ── ESTATE STATUS BAR — populate immediately with skeletons, fill with data
   const _populateESB = (d) => {
@@ -7360,70 +6367,6 @@ async function loadDashboard(){
     {l:'Compliance',p:cpPct,c:''}
   ].map(h=>`<div class="inv-row"><div class="inv-header"><span class="inv-name">${h.l}</span><span class="inv-qty">${h.p}%</span></div><div class="progress-bar"><div class="progress-fill ${h.c}" style="width:${h.p}%"></div></div></div>`).join('');
 
-  // ── Weather — live Open-Meteo API (free, no key, Harare coords) ────────────
-  (async()=>{
-    const _wr=document.getElementById('weather-row');
-    if(!_wr)return;
-    // WMO weather code → Material Symbol + short label
-    const _wmoIcon=code=>{
-      if(code===0)return['wb_sunny','Clear'];
-      if(code<=2)return['partly_cloudy_day','P. Cloudy'];
-      if(code===3)return['cloud','Overcast'];
-      if(code<=49)return['foggy','Fog'];
-      if(code<=59)return['grain','Drizzle'];
-      if(code<=69)return['rainy','Rain'];
-      if(code<=79)return['snowing','Snow'];
-      if(code<=82)return['rainy','Showers'];
-      if(code<=84)return['thunderstorm','T-Storm'];
-      if(code<=99)return['thunderstorm','Thunder'];
-      return['device_thermostat','Unknown'];
-    };
-    const _dayLabel=dateStr=>{
-      const d=new Date(dateStr+'T00:00:00');
-      return d.toLocaleDateString('en-GB',{weekday:'short'});
-    };
-    const _renderWeather=days=>{
-      _wr.innerHTML=days.slice(0,7).map(d=>{
-        const[icon,label]=_wmoIcon(d.code);
-        return`<div class="weather-day" title="${label} — ${Math.round(d.max)}° / ${Math.round(d.min)}°">
-          <div class="weather-icon"><span style="font-family:'Material Symbols Outlined';font-size:20px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">${icon}</span></div>
-          <div class="weather-temp">${Math.round(d.max)}°</div>
-          <div class="weather-temp" style="font-size:10px;color:var(--text-muted);margin-top:1px">${Math.round(d.min)}°</div>
-          <div class="weather-label">${_dayLabel(d.date)}</div>
-        </div>`;
-      }).join('');
-    };
-    // Check cache (4-hour TTL)
-    const _cacheKey='tf_weather_v2';
-    const _cached=localStorage.getItem(_cacheKey);
-    if(_cached){
-      try{
-        const{ts,days}=JSON.parse(_cached);
-        if(Date.now()-ts<4*3600*1000){_renderWeather(days);return;}
-      }catch{}
-    }
-    // Show skeleton while fetching
-    _wr.innerHTML=[1,2,3,4,5,6,7].map(()=>`<div class="weather-day"><div class="skel" style="height:22px;border-radius:4px;margin-bottom:4px;width:24px;margin-left:auto;margin-right:auto"></div><div class="skel skel-text short" style="width:28px;margin:2px auto"></div><div class="skel skel-text short" style="width:22px;margin:2px auto"></div></div>`).join('');
-    try{
-      const _url='https://api.open-meteo.com/v1/forecast?latitude=-17.8292&longitude=31.0522&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Africa%2FHarare&forecast_days=7';
-      const _res=await fetch(_url,{signal:AbortSignal.timeout(6000)});
-      if(!_res.ok)throw new Error('HTTP '+_res.status);
-      const _d=await _res.json();
-      const days=(_d.daily.time||[]).map((date,i)=>({
-        date,
-        code:_d.daily.weathercode[i],
-        max:_d.daily.temperature_2m_max[i],
-        min:_d.daily.temperature_2m_min[i]
-      }));
-      localStorage.setItem(_cacheKey,JSON.stringify({ts:Date.now(),days}));
-      _renderWeather(days);
-      // Update card title to show it's live
-      const _cardTitle=_wr.closest('.card')?.querySelector('.card-title');
-      if(_cardTitle)_cardTitle.innerHTML='7-Day Forecast <span style="font-size:9px;color:var(--success-txt);font-family:var(--ff-mono);text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px">● live</span>';
-    }catch(err){
-      _wr.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:72px;gap:8px;flex-direction:column"><span style="font-size:11px;color:var(--text-faint)">Weather unavailable</span><button class="page-error-btn" style="padding:4px 12px;font-size:10px" onclick="loadDashboard()">↻ Retry</button></div>`;
-    }
-  })();
 
   // ── Recent activity ───────────────────────────────────────────────────────
   const ev=d.recent_events||[];
@@ -9158,14 +8101,6 @@ async function loadAIInsights(){
     insights.push({type:'recommendation',priority:4,text:`<strong>${dash.compliance_due_soon}</strong> compliance renewal${dash.compliance_due_soon>1?'s':''} due soon. Begin renewal process to avoid lapses.`,action:'View compliance',page:'compliance'});
   }
 
-  // ── WEATHER-BASED RECOMMENDATION ─────────────────────────────────────────
-  const weatherInsights=[
-    {type:'weather',priority:5,text:`Rain forecast <strong>Wed–Thu</strong>. Good opportunity to delay irrigation on drip/pivot fields and reduce water costs this week.`,action:null,page:null},
-    {type:'weather',priority:5,text:`Hot spell <strong>Mon–Tue (28°C+)</strong>. Ensure livestock have access to shade and water. Check trough levels in all paddocks.`,action:'Check herds',page:'livestock'}
-  ];
-  // Pick whichever weather insight hasn't already been triggered by other rules
-  const hasIrrRec=insights.some(i=>i.text.includes('irrigation'));
-  insights.push(hasIrrRec?weatherInsights[1]:weatherInsights[0]);
 
   // ── WORKER ATTENDANCE ─────────────────────────────────────────────────────
   const onSite=dash.workers_on_site||0,total=dash.workers_total||0;
@@ -9188,7 +8123,7 @@ async function loadAIInsights(){
   while(top.length<6&&fi<fallbacks.length){top.push(fallbacks[fi++]);}
 
   // ── RENDER — always resolves, never stays as spinner ─────────────────────
-  const typeIcon={crop:'grass',livestock:'pets',finance:'payments',recommendation:'lightbulb',alert:'warning',weather:'wb_sunny'};
+  const typeIcon={crop:'grass',livestock:'pets',finance:'payments',recommendation:'lightbulb',alert:'warning'};
 
   if(!hasServerData){
     body.innerHTML=`
@@ -9429,7 +8364,7 @@ function copyInviteCode(){
 .variance-fill.under { background: var(--success-txt); }
 .variance-fill.over { background: var(--error-txt); }
 
-.erp-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--bdr); background: var(--s3); color: var(--text-primary); font-size: 13px; cursor: pointer; transition: var(--tr); }
+.erp-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--bdr); background: var(--s3); color: var(--text-primary); font-size: 13px; cursor: pointer; transition: var(--tr); min-height: 42px; }
 .erp-btn:hover { background: var(--s4); border-color: var(--bdr-hv); }
 .erp-btn.primary { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold-lt); }
 .erp-btn.primary:hover { background: rgba(184,146,74,0.2); }
@@ -9463,7 +8398,6 @@ function copyInviteCode(){
 }
 
 /* Larger touch targets for older users */
-.erp-btn { min-height: 42px; }
 .erp-input, .erp-select { min-height: 44px; font-size: 14px !important; }
 .kpi-value { font-size: 28px !important; }
 .profit-row { font-size: 15px; padding: 10px 0; }
@@ -10595,347 +9529,6 @@ async function runDepreciation(id){
 }
 
 // ── OPERATIONAL UNITS ─────────────────────────────────────────────────────────
-async function loadErpUnits(){
-  currentPage = 'erp-units';
-  erpContent(`<div class="page-header"><h1>Operational Units</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
-
-  const [units, farms] = await Promise.all([
-    erpFetch('/erp/units'),
-    erpFetch('/erp/farms')
-  ]);
-
-  const byType = units.reduce((acc,u)=>{ acc[u.unit_type]=(acc[u.unit_type]||0)+1; return acc; },{});
-
-  erpContent(`
-<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
-  <div><h1>Operational Units</h1><p class="page-sub">Fields, herds, warehouses, silos, and all operational areas</p></div>
-  <button class="erp-btn primary" onclick="openUnitForm()">+ Add Unit</button>
-</div>
-
-<div class="erp-grid">
-  ${Object.entries(byType).map(([t,c])=>`<div class="kpi-card"><div class="kpi-label">${t.charAt(0).toUpperCase()+t.slice(1)}s</div><div class="kpi-value">${c}</div></div>`).join('')}
-</div>
-
-<!-- Add Unit Form -->
-<div id="unit-form" style="display:none" class="erp-panel">
-  <div class="erp-panel-title">Add Operational Unit</div>
-  <div class="erp-form-row triple">
-    <div><label class="erp-label">Farm</label><select id="uf-farm" class="erp-select"><option value="">— Select Farm —</option>${farms.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}</select></div>
-    <div><label class="erp-label">Unit Name</label><input id="uf-name" class="erp-input" placeholder="e.g. Block N3 — Groundnuts"></div>
-    <div><label class="erp-label">Type</label><select id="uf-type" class="erp-select"><option value="field">Field</option><option value="herd">Herd</option><option value="greenhouse">Greenhouse</option><option value="warehouse">Warehouse</option><option value="pen">Pen</option><option value="silo">Silo</option><option value="orchard">Orchard</option><option value="paddock">Paddock</option><option value="other">Other</option></select></div>
-  </div>
-  <div class="erp-form-row">
-    <div><label class="erp-label">Area (ha)</label><input id="uf-area" type="number" class="erp-input" min="0" step="0.1" value="0"></div>
-    <div><label class="erp-label">Notes</label><input id="uf-notes" class="erp-input" placeholder="optional"></div>
-  </div>
-  <div style="display:flex;gap:8px;margin-top:8px">
-    <button class="erp-btn primary" onclick="saveUnit()">Save Unit</button>
-    <button class="erp-btn" onclick="document.getElementById('unit-form').style.display='none'">Cancel</button>
-  </div>
-</div>
-
-<div class="erp-panel">
-  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">domain</span> All Units (${units.length})</div>
-  <table class="erp-table">
-    <thead><tr><th>Name</th><th>Type</th><th>Farm</th><th>Area (ha)</th><th>Notes</th></tr></thead>
-    <tbody>
-      ${units.map(u=>`
-      <tr>
-        <td><div style="font-weight:500">${u.name}</div></td>
-        <td><span class="pill pill-info">${u.unit_type}</span></td>
-        <td style="color:var(--text-secondary)">${u.farm_name||'—'}</td>
-        <td>${u.area_ha||0}</td>
-        <td style="color:var(--text-muted);font-size:12px">${u.notes||'—'}</td>
-      </tr>`).join('') || '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--text-muted)">No units found</td></tr>'}
-    </tbody>
-  </table>
-</div>
-  `);
-}
-function openUnitForm(){ const f=document.getElementById('unit-form'); if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth'});} }
-async function saveUnit(){
-  const d = {
-    farm_id: parseInt(document.getElementById('uf-farm').value),
-    name: document.getElementById('uf-name').value.trim(),
-    unit_type: document.getElementById('uf-type').value,
-    area_ha: parseFloat(document.getElementById('uf-area').value||0),
-    notes: document.getElementById('uf-notes').value
-  };
-  if(!d.farm_id||!d.name){ toast('Farm and name required','error'); return; }
-  await erpFetch('/erp/units','POST',d);
-  toast('Unit created');
-  loadErpUnits();
-}
-
-// ── SEASONS ───────────────────────────────────────────────────────────────────
-async function loadErpSeasons(){
-  currentPage = 'erp-seasons';
-  erpContent(`<div class="page-header"><h1>Seasons</h1></div><div style="color:var(--text-muted);padding:20px">Loading…</div>`);
-
-  const [seasons, farms] = await Promise.all([
-    erpFetch('/erp/seasons'),
-    erpFetch('/erp/farms')
-  ]);
-
-  erpContent(`
-<div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
-  <div><h1>Season Management</h1><p class="page-sub">Plan, activate, and close production seasons</p></div>
-  <button class="erp-btn primary" onclick="openSeasonForm()">+ New Season</button>
-</div>
-
-<!-- Add Season Form -->
-<div id="season-form" style="display:none" class="erp-panel">
-  <div class="erp-panel-title">Create Season</div>
-  <div class="erp-form-row triple">
-    <div><label class="erp-label">Farm</label><select id="sf-farm" class="erp-select"><option value="">— Farm —</option>${farms.map(f=>`<option value="${f.id}">${f.name}</option>`).join('')}</select></div>
-    <div><label class="erp-label">Season Name</label><input id="sf-name" class="erp-input" placeholder="e.g. 2026/2027 Summer"></div>
-    <div><label class="erp-label">Status</label><select id="sf-status" class="erp-select"><option value="Planning">Planning</option><option value="Active">Active</option><option value="Closed">Closed</option></select></div>
-  </div>
-  <div class="erp-form-row">
-    <div><label class="erp-label">Start Date</label><input id="sf-start" type="date" class="erp-input"></div>
-    <div><label class="erp-label">End Date</label><input id="sf-end" type="date" class="erp-input"></div>
-  </div>
-  <div style="display:flex;gap:8px;margin-top:8px">
-    <button class="erp-btn primary" onclick="saveSeason()">Create Season</button>
-    <button class="erp-btn" onclick="document.getElementById('season-form').style.display='none'">Cancel</button>
-  </div>
-</div>
-
-<div class="erp-panel">
-  <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">calendar_month</span> All Seasons</div>
-  ${seasons.length ? seasons.map(s=>`
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--s3);border:1px solid var(--bdr);border-radius:var(--radius);margin-bottom:10px">
-    <div>
-      <div style="font-weight:600;font-size:15px;margin-bottom:4px">${s.name}</div>
-      <div style="font-size:12px;color:var(--text-muted)">${s.farm_name} &bull; ${erpFmt.date(s.start_date)}${s.end_date?' — '+erpFmt.date(s.end_date):''}</div>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px">
-      <span class="season-badge ${s.status}">${s.status}</span>
-      <button class="erp-btn" onclick="loadErpBudgets()" style="padding:5px 10px;font-size:11px">View Budgets</button>
-    </div>
-  </div>`).join('') : `<div style="color:var(--text-muted);padding:20px;text-align:center">No seasons found</div>`}
-</div>
-  `);
-}
-function openSeasonForm(){ const f=document.getElementById('season-form'); if(f){f.style.display='block';f.scrollIntoView({behavior:'smooth'});} }
-async function saveSeason(){
-  const d = {
-    farm_id: parseInt(document.getElementById('sf-farm').value),
-    name: document.getElementById('sf-name').value.trim(),
-    status: document.getElementById('sf-status').value,
-    start_date: document.getElementById('sf-start').value,
-    end_date: document.getElementById('sf-end').value || null
-  };
-  if(!d.farm_id||!d.name||!d.start_date){ toast('Farm, name, and start date required','error'); return; }
-  await erpFetch('/erp/seasons','POST',d);
-  toast('Season created');
-  loadErpSeasons();
-}
-
-// ── RECEIVE INVENTORY (ERP-enhanced) ─────────────────────────────────────────
-async function erpReceiveInventory(inventoryId, itemName){
-  erpModal('Receive Stock — ' + (itemName || 'Item'),
-    'Stock will be added to inventory and the cost recorded as an expense automatically',
-    [
-      {id:'ri-qty',  label:'Quantity Received', type:'number', placeholder:'0'},
-      {id:'ri-cost', label:'Unit Cost (USD $)',  type:'number', placeholder:'0.00'},
-      {id:'ri-supplier', label:'Supplier (optional)', type:'text', placeholder:'e.g. Agrochem Zimbabwe'}
-    ],
-    async (vals) => {
-      const qty = parseFloat(vals['ri-qty']);
-      const cost = parseFloat(vals['ri-cost']);
-      if(!qty || qty <= 0){ erpModalError('Please enter a quantity'); return false; }
-      if(!cost || cost <= 0){ erpModalError('Please enter a unit cost'); return false; }
-      await erpFetch('/erp/inventory-lots','POST',{
-        inventory_id: inventoryId,
-        quantity_received: qty,
-        unit_cost: cost,
-        supplier: vals['ri-supplier'] || null,
-        received_date: new Date().toISOString().split('T')[0]
-      });
-      toast('Stock received — inventory updated and expense recorded');
-      if(typeof loadInventory === 'function') loadInventory();
-      return true;
-    }
-  );
-}
-
-// ── RECEIVE STOCK PICKER (called from standard Inventory page) ───────────────
-async function openReceiveStockPicker(){
-  // Fetch current inventory to populate picker
-  const items = await erpFetch('/inventory').catch(()=>[]);
-  if(!items || !items.length){
-    toast('Add inventory items first before receiving stock','error');
-    return;
-  }
-  const existing = document.getElementById('erp-shared-modal');
-  if(existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'erp-shared-modal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.innerHTML = `
-    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:520px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6)">
-      <div style="font-size:19px;font-weight:600;color:var(--text-primary);margin-bottom:5px">Receive Stock</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:22px">Stock is added to inventory and the purchase cost is recorded as an expense automatically</div>
-      <div style="margin-bottom:16px">
-        <label class="erp-label" style="font-size:13px">Which item are you receiving?</label>
-        <select id="rs-item" class="erp-input" style="font-size:14px;cursor:pointer">
-          <option value="">— Select an item —</option>
-          ${items.map(i=>`<option value="${i.id}" data-name="${i.name}">${i.name} (${i.category}) — ${i.on_hand} ${i.unit} currently in stock</option>`).join('')}
-        </select>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
-        <div>
-          <label class="erp-label" style="font-size:13px">Quantity Received</label>
-          <input id="rs-qty" type="number" class="erp-input" placeholder="0" min="0" step="0.01" style="font-size:14px">
-        </div>
-        <div>
-          <label class="erp-label" style="font-size:13px">Unit Cost (USD $)</label>
-          <input id="rs-cost" type="number" class="erp-input" placeholder="0.00" min="0" step="0.01" style="font-size:14px">
-        </div>
-      </div>
-      <div style="margin-bottom:20px">
-        <label class="erp-label" style="font-size:13px">Supplier (optional)</label>
-        <input id="rs-supplier" class="erp-input" placeholder="e.g. Agrochem Zimbabwe" style="font-size:14px">
-      </div>
-      <div id="erp-modal-err" style="display:none;padding:10px 14px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:8px;color:var(--error-txt);font-size:13px;margin-bottom:14px"></div>
-      <div style="display:flex;gap:10px">
-        <button id="rs-save-btn" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
-          <span class="material-symbols-outlined" style="font-size:16px">inventory</span> Receive Stock
-        </button>
-        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">Cancel</button>
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  modal.addEventListener('click', e => { if(e.target === modal) modal.remove(); });
-  setTimeout(()=>document.getElementById('rs-item')?.focus(), 100);
-
-  document.getElementById('rs-save-btn').addEventListener('click', async () => {
-    const itemId = document.getElementById('rs-item').value;
-    const qty = parseFloat(document.getElementById('rs-qty').value || '0');
-    const cost = parseFloat(document.getElementById('rs-cost').value || '0');
-    const supplier = document.getElementById('rs-supplier').value;
-    const errEl = document.getElementById('erp-modal-err');
-
-    if(!itemId){ errEl.style.display='block'; errEl.textContent='Please select an item'; return; }
-    if(!qty || qty<=0){ errEl.style.display='block'; errEl.textContent='Please enter a quantity'; return; }
-    if(!cost || cost<=0){ errEl.style.display='block'; errEl.textContent='Please enter the unit cost'; return; }
-
-    const btn = document.getElementById('rs-save-btn');
-    btn.textContent='Saving…'; btn.disabled=true;
-
-    try {
-      await erpFetch('/erp/inventory-lots','POST',{
-        inventory_id: parseInt(itemId),
-        quantity_received: qty,
-        unit_cost: cost,
-        supplier: supplier || null,
-        received_date: new Date().toISOString().split('T')[0]
-      });
-      modal.remove();
-      toast(`Stock received — inventory updated, $${(qty*cost).toLocaleString()} recorded as expense`);
-      loadInventory();
-    } catch(e) {
-      errEl.style.display='block'; errEl.textContent='Error saving — please try again';
-      btn.innerHTML='<span class="material-symbols-outlined" style="font-size:16px">inventory</span> Receive Stock';
-      btn.disabled=false;
-    }
-  });
-}
-
-// ── INIT: Load ERP data on startup ───────────────────────────────────────────
-async function initErpState(){
-  try {
-    const [farms, seasons] = await Promise.all([
-      erpFetch('/erp/farms'),
-      erpFetch('/erp/seasons')
-    ]);
-    ERP.farms = farms || [];
-    ERP.seasons = seasons || [];
-    ERP.activeSeason = seasons.find(s=>s.status==='Active') || seasons[0] || null;
-  } catch(e) {
-    // ERP init skipped — user not yet authenticated
-  }
-}
-
-// Initialize ERP when user logs in
-const _origLoadDashboard = typeof loadDashboard === 'function' ? loadDashboard : null;
-const _origDoLogin = typeof doLogin === 'function' ? doLogin : null;
-
-// Hook into authentication to init ERP
-document.addEventListener('DOMContentLoaded', ()=>{
-  // If already authenticated, init ERP state after main app loads
-  setTimeout(()=>{
-    if(currentUser) initErpState();
-  }, 2000);
-
-  // ── Idle-time request cache cleanup ────────────────────────────────────────
-  // Flush stale entries from the dedup cache every 2 minutes during idle time.
-  const _flushStaleCache = () => {
-    const now = Date.now();
-    for (const [key, entry] of _reqCache.entries()) {
-      if (now - entry.ts > _REQ_CACHE_TTL * 3) _reqCache.delete(key);
-    }
-  };
-  if (typeof requestIdleCallback !== 'undefined') {
-    setInterval(() => requestIdleCallback(_flushStaleCache, { timeout: 5000 }), 120000);
-  } else {
-    setInterval(_flushStaleCache, 120000);
-  }
-
-  // ── Mobile: prevent 300ms tap delay on supported browsers ─────────────────
-  if ('ontouchstart' in window) {
-    document.documentElement.style.touchAction = 'manipulation';
-  }
-});
-
-// ERP Module — 9 intelligence pages loaded
-// Enterprise Engine — 12 analytics pages
-</script>
-
-<script>
-// ═══════════════════════════════════════════════════════════════════════════
-// ENTERPRISE ENGINE — 12 ANALYTICS PAGES
-// All routes hit /api/enterprise/* (Blueprint prefix in erp_engine.py)
-// ═══════════════════════════════════════════════════════════════════════════
-
-function entFetch(path, method='GET', body=null){
-  return api('/enterprise' + path, method, body);
-}
-
-// ── Shared formatting helpers (reuse erpFmt if available) ────────────────
-const entFmt = {
-  usd: v => '$' + (Number(v)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}),
-  pct: v => (Number(v)||0).toFixed(1) + '%',
-  num: v => (Number(v)||0).toLocaleString(),
-  dec: (v,d=2) => (Number(v)||0).toFixed(d),
-  date: v => v ? v.toString().slice(0,10) : '—',
-  badge: (v, pos='Up', neg='Down') => `<span class="badge ${v>=0?'badge-success':'badge-error'}">${v>=0?pos:neg}</span>`,
-  clr: v => Number(v) >= 0 ? 'var(--success-txt)' : 'var(--error-txt)',
-};
-
-function entContent(html){ erpContent(html); }
-
-// ── Reusable KPI card ─────────────────────────────────────────────────────
-function entKpi(title, value, sub='', icon='insights', clr=''){
-  return `<div class="kpi-card"><div class="kpi-label"><span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-right:4px;color:var(--gold)">${icon}</span>${title}</div><div class="kpi-value" style="${clr?'color:'+clr:''}">${value}</div>${sub?`<div class="kpi-sub">${sub}</div>`:''}</div>`;
-}
-
-// ── Loading skeleton ───────────────────────────────────────────────────────
-function entLoading(title){
-  return `<div class="page-header"><h1>${title}</h1></div><div style="color:var(--text-muted);padding:20px;font-size:13px">Loading…</div>`;
-}
-
-// ── Simple table builder ───────────────────────────────────────────────────
-function entTable(headers, rows){
-  if(!rows||!rows.length) return `<p style="color:var(--text-muted);font-size:13px;padding:10px 0">No data available.</p>`;
-  return `<table class="erp-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>`;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PAGE 1 — Enterprise KPI Dashboard  → GET /api/enterprise/kpi-dashboard
-// ─────────────────────────────────────────────────────────────────────────────
 async function loadEntKpiDashboard(){
   currentPage = 'ent-kpi-dashboard';
   entContent(entLoading('Enterprise KPI Dashboard'));
