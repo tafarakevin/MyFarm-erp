@@ -3578,6 +3578,80 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero .hero-features,
 .auth-hero .hero-ctas { position: relative; z-index: 3; }
 
+/* ── ERP MODE BUTTON ────────────────────────────────────────────────────── */
+#erp-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--s2);
+  border: 1px solid var(--bdr);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--ff-ui);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: all var(--tr);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#erp-mode-btn:hover {
+  border-color: var(--gold-border);
+  color: var(--gold-lt);
+  background: var(--gold-dim);
+}
+#erp-mode-btn.erp-active {
+  background: var(--gold-dim);
+  border-color: var(--gold-border);
+  color: var(--gold-lt);
+}
+#erp-mode-btn .erp-btn-icon {
+  font-family: 'Material Symbols Outlined';
+  font-size: 14px;
+  font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
+  font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none;
+  display: inline-block; vertical-align: middle;
+}
+
+/* ERP/Enterprise dynamic page container */
+.erp-page-container {
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+/* ERP mode strip — breadcrumb bar shown when ERP mode is active */
+.erp-mode-strip {
+  display: none;
+  padding: 8px 24px;
+  background: linear-gradient(90deg, rgba(184,146,74,0.08), transparent);
+  border-bottom: 1px solid var(--gold-border);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  align-items: center;
+  gap: 8px;
+}
+#app.erp-mode #erp-mode-strip { display: flex; }
+#app.erp-mode .erp-mode-strip { display: flex; }
+.erp-mode-back {
+  margin-left: auto;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: color var(--tr);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-family: var(--ff-ui);
+}
+.erp-mode-back:hover { color: var(--text-secondary); }
+
 /* ═══════════════════════════════════════════════════════════════════════════
    LAYOUT & VISUAL FIX PATCH
    ─ Fix 1: bar-chart height — remove hardcoded 140px, let flex fill parent
