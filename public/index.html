@@ -7219,6 +7219,79 @@ async function loadWorkers(){
     :`<div style="grid-column:1/-1;padding:48px 24px;text-align:center"><div style="font-size:32px;margin-bottom:12px;groups</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No staff on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your farm workers to track daily attendance, leave, roles and monthly payroll. Field supervisors and managers can then be assigned access roles.</span>${cw?`<button class="empty-cta" style="margin-top:16px" onclick="openModal('worker')">+ Add first staff member</button>`:''}</div>`;
 }
 
+// Receive stock against an existing inventory item — adds quantity to on_hand
+async function openReceiveStockPicker(){
+  if(!canWrite()){ toast('Write access required','error'); return; }
+  let items = [];
+  try{ items = await api('/inventory'); } catch(e){ toast('Could not load inventory','error'); return; }
+  if(!items.length){ toast('No inventory items — add items first','info'); return; }
+
+  // Build modal manually so we get proper value=id selects
+  const existing = document.getElementById('erp-shared-modal');
+  if(existing) existing.remove();
+
+  const opts = items.map(i=>`<option value="${i.id}">${i.name} (${parseFloat(i.on_hand)||0} ${i.unit||''} on hand)</option>`).join('');
+  const modal = document.createElement('div');
+  modal.id = 'erp-shared-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = `
+    <div style="background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:28px 32px;width:500px;max-width:95vw;box-shadow:0 32px 80px rgba(0,0,0,0.6);animation:slideUp 0.2s ease">
+      <div style="margin-bottom:20px">
+        <div style="font-size:19px;font-weight:600;color:var(--text-primary);margin-bottom:5px">Receive Stock</div>
+        <div style="font-size:13px;color:var(--text-muted)">Record incoming stock against an existing inventory item</div>
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="erp-label">Item</label>
+        <select id="recv-item" class="erp-input" style="font-size:14px;cursor:pointer">${opts}</select>
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="erp-label">Quantity Received</label>
+        <input id="recv-qty" type="number" class="erp-input" placeholder="e.g. 50" min="0.01" step="0.01" style="font-size:14px">
+      </div>
+      <div style="margin-bottom:16px">
+        <label class="erp-label">Notes (optional)</label>
+        <input id="recv-notes" type="text" class="erp-input" placeholder="e.g. Supplier delivery #INV-042" style="font-size:14px">
+      </div>
+      <div id="recv-err" style="display:none;padding:10px 14px;background:var(--error-bg);border:1px solid var(--error-bdr);border-radius:8px;color:var(--error-txt);font-size:13px;margin-bottom:14px"></div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button id="recv-save" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
+          <span class="material-symbols-outlined" style="font-size:16px">check</span> Receive
+        </button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">Cancel</button>
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
+  const esc = e => { if(e.key==='Escape'){ modal.remove(); document.removeEventListener('keydown',esc); }};
+  document.addEventListener('keydown', esc);
+  document.getElementById('recv-qty').focus();
+
+  document.getElementById('recv-save').addEventListener('click', async () => {
+    const btn    = document.getElementById('recv-save');
+    const itemId = document.getElementById('recv-item').value;
+    const qty    = parseFloat(document.getElementById('recv-qty').value);
+    const notes  = document.getElementById('recv-notes').value.trim();
+    const errEl  = document.getElementById('recv-err');
+    const showErr = msg => { errEl.style.display='block'; errEl.textContent=msg; };
+
+    if(!qty || qty <= 0){ showErr('Enter a valid quantity greater than 0'); return; }
+    btn.textContent = 'Saving…'; btn.disabled = true;
+    try{
+      const item = await api(`/inventory/${itemId}`);
+      const updated = {...item, on_hand: (parseFloat(item.on_hand)||0) + qty};
+      if(notes) updated.notes = (item.notes ? item.notes+' | ' : '') + `Received ${qty} ${item.unit||''}: ${notes}`;
+      await api(`/inventory/${itemId}`, 'PUT', updated);
+      modal.remove();
+      toast(`Received ${qty} ${item.unit||''} of ${item.name}`);
+      loadInventory();
+    } catch(e){
+      showErr('Failed to save — please try again');
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">check</span> Receive';
+      btn.disabled = false;
+    }
+  });
+}
+
 async function loadInventory(){
   currentPage='inventory';
   _renderRelatedBar('inventory-related', _PAGE_RELATED['inventory'] || []);
@@ -7957,6 +8030,72 @@ function _viewHistoryReport(i){
   document.getElementById('rep-preview-title').textContent = r.title;
   document.getElementById('report-preview-body').innerHTML = r.html;
   previewCard.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+// ── REPORT PREVIEW ACTIONS ────────────────────────────────────────────────────
+function closeReportPreview(){
+  const card = document.getElementById('report-preview-card');
+  if(card) card.classList.add('hidden');
+}
+
+function printReport(){
+  const html = _repState.lastHtml;
+  if(!html){ toast('No report to print','error'); return; }
+  const title = _repState.lastTitle || 'Report';
+  const w = window.open('','_blank','width=900,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+    <style>
+      body{font-family:Georgia,serif;padding:40px;max-width:800px;margin:0 auto;color:#111;font-size:13px;line-height:1.7}
+      h1{font-size:22px;margin-bottom:4px} h2{font-size:16px;margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:4px}
+      table{width:100%;border-collapse:collapse;margin:12px 0} td,th{padding:6px 10px;border:1px solid #ddd;text-align:left}
+      th{background:#f4f4f4;font-weight:600} .amount{text-align:right;font-family:monospace}
+      @media print{body{padding:20px}}
+    </style>
+  </head><body>${html}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(()=>{ w.print(); }, 400);
+}
+
+function downloadReport(){
+  const html = _repState.lastHtml;
+  const title = _repState.lastTitle || 'report';
+  if(!html){ toast('No report to download','error'); return; }
+  const fmt = _repState.fmt || 'pdf';
+
+  if(fmt === 'csv'){
+    // Extract tables from HTML and convert to CSV
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    const rows = [];
+    tmp.querySelectorAll('tr').forEach(tr => {
+      const cells = [...tr.querySelectorAll('th,td')].map(td => `"${td.textContent.replace(/"/g,'""').trim()}"`);
+      if(cells.length) rows.push(cells.join(','));
+    });
+    const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+    _triggerDownload(blob, title.replace(/\s+/g,'-').toLowerCase()+'.csv');
+  } else {
+    // PDF / HTML — wrap in a full HTML document and trigger download
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+      <style>body{font-family:Georgia,serif;padding:40px;max-width:800px;margin:0 auto;color:#111;font-size:13px;line-height:1.7}
+      h1{font-size:22px;margin-bottom:4px} h2{font-size:16px;margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:4px}
+      table{width:100%;border-collapse:collapse;margin:12px 0} td,th{padding:6px 10px;border:1px solid #ddd;text-align:left}
+      th{background:#f4f4f4;font-weight:600} .amount{text-align:right;font-family:monospace}</style>
+      </head><body>${html}</body></html>`;
+    const blob = new Blob([fullHtml], {type:'text/html'});
+    const fname = title.replace(/\s+/g,'-').toLowerCase();
+    _triggerDownload(blob, fname+(fmt==='pdf'?'.html':'.html'));
+    if(fmt==='pdf') toast('Saved as HTML — open in browser and use Print → Save as PDF','info');
+  }
+}
+
+function _triggerDownload(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
 function _downloadHistoryReport(i){
@@ -9061,6 +9200,11 @@ function erpContent(html){
 
 async function erpFetch(path, method='GET', body=null){
   return api(path, method, body);
+}
+
+// Enterprise Analytics fetch — prefixes /enterprise/ onto all paths
+async function entFetch(path, method='GET', body=null){
+  return api('/enterprise' + path, method, body);
 }
 
 // ── SHARED ERP MODAL ─────────────────────────────────────────────────────────
