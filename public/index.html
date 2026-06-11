@@ -8366,7 +8366,8 @@ async function executeDelete(){
     closeDelConfirm();
     closeModal();
     toast(`${_delTypeLabel[type] || 'Record'} deleted`, 'success');
-    loadPage(currentPage);
+    await new Promise(r => setTimeout(r, 150));
+    await loadPage(currentPage);
   } catch(err){
     btn.classList.remove('executing');
     btn.classList.add('armed');
@@ -8475,6 +8476,73 @@ ${!d.id?`<div class="form-group" style="background:var(--s2);border-radius:8px;p
   },100);
 }
 
+// Optimistically inject a newly saved record into the visible list
+// so it appears immediately without waiting for the background reload.
+function _optimisticInsert(type, rec) {
+  const cw = ['owner','manager','finance'].includes(currentUser?.role);
+  const editBtn = (t,id) => cw ? `<button class="btn btn-secondary btn-sm" onclick="openModal('${t}',null,{id:${id}})">Edit</button>` : '';
+  const delBtn  = (t,id) => cw ? `<button class="btn btn-danger btn-sm" onclick="delRec('${t}',${id})">✕</button>` : '';
+  const actions = (t,id) => `<div style="display:flex;gap:6px">${editBtn(t,id)}${delBtn(t,id)}</div>`;
+
+  let containerId, html;
+
+  if(type === 'asset') {
+    containerId = 'asset-list';
+    html = `<div class="list-item" data-id="${rec.id}">
+      <div style="flex:1"><div class="li-title">${rec.description||'—'}</div>
+      <div class="li-sub">${rec.category||'—'} · ${rec.location||'—'} · <span class="pill pill-success">${rec.status||'—'}</span></div></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:var(--ff-mono);font-size:13px">$${(rec.value||0).toLocaleString()}</span>
+        ${actions('asset',rec.id)}
+      </div></div>`;
+  } else if(type === 'herd') {
+    containerId = 'herd-list';
+    html = `<div class="list-item" data-id="${rec.id}">
+      <div style="flex:1"><div class="li-title">${rec.herd_name||'—'}</div>
+      <div class="li-sub">${rec.breed||'—'} · ${rec.count||0} head · <span class="pill pill-success">${rec.health||'Good'}</span></div></div>
+      ${actions('herd',rec.id)}</div>`;
+  } else if(type === 'crop') {
+    containerId = 'crop-list';
+    html = `<div class="list-item" data-id="${rec.id}">
+      <div style="flex:1"><div class="li-title">${rec.block||'—'} — ${rec.crop||'—'}</div>
+      <div class="li-sub">${rec.area_ha||0} ha · <span class="pill pill-info">${rec.status||'—'}</span></div></div>
+      ${actions('crop',rec.id)}</div>`;
+  } else if(type === 'worker') {
+    containerId = 'worker-list';
+    html = `<div class="list-item" data-id="${rec.id}">
+      <div style="flex:1"><div class="li-title">${rec.name||'—'}</div>
+      <div class="li-sub">${rec.role||'—'} · ${rec.department||'—'} · <span class="pill pill-success">${rec.status||'Present'}</span></div></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:var(--ff-mono);font-size:13px">$${(rec.salary||0).toLocaleString()}/mo</span>
+        ${actions('worker',rec.id)}
+      </div></div>`;
+  } else if(type === 'inventory') {
+    containerId = 'inventory-levels';
+    html = `<div class="list-item" data-id="${rec.id}">
+      <div style="flex:1"><div class="li-title">${rec.name||'—'}</div>
+      <div class="li-sub">${rec.category||'—'} · ${rec.on_hand||0} ${rec.unit||''} on hand</div></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-family:var(--ff-mono);font-size:13px">$${(rec.unit_cost||0).toFixed(2)}/${rec.unit||'unit'}</span>
+        ${actions('inventory',rec.id)}
+      </div></div>`;
+  } else if(type === 'compliance') {
+    containerId = 'compliance-list';
+    html = `<div class="list-item" data-id="${rec.id}">
+      <div style="flex:1"><div class="li-title">${rec.title||'—'}</div>
+      <div class="li-sub">${rec.category||'—'} · Expires ${rec.expiry_date||'—'} · <span class="pill pill-${rec.status==='Compliant'?'success':rec.status==='Due Soon'?'warn':'error'}">${rec.status||'—'}</span></div></div>
+      ${actions('compliance',rec.id)}</div>`;
+  } else {
+    return; // no optimistic insert for unknown types
+  }
+
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  // Remove empty-state placeholder if present
+  const empty = container.querySelector('[style*="padding:48px"],[style*="text-align:center"]');
+  if(empty) empty.remove();
+  container.insertAdjacentHTML('afterbegin', html);
+}
+
 function closeModal(){
   const overlay=document.getElementById('modal-overlay');
   overlay.classList.remove('open');
@@ -8544,9 +8612,16 @@ async function modalSave(){
       const tabBtn=document.querySelector(`.fin-tab[data-tab="${isIncome?'income':'expenses'}"]`);
       if(tabBtn) finTab(tabBtn,isIncome?'income':'expenses');
       // Background reload to get accurate totals and sort order
-      loadFinance();
+      await loadFinance();
     } else {
-      loadPage(currentPage);
+      // Optimistic insert — show the new record immediately in the list
+      // before the background reload completes, so the UI feels instant.
+      if(method === 'POST' && saved && saved.id) {
+        _optimisticInsert(type, saved);
+      }
+      // Small delay ensures the DB write is committed before we re-fetch.
+      await new Promise(r => setTimeout(r, 150));
+      await loadPage(currentPage);
     }
   }catch(e){
     const msg = e?.data?.error || e?.message || 'Server error — please try again.';
