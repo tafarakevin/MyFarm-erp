@@ -4153,9 +4153,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
 /* ERP sidebar overlay — shown when ERP mode is active */
 
-/* ERP/Enterprise dynamic page container */
+/* ERP/Enterprise page container — uses shared .page/.page.active display rules */
 .erp-page-container {
-  padding: 0;
   min-width: 0;
   width: 100%;
 }
@@ -5258,6 +5257,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
           <div><div class="card"><div class="card-title">System Preferences</div><div id="settings-prefs"></div></div></div>
         </div>
       </div>
+
+      <!-- ERP/Enterprise pages render here. Treated identically to every other
+           .page element — activated via .active, never via inline display. -->
+      <div class="page erp-page-container" id="erp-page-container"></div>
 
     </div>
   </div>
@@ -6466,15 +6469,14 @@ document.querySelectorAll('.sb-item[data-page]').forEach(item=>{
     item.classList.add('active');
     document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n=>n.classList.toggle('active', n.dataset.page===pg));
 
-    // 3. Show/hide ERP container vs standard page
-    const erpContainer=document.getElementById('erp-page-container');
+    // 3. Activate the target page — ERP/ENT pages share the same
+    //    #erp-page-container .page element as every other page, so this
+    //    single branch covers all page types identically.
     const isErpPage=pg.startsWith('erp-')||pg.startsWith('ent-');
     if(isErpPage){
-      // ERP pages render into erp-page-container — standard pages stay hidden
-      if(erpContainer) erpContainer.style.display='block';
+      const erpContainer=document.getElementById('erp-page-container');
+      if(erpContainer) erpContainer.classList.add('active');
     } else {
-      // Standard page — hide ERP container, show standard page div
-      if(erpContainer) erpContainer.style.display='none';
       const pgEl=document.getElementById('page-'+pg);
       if(pgEl) pgEl.classList.add('active');
     }
@@ -6619,12 +6621,11 @@ function navigateTo(page) {
   document.querySelectorAll('.mobile-nav-item[data-page]').forEach(n =>
     n.classList.toggle('active', n.dataset.page === page));
 
-  const erpContainer = document.getElementById('erp-page-container');
   const isErpPage = page.startsWith('erp-') || page.startsWith('ent-');
   if (isErpPage) {
-    if (erpContainer) erpContainer.style.display = 'block';
+    const erpContainer = document.getElementById('erp-page-container');
+    if (erpContainer) erpContainer.classList.add('active');
   } else {
-    if (erpContainer) erpContainer.style.display = 'none';
     const pgEl = document.getElementById('page-' + page);
     if (pgEl) pgEl.classList.add('active');
   }
@@ -9253,17 +9254,13 @@ const erpFmt = {
 };
 
 function erpContent(html){
-  // Ensure standard page divs are hidden
+  // Unified page system: clear all active pages, activate the ERP container
+  // exactly like any other .page. The container is a static element already
+  // present in the DOM (see #erp-page-container in the HTML shell) — never
+  // appended dynamically, so it can never end up below other pages.
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  // Get or create the ERP container (lazy creation — only built once)
-  let erp = document.getElementById('erp-page-container');
-  if(!erp){
-    erp = document.createElement('div');
-    erp.id = 'erp-page-container';
-    erp.className = 'erp-page-container';
-    document.getElementById('content').appendChild(erp);
-  }
-  erp.style.display = 'block';
+  const erp = document.getElementById('erp-page-container');
+  erp.classList.add('active');
   erp.innerHTML = html;
   // Auto-inject related bar for ERP/ENT pages
   _injectErpRelatedBar(currentPage);
@@ -9280,6 +9277,72 @@ async function erpFetch(path, method='GET', body=null){
 // Enterprise Analytics fetch — prefixes /enterprise/ onto all paths
 async function entFetch(path, method='GET', body=null){
   return api('/enterprise' + path, method, body);
+}
+
+// ── ENTERPRISE HELPERS ───────────────────────────────────────────────────────
+
+// Formatting helpers for Enterprise Analytics pages
+const entFmt = {
+  usd: v  => '$' + Number(v||0).toLocaleString('en', {minimumFractionDigits:0, maximumFractionDigits:0}),
+  pct: v  => Number(v||0).toFixed(1) + '%',
+  num: v  => Number(v||0).toLocaleString('en', {minimumFractionDigits:0}),
+  dec: (v, dp=2) => Number(v||0).toFixed(dp),
+  date: s => s ? new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—',
+  clr: v  => Number(v||0) >= 0 ? 'var(--success-txt)' : 'var(--error-txt)',
+};
+
+// Renders HTML into the shared ERP/ENT page container (same container as erpContent)
+function entContent(html){
+  erpContent(html);
+}
+
+// Returns a skeleton loading screen for ENT pages while data fetches
+function entLoading(title){
+  return `
+    <div class="page-header">
+      <h1><span class="ph-icon">analytics</span>${title}</h1>
+      <p>Loading enterprise analytics…</p>
+    </div>
+    <div class="erp-grid">
+      ${[1,2,3,4,5,6].map(()=>`
+        <div class="erp-panel" style="padding:20px">
+          <div class="skel skel-text short" style="width:100px;margin-bottom:10px"></div>
+          <div class="skel" style="height:32px;width:80%;border-radius:6px;margin-bottom:8px"></div>
+          <div class="skel skel-text short" style="width:120px"></div>
+        </div>`).join('')}
+    </div>
+    <div class="erp-grid-2" style="margin-top:20px">
+      ${[1,2].map(()=>`
+        <div class="erp-panel">
+          <div class="skel skel-text" style="width:160px;margin-bottom:16px"></div>
+          ${[1,2,3,4].map(()=>`<div class="skel skel-row" style="margin-bottom:8px"></div>`).join('')}
+        </div>`).join('')}
+    </div>`;
+}
+
+// Renders a standard data table for Enterprise Analytics pages.
+// headers: array of column header labels (use '' for an action column with no label)
+// rowsHtml: pre-joined string of <tr>...</tr> rows (already formatted by the caller)
+function entTable(headers, rowsHtml){
+  const thead = headers.map(h => `<th>${h}</th>`).join('');
+  const body = rowsHtml && rowsHtml.trim()
+    ? rowsHtml
+    : `<tr><td colspan="${headers.length}" style="text-align:center;color:var(--text-muted);padding:24px">No data available</td></tr>`;
+  return `<table class="erp-table"><thead><tr>${thead}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+// Renders a single KPI metric card for Enterprise Analytics pages
+// entKpi(label, value, sub, icon, color)
+function entKpi(label, value, sub='', icon='analytics', color='var(--text-primary)'){
+  return `
+    <div class="erp-panel" style="padding:18px 20px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-muted)">${label}</span>
+        <span class="material-symbols-outlined" style="font-size:18px;color:var(--text-faint);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20">${icon}</span>
+      </div>
+      <div style="font-size:26px;font-weight:300;font-family:var(--ff-display);color:${color};line-height:1;margin-bottom:6px">${value}</div>
+      ${sub ? `<div style="font-size:11px;color:var(--text-muted)">${sub}</div>` : ''}
+    </div>`;
 }
 
 // ── SHARED ERP MODAL ─────────────────────────────────────────────────────────
