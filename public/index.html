@@ -4,17 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- ═══ SECURITY HEADERS ════════════════════════════════════════════════════
-     frame-ancestors and X-Frame-Options MUST be set as HTTP response headers
-     by the server (Flask after_request). Browsers ignore frame-ancestors in
-     <meta> tags entirely, and X-Frame-Options is not valid in <meta> at all.
-     Both are already set correctly in server.py add_security_headers().
+     AUTHORITATIVE CSP is set as an HTTP response header by Flask
+     (add_security_headers in server.py). That header uses a per-request
+     nonce injected into every <script> and <style> block, so it does NOT
+     need 'unsafe-inline'.
 
-     The meta CSP below is retained as a browser hint only for directives that
-     ARE valid in <meta> (script-src, style-src, img-src, etc).
+     This <meta> CSP is a browser fallback hint ONLY. It intentionally
+     omits script-src so it cannot weaken the server-side nonce policy.
+     Directives that are valid and safe in <meta> (style-src, img-src, etc.)
+     are listed here as a secondary defence-in-depth layer.
+
+     Rules for this meta tag:
+       • NEVER add 'unsafe-inline' or 'unsafe-eval' to script-src here.
+       • frame-ancestors is NOT valid in <meta> — keep it server-side only.
+       • X-Frame-Options is NOT valid in <meta> — keep it server-side only.
      ══════════════════════════════════════════════════════════════════════════ -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
   connect-src 'self';
@@ -9320,6 +9326,24 @@ function entLoading(title){
     </div>`;
 }
 
+// Renders a standardised, styled error state into the ENT page container.
+// Mirrors the classifyError + errInline pattern used by the core modules,
+// so every page failure looks consistent regardless of which section failed.
+// Usage: catch(e){ entError('Page Title', e); return; }
+function entError(pageTitle, e){
+  const {title, sub, code} = classifyError(e);
+  entContent(`
+    <div class="page-header"><h1>${pageTitle}</h1></div>
+    <div class="page-error">
+      <div class="page-error-icon">
+        <span style="font-family:'Material Symbols Outlined';font-size:32px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none" aria-hidden="true">warning</span>
+      </div>
+      <div class="page-error-title">${title}</div>
+      <div class="page-error-sub">${sub}${code ? `<br><span style="font-family:var(--ff-mono);font-size:10px;color:var(--text-faint);letter-spacing:0.06em">${code}</span>` : ''}</div>
+      <button class="page-error-btn" onclick="loadPage(currentPage)">↻ Try again</button>
+    </div>`);
+}
+
 // Renders a standard data table for Enterprise Analytics pages.
 // headers: array of column header labels (use '' for an action column with no label)
 // rowsHtml: pre-joined string of <tr>...</tr> rows (already formatted by the caller)
@@ -10427,7 +10451,7 @@ async function loadEntKpiDashboard(){
   entContent(entLoading('Enterprise KPI Dashboard'));
   let d;
   try{ d = await entFetch('/kpi-dashboard'); }
-  catch(e){ entContent(`<div class="page-header"><h1>Enterprise KPI Dashboard</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  catch(e){ entError('Enterprise KPI Dashboard', e); return; }
 
   entContent(`
 <div class="page-header"><h1>Enterprise KPI Dashboard</h1><div class="page-subtitle">Powered by ${d.registered_formulas||0} registered calculation formulas</div></div>
@@ -10484,7 +10508,7 @@ async function loadEntProfitability(){
       entFetch('/profitability/by-enterprise'),
       entFetch('/profitability/by-season'),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>Advanced Profitability</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('Advanced Profitability', e); return; }
 
   const byEntRows = (byEnt||[]).map(r=>`<tr>
     <td>${r.unit_type||'—'}</td>
@@ -10550,7 +10574,7 @@ async function loadEntCogs(){
       entFetch('/cogs/summary'),
       entFetch('/cogs'),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>COGS Ledger</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('COGS Ledger', e); return; }
 
   const rows = (entries||[]).map(r=>`<tr>
     <td>${r.entry_type||'—'}</td>
@@ -10638,7 +10662,7 @@ async function loadEntCostAccounting(){
       entFetch('/cost-accounting/enterprise-summary'),
       entFetch('/cost-accounting/allocation-rules'),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>Cost Accounting</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('Cost Accounting', e); return; }
 
   const unitRows = (units||[]).map(r=>`<tr>
     <td>${r.name}</td>
@@ -10706,7 +10730,7 @@ async function loadEntForecasting(){
       entFetch('/forecasting/scenarios'),
       entFetch('/forecasting/what-if','POST',{}),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>Forecasting</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('Forecasting', e); return; }
 
   const cfRows = (cashflow?.forecast||[]).slice(0,6).map(m=>`<tr>
     <td>${m.month}</td>
@@ -10804,7 +10828,7 @@ async function loadEntInventoryOpt(){
   entContent(entLoading('Inventory Optimisation'));
   let data;
   try{ data = await entFetch('/inventory/optimisation'); }
-  catch(e){ entContent(`<div class="page-header"><h1>Inventory Optimisation</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  catch(e){ entError('Inventory Optimisation', e); return; }
 
   const items = data?.items||[];
   const reorder = data?.purchasing_recommendations||[];
@@ -10853,7 +10877,7 @@ async function loadEntLivestockAnalytics(){
   entContent(entLoading('Livestock Analytics'));
   let herds;
   try{ herds = await entFetch('/livestock/analytics'); }
-  catch(e){ entContent(`<div class="page-header"><h1>Livestock Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  catch(e){ entError('Livestock Analytics', e); return; }
 
   const cards = (herds||[]).map(h=>{
     const k = h.kpis||{};
@@ -10922,7 +10946,7 @@ async function loadEntCropAnalytics(){
       entFetch('/crops/analytics'),
       entFetch('/crops/season-comparison'),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>Crop Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('Crop Analytics', e); return; }
 
   const tableRows = (rows||[]).map(r=>{
     const a = r.analytics||{};
@@ -10999,7 +11023,7 @@ async function loadEntLabourAnalytics(){
   entContent(entLoading('Labour Analytics'));
   let data;
   try{ data = await entFetch('/labour/analytics'); }
-  catch(e){ entContent(`<div class="page-header"><h1>Labour Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  catch(e){ entError('Labour Analytics', e); return; }
 
   const kpis = data?.farm_kpis||{};
   const workers = data?.workers||[];
@@ -11042,7 +11066,7 @@ async function loadEntAssetAnalytics(){
       entFetch('/assets/analytics'),
       entFetch('/assets/replacement-forecast'),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>Asset Analytics</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('Asset Analytics', e); return; }
 
   const aRows = (assets||[]).map(a=>{
     const p = a.performance||{};
@@ -11084,7 +11108,7 @@ async function loadEntCalculations(){
   entContent(entLoading('Calculation Registry'));
   let data;
   try{ data = await entFetch('/calculations/registry'); }
-  catch(e){ entContent(`<div class="page-header"><h1>Calculation Registry</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  catch(e){ entError('Calculation Registry', e); return; }
 
   const formulas = data?.formulas||[];
   const byModule = {};
@@ -11132,7 +11156,7 @@ async function loadEntScenarios(){
       entFetch('/forecasting/scenarios'),
       entFetch('/forecasting/what-if','POST',{}),
     ]);
-  }catch(e){ entContent(`<div class="page-header"><h1>Scenario Modelling</h1></div><div class="error-msg">${e.message}</div>`); return; }
+  }catch(e){ entError('Scenario Modelling', e); return; }
 
   const wi = whatif?.scenarios||{};
   const wiKeys = ['worst_case','expected_case','best_case'];
