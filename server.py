@@ -16,10 +16,6 @@ import re
 import logging
 from datetime import datetime, timedelta
 from functools import wraps
-import smtplib
-import ssl
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from flask import Flask, request, jsonify, g, send_from_directory, make_response
 
 # bcrypt is the only acceptable algorithm for password storage.
@@ -421,132 +417,6 @@ _railway_url = os.environ.get("RAILWAY_PUBLIC_DOMAIN", "")
 _default_origin = f"https://{_railway_url}" if _railway_url else "http://localhost:5000"
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", _default_origin)
 
-# ── EMAIL / PASSWORD RESET CONFIG ─────────────────────────────────────────────
-# Set these as Railway environment variables:
-#   SMTP_HOST     e.g. smtp.gmail.com  (or smtp.zoho.com, smtp.sendgrid.net …)
-#   SMTP_PORT     587 for TLS (recommended), 465 for SSL
-#   SMTP_USER     your sending address  e.g. noreply@thornfield.co.zw
-#   SMTP_PASS     your SMTP password or app-specific password
-#   SMTP_FROM     display name + address, e.g. "Thornfield Estate <noreply@thornfield.co.zw>"
-#                 falls back to SMTP_USER if not set
-#   APP_URL       your public frontend URL e.g. https://thornfield.up.railway.app
-#                 used to build the reset link in the email
-_SMTP_HOST = os.environ.get("SMTP_HOST", "")
-_SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
-_SMTP_USER = os.environ.get("SMTP_USER", "")
-_SMTP_PASS = os.environ.get("SMTP_PASS", "")
-_SMTP_FROM = os.environ.get("SMTP_FROM", _SMTP_USER)
-_APP_URL   = os.environ.get("APP_URL", ALLOWED_ORIGIN).rstrip("/")
-
-def send_reset_email(recipient_email: str, token: str) -> bool:
-    """
-    Send a password reset email.
-    Returns True on success, False if email is not configured or sending fails.
-    Errors are logged but never raised — the caller always returns 200 to prevent
-    email enumeration regardless of whether delivery succeeded.
-    """
-    if not _SMTP_HOST or not _SMTP_USER or not _SMTP_PASS:
-        # Email not configured — token is only visible in logs (dev mode)
-        return False
-
-    reset_url = f"{_APP_URL}?reset_token={token}"
-
-    # Plain-text fallback
-    text_body = f"""Hello,
-
-You requested a password reset for your Thornfield Estate account.
-
-Click the link below to set a new password (valid for 1 hour):
-
-{reset_url}
-
-If you did not request this, you can safely ignore this email.
-Your password will not change until you click the link above.
-
-— Thornfield Estate
-"""
-
-    # HTML version
-    html_body = f"""<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0d0e10;font-family:'DM Sans',Arial,sans-serif">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0e10;padding:40px 0">
-    <tr><td align="center">
-      <table width="480" cellpadding="0" cellspacing="0"
-             style="background:#111316;border:1px solid rgba(184,146,74,0.22);border-radius:12px;overflow:hidden">
-        <tr>
-          <td style="padding:32px 36px 20px;border-bottom:1px solid rgba(184,146,74,0.12)">
-            <span style="font-family:Georgia,serif;font-size:18px;font-weight:700;
-                         color:#d4aa60;letter-spacing:0.14em;text-transform:uppercase">
-              &#9670; THORNFIELD ESTATE
-            </span>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:32px 36px">
-            <h1 style="margin:0 0 12px;font-size:22px;font-weight:600;color:#e8e4dc">
-              Reset your password
-            </h1>
-            <p style="margin:0 0 24px;font-size:14px;color:#a09a8e;line-height:1.6">
-              We received a request to reset the password for your Thornfield Estate account.
-              Click the button below — this link is valid for <strong style="color:#e8e4dc">1 hour</strong>.
-            </p>
-            <table cellpadding="0" cellspacing="0" style="margin-bottom:28px">
-              <tr>
-                <td style="background:#b8924a;border-radius:8px">
-                  <a href="{reset_url}"
-                     style="display:inline-block;padding:13px 28px;font-size:14px;font-weight:600;
-                            color:#0d0e10;text-decoration:none;letter-spacing:0.03em">
-                    Set new password →
-                  </a>
-                </td>
-              </tr>
-            </table>
-            <p style="margin:0 0 8px;font-size:12px;color:#6a6560;line-height:1.6">
-              If the button doesn't work, copy and paste this URL into your browser:
-            </p>
-            <p style="margin:0;font-size:11px;color:#b8924a;word-break:break-all">{reset_url}</p>
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:18px 36px;border-top:1px solid rgba(255,255,255,0.06)">
-            <p style="margin:0;font-size:11.5px;color:#3e3c38;line-height:1.6">
-              If you didn't request a password reset, ignore this email — your password won't change.
-            </p>
-          </td>
-        </tr>
-      </table>
-    </td></tr>
-  </table>
-</body>
-</html>"""
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = "Reset your Thornfield Estate password"
-    msg["From"]    = _SMTP_FROM
-    msg["To"]      = recipient_email
-    msg.attach(MIMEText(text_body, "plain"))
-    msg.attach(MIMEText(html_body, "html"))
-
-    try:
-        context = ssl.create_default_context()
-        if _SMTP_PORT == 465:
-            with smtplib.SMTP_SSL(_SMTP_HOST, _SMTP_PORT, context=context) as server:
-                server.login(_SMTP_USER, _SMTP_PASS)
-                server.sendmail(_SMTP_USER, recipient_email, msg.as_string())
-        else:
-            with smtplib.SMTP(_SMTP_HOST, _SMTP_PORT) as server:
-                server.ehlo()
-                server.starttls(context=context)
-                server.login(_SMTP_USER, _SMTP_PASS)
-                server.sendmail(_SMTP_USER, recipient_email, msg.as_string())
-        return True
-    except Exception as exc:
-        # Log but swallow — caller always returns 200 regardless
-        print(f"  [EMAIL ERROR] failed to send reset email to {recipient_email}: {exc}")
-        return False
-
 # Support comma-separated list of origins for multi-domain setups
 ALLOWED_ORIGINS = set(o.strip() for o in ALLOWED_ORIGIN.split(",") if o.strip())
 
@@ -729,9 +599,12 @@ def _inc(key: str, n: int = 1):
 
 @app.before_request
 def _before_request():
-    """Assign a unique request ID and start a request timer."""
+    """Assign a unique request ID, CSP nonce, and start a request timer."""
     g.request_id  = request.headers.get("X-Request-ID") or _uuid_mod.uuid4().hex[:16]
     g.request_t0  = time.monotonic()
+    # Generate a per-request cryptographic nonce for CSP script-src.
+    # 128 bits of randomness from the OS CSPRNG — safe for production.
+    g.csp_nonce   = secrets.token_urlsafe(16)
     _inc("requests_total")
 
 @app.after_request
@@ -908,17 +781,23 @@ def add_security_headers(response):
     response.headers["Referrer-Policy"]            = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"]         = "geolocation=(), microphone=(), camera=()"
     response.headers["Strict-Transport-Security"]  = "max-age=31536000; includeSubDomains"
+    # Nonce-based CSP — eliminates 'unsafe-inline' for scripts.
+    # The nonce is generated fresh each request in _before_request() and
+    # injected into the HTML <script> tag via serve_frontend().
+    # Browsers that support nonces will enforce this; legacy browsers fall
+    # back to the meta-tag CSP set in the HTML <head>.
+    nonce = getattr(g, "csp_nonce", secrets.token_urlsafe(16))
     response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        "font-src 'self' https://fonts.gstatic.com; "
-        "connect-src 'self'; "
-        "img-src 'self' data:; "
-        "frame-ancestors 'none'; "
-        "base-uri 'self'; "
-        "form-action 'self'; "
-        "report-uri /api/csp-report;"
+        f"default-src 'self'; "
+        f"script-src 'self' 'nonce-{nonce}'; "
+        f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        f"font-src 'self' https://fonts.gstatic.com; "
+        f"connect-src 'self'; "
+        f"img-src 'self' data:; "
+        f"frame-ancestors 'none'; "
+        f"base-uri 'self'; "
+        f"form-action 'self'; "
+        f"report-uri /api/csp-report;"
     )
     # Remove headers that leak server info
     response.headers.pop("Server", None)
@@ -1302,10 +1181,11 @@ def forgot_password():
         (token, user["id"], expires)
     )
 
-    # Send reset email (logs token to console if SMTP is not configured)
-    sent = send_reset_email(email, token)
-    if not sent:
-        print(f"  [PASSWORD RESET] token for {email}: {token} (expires {expires}) — configure SMTP env vars to send email")
+    # TODO: Send email here via SendGrid / Mailgun / SES:
+    #   send_reset_email(email, token)
+    # Reset link would be: https://your-domain.com/%sreset_token=<token>
+    # For now we log it so you can test end-to-end without email infra
+    print(f"  [PASSWORD RESET] token for {email}: {token} (expires {expires})")
 
     return jsonify({"message": "If that email exists, a reset link has been sent"}), 200
 
@@ -2901,13 +2781,50 @@ def get_finance_budget_summary():
 
 # ─── STATIC / FRONTEND ────────────────────────────────────────────────────────
 
+# Cached raw HTML bytes — read once from disk, never again.
+# The nonce placeholder %%CSP_NONCE%% is replaced per-request in memory;
+# the file on disk is never mutated.
+_INDEX_HTML_CACHE: str | None = None
+
+def _load_index_html() -> str:
+    """Read public/index.html from disk once and cache it in memory."""
+    global _INDEX_HTML_CACHE
+    if _INDEX_HTML_CACHE is None:
+        index_path = os.path.join(PUBLIC_DIR, "index.html")
+        with open(index_path, "r", encoding="utf-8") as fh:
+            _INDEX_HTML_CACHE = fh.read()
+    return _INDEX_HTML_CACHE
+
+
 @app.route("/")
 @app.route("/<path:path>")
 def index(path=None):
-    # Serve API routes normally; catch all others for the SPA
+    """Serve the SPA, injecting the per-request CSP nonce into every <script> tag.
+
+    In index.html, add the attribute  nonce="%%CSP_NONCE%%"  to every inline
+    or external <script> tag, e.g.:
+
+        <script nonce="%%CSP_NONCE%%">…</script>
+        <script nonce="%%CSP_NONCE%%" src="/app.js"></script>
+
+    Flask replaces the placeholder with the real nonce at serve time, matching
+    the value in the Content-Security-Policy header that add_security_headers()
+    sets.  Browsers validate the two values match before executing any script.
+    """
+    # API paths should never reach this catch-all — return 404 cleanly.
     if path and path.startswith("api/"):
         return jsonify({"error": "Not found"}), 404
-    return send_from_directory(PUBLIC_DIR, "index.html")
+
+    nonce = getattr(g, "csp_nonce", secrets.token_urlsafe(16))
+
+    html = _load_index_html().replace("%%CSP_NONCE%%", nonce)
+
+    resp = make_response(html, 200)
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    # Prevent the SPA shell from being cached — assets (JS/CSS) are cache-busted
+    # by their content-hashed filenames and served directly by Flask's static handler.
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
