@@ -33,15 +33,15 @@
 <!-- Referrer policy -->
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>MyFarm — Thornfield Estate Intelligence</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d0e10'/%3E%3Cpath d='M16 7l2.5 4.3h5L21 15l1.9 3.2-1.9.6-1.1-1.9L16 21l-3.9-4.1-1.1 1.9-1.9-.6L11 15l-2.5-3.7h5z' fill='%23b8924a' opacity='.9'/%3E%3C/svg%3E">
-<link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d0e10'/%3E%3Cpath d='M16 7l2.5 4.3h5L21 15l1.9 3.2-1.9.6-1.1-1.9L16 21l-3.9-4.1-1.1 1.9-1.9-.6L11 15l-2.5-3.7h5z' fill='%23b8924a' opacity='.9'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1712'/%3E%3Cpath d='M16 7l2.5 4.3h5L21 15l1.9 3.2-1.9.6-1.1-1.9L16 21l-3.9-4.1-1.1 1.9-1.9-.6L11 15l-2.5-3.7h5z' fill='%23c17a42' opacity='.9'/%3E%3C/svg%3E">
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1712'/%3E%3Cpath d='M16 7l2.5 4.3h5L21 15l1.9 3.2-1.9.6-1.1-1.9L16 21l-3.9-4.1-1.1 1.9-1.9-.6L11 15l-2.5-3.7h5z' fill='%23c17a42' opacity='.9'/%3E%3C/svg%3E">
 <meta name="description" content="Thornfield Estate — Institutional agricultural asset intelligence platform for investors, estate managers and stakeholders.">
 <meta property="og:title" content="MyFarm — Thornfield Estate Intelligence">
 <meta property="og:description" content="Premium agricultural investment intelligence for Sub-Saharan Africa.">
-<meta name="theme-color" content="#0d0e10">
+<meta name="theme-color" content="#0e1712">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..700&family=Schibsted+Grotesk:wght@300;400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300,0,0" rel="stylesheet">
 <!-- Performance: DNS prefetch for API (same origin on Railway) -->
 <link rel="dns-prefetch" href="/">
@@ -52,81 +52,87 @@
 <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    MYFARM — INSTITUTIONAL AGRICULTURAL INTELLIGENCE PLATFORM
-   Redesign: Premium dark, charcoal/navy, restrained bronze/gold accents
+   Redesign: "Estate Ledger" — deep loam-green surfaces, parchment-ivory
+   text, restrained copper accent. A financial-ledger sensibility applied
+   to an agricultural estate platform.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* ── SURFACES ── */
-  --bg:     #0d0e10;
-  --s1:     #111316;
-  --s2:     #161820;
-  --s3:     #1b1d26;
-  --s4:     #21232e;
-  --s5:     #272a38;
+  /* ── SURFACES: deep loam green, like land at dusk ── */
+  --bg:     #0e1712;
+  --s1:     #131f17;
+  --s2:     #18261c;
+  --s3:     #1e2e22;
+  --s4:     #263a2c;
+  --s5:     #2f4636;
 
-  /* ── ACCENT: RESTRAINED BRONZE/GOLD ── */
-  --gold:        #b8924a;
-  --gold-lt:     #d4aa60;
-  --gold-dk:     #8a6c30;
-  --gold-dim:    rgba(184,146,74,0.10);
-  --gold-glow:   rgba(212,170,96,0.12);
-  --gold-border: rgba(184,146,74,0.22);
+  /* ── ACCENT: COPPER — brass survey instruments, ledger ink ── */
+  --copper:        #c17a42;
+  --copper-lt:     #dd9c61;
+  --copper-dk:     #8f5527;
+  --copper-dim:    rgba(193,122,66,0.10);
+  --copper-glow:   rgba(221,156,97,0.14);
+  --copper-border: rgba(193,122,66,0.24);
 
-  /* ── TYPOGRAPHY COLORS ── */
-  --text-primary:   #e8e4dc;
-  --text-secondary: #a09a8e;
-  --text-muted:     #6a6560;
-  --text-faint:     #3e3c38;
+  /* ── A second earth note — moss, used sparingly for crop/growth context ── */
+  --moss:     #7a9c4a;
+  --moss-txt: #9bc46e;
+
+  /* ── TYPOGRAPHY COLORS: parchment ink ── */
+  --text-primary:   #f1ead9;
+  --text-secondary: #b3a890;
+  --text-muted:     #7d7762;
+  --text-faint:     #45433a;
 
   /* ── STATUS ── */
-  --success:     #3d7a38;
-  --success-lt:  #5aaa52;
-  --success-txt: #7ecc74;
-  --success-bg:  rgba(94,170,80,0.08);
-  --success-bdr: rgba(94,170,80,0.20);
+  --success:     #4a8a3f;
+  --success-lt:  #6cb35e;
+  --success-txt: #8ed47e;
+  --success-bg:  rgba(108,179,94,0.08);
+  --success-bdr: rgba(108,179,94,0.20);
 
-  --warn:     #8a6018;
-  --warn-lt:  #c4862a;
-  --warn-txt: #e0a840;
-  --warn-bg:  rgba(196,134,42,0.08);
-  --warn-bdr: rgba(196,134,42,0.20);
+  --warn:     #9c6f1a;
+  --warn-lt:  #c98f2e;
+  --warn-txt: #e3ad4c;
+  --warn-bg:  rgba(201,143,46,0.08);
+  --warn-bdr: rgba(201,143,46,0.20);
 
-  --error:     #7a2828;
-  --error-lt:  #b04040;
-  --error-txt: #e06060;
-  --error-bg:  rgba(176,64,64,0.08);
-  --error-bdr: rgba(176,64,64,0.20);
+  --error:     #8a3328;
+  --error-lt:  #c14d3c;
+  --error-txt: #e2705c;
+  --error-bg:  rgba(193,77,60,0.08);
+  --error-bdr: rgba(193,77,60,0.20);
 
-  --info:     #2a5070;
-  --info-lt:  #3a7898;
-  --info-txt: #5aaece;
-  --info-bg:  rgba(58,120,152,0.08);
-  --info-bdr: rgba(58,120,152,0.20);
+  --info:     #2f5a72;
+  --info-lt:  #4683a0;
+  --info-txt: #6fb0cc;
+  --info-bg:  rgba(70,131,160,0.08);
+  --info-bdr: rgba(70,131,160,0.20);
 
-  /* ── BORDERS ── */
-  --bdr:     rgba(255,255,255,0.055);
-  --bdr2:    rgba(255,255,255,0.030);
-  --bdr-hv:  rgba(255,255,255,0.095);
+  /* ── BORDERS: ivory-tinted hairlines, not cold white ── */
+  --bdr:     rgba(241,234,217,0.07);
+  --bdr2:    rgba(241,234,217,0.04);
+  --bdr-hv:  rgba(241,234,217,0.12);
 
   /* ── SHADOWS ── */
   --sh-sm: 0 1px 4px rgba(0,0,0,0.45);
   --sh-md: 0 4px 16px rgba(0,0,0,0.55);
   --sh-lg: 0 12px 40px rgba(0,0,0,0.65), 0 4px 12px rgba(0,0,0,0.40);
-  --sh-gold: 0 4px 24px rgba(184,146,74,0.15);
+  --sh-copper: 0 4px 24px rgba(193,122,66,0.18);
 
   /* ── FONTS ── */
-  --ff-display: 'Cormorant Garamond', Georgia, serif;
-  --ff-ui:      'DM Sans', sans-serif;
-  --ff-mono:    'DM Mono', monospace;
+  --ff-display: 'Fraunces', Georgia, serif;
+  --ff-ui:      'Schibsted Grotesk', sans-serif;
+  --ff-mono:    'Spline Sans Mono', monospace;
 
-  /* ── LAYOUT ── */
+  /* ── LAYOUT — tightened toward a bound-ledger-book feel ── */
   --sidebar-w: 290px;  /* kept for compat */
   --sb-w: 290px;
-  --radius:    10px;
-  --radius-sm: 7px;
-  --radius-lg: 14px;
+  --radius:    8px;
+  --radius-sm: 5px;
+  --radius-lg: 12px;
 
   /* ── TRANSITIONS ── */
   --tr:     0.20s cubic-bezier(0.4,0,0.2,1);
@@ -187,8 +193,8 @@ body {
 /* ─── EMPTY TABLE STATE ──────────────────────────────────────────────────── */
 .empty-row td { padding:48px 16px; text-align:center; color:var(--text-faint); font-size:12px; border-bottom:none; }
 .empty-row .empty-title { display:block; font-family:var(--ff-display); font-size:16px; color:var(--text-muted); margin-bottom:8px; font-style:italic; }
-.empty-row .empty-cta { display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:8px 18px; background:var(--gold-dim); border:1px solid var(--gold-border); color:var(--gold-lt); border-radius:7px; font-size:11.5px; font-weight:500; cursor:pointer; font-style:normal; transition:all var(--tr); }
-.empty-row .empty-cta:hover { background:rgba(184,146,74,0.18); border-color:rgba(212,170,96,0.38); }
+.empty-row .empty-cta { display:inline-flex; align-items:center; gap:6px; margin-top:12px; padding:8px 18px; background:var(--copper-dim); border:1px solid var(--copper-border); color:var(--copper-lt); border-radius:7px; font-size:11.5px; font-weight:500; cursor:pointer; font-style:normal; transition:all var(--tr); }
+.empty-row .empty-cta:hover { background:rgba(193,122,66,0.18); border-color:rgba(221,156,97,0.38); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    ONBOARDING WIZARD
@@ -200,9 +206,9 @@ body {
 }
 #onboarding-overlay.hidden { display: none; }
 #onboarding-box {
-  background: var(--s2); border: 1px solid var(--gold-border); border-radius: 18px;
+  background: var(--s2); border: 1px solid var(--copper-border); border-radius: 18px;
   width: min(560px, calc(100vw - 32px));
-  box-shadow: var(--sh-lg), 0 0 60px rgba(184,146,74,0.08);
+  box-shadow: var(--sh-lg), 0 0 60px rgba(193,122,66,0.08);
   animation: scaleIn 0.35s var(--tr-spr) both; overflow: hidden;
 }
 .ob-header { padding: 28px 32px 0; text-align: center; }
@@ -214,10 +220,10 @@ body {
 .ob-step-wrap:last-child { flex: none; }
 .ob-step { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
 .ob-step-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--s4); border: 2px solid var(--bdr); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--text-faint); transition: all var(--tr); font-family: var(--ff-mono); }
-.ob-step.active .ob-step-dot { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-lt); box-shadow: 0 0 0 4px rgba(184,146,74,0.12); }
-.ob-step.done .ob-step-dot { background: rgba(94,170,80,0.15); border-color: var(--success-lt); color: var(--success-txt); font-size: 15px; }
+.ob-step.active .ob-step-dot { background: var(--copper-dim); border-color: var(--copper); color: var(--copper-lt); box-shadow: 0 0 0 4px rgba(193,122,66,0.12); }
+.ob-step.done .ob-step-dot { background: rgba(108,179,94,0.15); border-color: var(--success-lt); color: var(--success-txt); font-size: 15px; }
 .ob-step-label { font-size: 10px; color: var(--text-faint); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; transition: color var(--tr); text-align: center; }
-.ob-step.active .ob-step-label { color: var(--gold); }
+.ob-step.active .ob-step-label { color: var(--copper); }
 .ob-step.done .ob-step-label { color: var(--success-txt); }
 .ob-connector { flex: 1; height: 1px; background: var(--bdr); margin: 0 6px; margin-bottom: 18px; transition: background var(--tr); }
 .ob-connector.done { background: var(--success-lt); opacity: 0.4; }
@@ -229,17 +235,17 @@ body {
 .ob-panel-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.65; text-align: center; margin-bottom: 20px; }
 .ob-actions { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .ob-action-card { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: var(--s3); border: 1px solid var(--bdr); border-radius: 10px; cursor: pointer; transition: all var(--tr); }
-.ob-action-card:hover { background: var(--s4); border-color: var(--gold-border); }
+.ob-action-card:hover { background: var(--s4); border-color: var(--copper-border); }
 .ob-action-icon { font-size: 22px; flex-shrink: 0; width: 36px; text-align: center; }
 .ob-action-text { flex: 1; }
 .ob-action-label { font-size: 13px; font-weight: 400; color: var(--text-primary); margin-bottom: 2px; }
 .ob-action-hint { font-size: 11.5px; color: var(--text-muted); }
-.ob-action-arrow { color: var(--gold); font-size: 16px; opacity: 0.7; }
+.ob-action-arrow { color: var(--copper); font-size: 16px; opacity: 0.7; }
 .ob-footer { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px 24px; border-top: 1px solid var(--bdr); gap: 12px; }
 .ob-skip { font-size: 12px; color: var(--text-faint); cursor: pointer; background: none; border: none; font-family: var(--ff-ui); transition: color var(--tr); padding: 8px 0; }
 .ob-skip:hover { color: var(--text-muted); }
-.ob-next { background: rgba(184,146,74,0.12); color: var(--gold-lt); border: 1px solid var(--gold-border); border-radius: 8px; padding: 10px 28px; font-family: var(--ff-ui); font-size: 12.5px; font-weight: 500; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all var(--tr); }
-.ob-next:hover { background: rgba(184,146,74,0.22); border-color: rgba(212,170,96,0.45); transform: translateY(-1px); }
+.ob-next { background: rgba(193,122,66,0.12); color: var(--copper-lt); border: 1px solid var(--copper-border); border-radius: 8px; padding: 10px 28px; font-family: var(--ff-ui); font-size: 12.5px; font-weight: 500; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all var(--tr); }
+.ob-next:hover { background: rgba(193,122,66,0.22); border-color: rgba(221,156,97,0.45); transform: translateY(-1px); }
 
 /* ══════════════════════════════════════════════════════════════════════════
    AUTH SCREEN — TWO STATES: LANDING PAGE & AUTH FORM
@@ -277,17 +283,17 @@ body {
 .lp-nav {
   display: flex; align-items: center; justify-content: space-between;
   padding: 20px 64px; border-bottom: 1px solid var(--bdr);
-  position: sticky; top: 0; background: rgba(13,14,16,0.95);
+  position: sticky; top: 0; background: rgba(14,23,18,0.95);
   backdrop-filter: blur(12px); z-index: 10;
 }
 .lp-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
 .lp-logo-mark {
   font-family: var(--ff-display); font-size: 18px; font-weight: 700;
-  color: var(--gold-lt); letter-spacing: 0.20em; text-transform: uppercase;
+  color: var(--copper-lt); letter-spacing: 0.20em; text-transform: uppercase;
 }
 .lp-logo-mark::before {
   content: ''; display: inline-block; width: 6px; height: 6px;
-  background: var(--gold); border-radius: 1px; transform: rotate(45deg);
+  background: var(--copper); border-radius: 1px; transform: rotate(45deg);
   margin-right: 10px; vertical-align: middle; opacity: 0.9;
 }
 .lp-nav-links { display: flex; align-items: center; gap: 28px; }
@@ -301,12 +307,12 @@ body {
 }
 .lp-signin-btn:hover { border-color: var(--bdr-hv); color: var(--text-primary); }
 .lp-getstarted-btn {
-  font-size: 12px; font-weight: 500; color: var(--gold-lt);
-  background: rgba(184,146,74,0.12); border: 1px solid var(--gold-border);
+  font-size: 12px; font-weight: 500; color: var(--copper-lt);
+  background: rgba(193,122,66,0.12); border: 1px solid var(--copper-border);
   border-radius: 7px; padding: 8px 18px; cursor: pointer; font-family: var(--ff-ui);
   transition: all var(--tr); letter-spacing: 0.04em;
 }
-.lp-getstarted-btn:hover { background: rgba(184,146,74,0.22); border-color: rgba(212,170,96,0.45); }
+.lp-getstarted-btn:hover { background: rgba(193,122,66,0.22); border-color: rgba(221,156,97,0.45); }
 
 /* Hero section */
 .lp-hero {
@@ -317,14 +323,14 @@ body {
 .lp-hero-left { animation: fadeUp 0.7s 0.1s ease both; }
 .lp-eyebrow {
   font-size: 10px; text-transform: uppercase; letter-spacing: 0.28em;
-  color: var(--gold); font-weight: 500; margin-bottom: 18px; opacity: 0.85;
+  color: var(--copper); font-weight: 500; margin-bottom: 18px; opacity: 0.85;
 }
 .lp-headline {
   font-family: var(--ff-display); font-size: 58px; font-weight: 600;
   color: var(--text-primary); line-height: 1.05; margin-bottom: 22px;
   letter-spacing: -0.01em;
 }
-.lp-headline span { color: var(--gold-lt); }
+.lp-headline span { color: var(--copper-lt); }
 .lp-subtext {
   font-size: 15px; color: var(--text-secondary); line-height: 1.75;
   max-width: 440px; margin-bottom: 36px; font-weight: 300;
@@ -332,12 +338,12 @@ body {
 .lp-hero-ctas { display: flex; gap: 12px; margin-bottom: 40px; flex-wrap: wrap; }
 .lp-cta-primary {
   display: inline-flex; align-items: center; gap: 8px;
-  background: var(--gold); color: var(--bg);
+  background: var(--copper); color: var(--bg);
   border: none; border-radius: 8px; padding: 14px 28px;
   font-family: var(--ff-ui); font-size: 13px; font-weight: 500;
   cursor: pointer; transition: all var(--tr); letter-spacing: 0.04em;
 }
-.lp-cta-primary:hover { background: var(--gold-lt); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(184,146,74,0.35); }
+.lp-cta-primary:hover { background: var(--copper-lt); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(193,122,66,0.35); }
 .lp-cta-secondary {
   display: inline-flex; align-items: center; gap: 8px;
   background: transparent; color: var(--text-secondary);
@@ -348,7 +354,7 @@ body {
 .lp-cta-secondary:hover { border-color: var(--bdr-hv); color: var(--text-primary); }
 .lp-trust-row { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
 .lp-trust-item { font-size: 11.5px; color: var(--text-faint); display: flex; align-items: center; gap: 6px; }
-.lp-trust-item::before { content: '✓'; color: var(--gold); font-size: 11px; }
+.lp-trust-item::before { content: '✓'; color: var(--copper); font-size: 11px; }
 
 /* Hero right — app preview */
 .lp-hero-right { animation: fadeUp 0.7s 0.25s ease both; }
@@ -375,22 +381,30 @@ body {
 .lp-mini-bars { display: flex; align-items: flex-end; gap: 4px; height: 48px; }
 .lp-mini-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; }
 
-/* Stats band */
+/* Stats band — styled as ledger line-items: label above, mono figure
+   below double-ruled in copper, the way a reconciled total is underscored
+   twice in an accounts book. */
 .lp-stats-band {
   background: var(--s1); border-top: 1px solid var(--bdr); border-bottom: 1px solid var(--bdr);
-  padding: 40px 64px;
+  padding: 52px 64px;
 }
-.lp-stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 32px; }
-.lp-stat { text-align: center; }
-.lp-stat-num { font-family: var(--ff-display); font-size: 42px; font-weight: 600; color: var(--gold-lt); margin-bottom: 6px; }
-.lp-stat-label { font-size: 12px; color: var(--text-muted); letter-spacing: 0.04em; }
+.lp-stats-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(4,1fr); gap: 0; }
+.lp-stat { text-align: left; padding: 0 30px; border-left: 1px solid var(--bdr2); }
+.lp-stat:first-child { border-left: none; padding-left: 0; }
+.lp-stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin-bottom: 14px; font-weight: 500; }
+.lp-stat-num {
+  font-family: var(--ff-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.01em;
+  color: var(--text-primary); line-height: 1; display: inline-block; position: relative; padding-bottom: 13px;
+}
+.lp-stat-num::before { content: ''; position: absolute; left: 0; bottom: 6px; width: 100%; height: 2px; background: var(--copper); }
+.lp-stat-num::after  { content: ''; position: absolute; left: 0; bottom: 2px; width: 100%; height: 1px; background: var(--copper-dk); opacity: 0.55; }
 
 /* Features grid */
 .lp-features {
   padding: 80px 64px;
   max-width: 1100px; margin: 0 auto; width: 100%;
 }
-.lp-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.28em; color: var(--gold); font-weight: 500; margin-bottom: 14px; opacity: 0.85; }
+.lp-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.28em; color: var(--copper); font-weight: 500; margin-bottom: 14px; opacity: 0.85; }
 .lp-section-title { font-family: var(--ff-display); font-size: 40px; font-weight: 600; color: var(--text-primary); margin-bottom: 10px; }
 .lp-section-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 48px; max-width: 520px; line-height: 1.7; }
 .lp-feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
@@ -398,7 +412,7 @@ body {
   background: var(--s1); border: 1px solid var(--bdr); border-radius: 12px;
   padding: 26px 24px; transition: all var(--tr);
 }
-.lp-feat-card:hover { border-color: var(--gold-border); background: var(--s2); transform: translateY(-2px); }
+.lp-feat-card:hover { border-color: var(--copper-border); background: var(--s2); transform: translateY(-2px); }
 .lp-feat-icon { font-size: 26px; margin-bottom: 14px; }
 .lp-feat-title { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; }
 .lp-feat-desc { font-size: 12.5px; color: var(--text-muted); line-height: 1.65; }
@@ -415,10 +429,10 @@ body {
 }
 .lp-proof-quote { font-size: 13px; color: var(--text-secondary); line-height: 1.75; margin-bottom: 18px; font-style: italic; }
 .lp-proof-author { display: flex; align-items: center; gap: 10px; }
-.lp-proof-av { width: 34px; height: 34px; border-radius: 50%; background: var(--gold-dim); border: 1px solid var(--gold-border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--gold-lt); flex-shrink: 0; font-family: var(--ff-mono); }
+.lp-proof-av { width: 34px; height: 34px; border-radius: 50%; background: var(--copper-dim); border: 1px solid var(--copper-border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--copper-lt); flex-shrink: 0; font-family: var(--ff-mono); }
 .lp-proof-name { font-size: 12.5px; font-weight: 500; color: var(--text-primary); }
 .lp-proof-role { font-size: 11px; color: var(--text-muted); }
-.lp-proof-stars { color: var(--gold); font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; }
+.lp-proof-stars { color: var(--copper); font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; }
 
 /* CTA banner */
 .lp-cta-section {
@@ -426,7 +440,7 @@ body {
   max-width: 1100px; margin: 0 auto; width: 100%;
 }
 .lp-cta-title { font-family: var(--ff-display); font-size: 46px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px; }
-.lp-cta-title span { color: var(--gold-lt); }
+.lp-cta-title span { color: var(--copper-lt); }
 .lp-cta-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 36px; line-height: 1.7; max-width: 480px; margin-left: auto; margin-right: auto; }
 .lp-cta-btns { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
 
@@ -447,8 +461,9 @@ body {
   .lp-hero { grid-template-columns: 1fr; padding: 60px 24px 40px; gap: 36px; }
   .lp-hero-right { display: none; }
   .lp-headline { font-size: 40px; }
-  .lp-stats-inner { grid-template-columns: repeat(2,1fr); gap: 20px; }
+  .lp-stats-inner { grid-template-columns: repeat(2,1fr); gap: 28px 20px; }
   .lp-stats-band { padding: 36px 24px; }
+  .lp-stat { border-left: none; padding: 0; }
   .lp-features, .lp-proof, .lp-cta-section { padding: 48px 24px; }
   .lp-feat-grid { grid-template-columns: 1fr; }
   .lp-proof-grid { grid-template-columns: 1fr; }
@@ -466,8 +481,8 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(160deg, rgba(13,14,16,0) 0%, rgba(13,14,16,0.6) 50%, rgba(13,14,16,0.95) 100%),
-    linear-gradient(135deg, #0d1a10 0%, #0a0f1a 40%, #0d0e10 100%);
+    linear-gradient(160deg, rgba(14,23,18,0) 0%, rgba(14,23,18,0.6) 50%, rgba(14,23,18,0.95) 100%),
+    linear-gradient(135deg, #0e1712 0%, #15211a 40%, #0e1712 100%);
   border-right: 1px solid var(--bdr);
 }
 .auth-hero-strip::before {
@@ -480,14 +495,14 @@ body {
 }
 .auth-hero-strip::after {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-lt) 50%, var(--gold) 70%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--copper) 30%, var(--copper-lt) 50%, var(--copper) 70%, transparent 100%);
   opacity: 0.5;
 }
 .auth-hero-strip .hero-logo { position: absolute; top: 48px; left: 80px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-.auth-hero-strip .hero-logo-mark { font-family: var(--ff-display); font-size: 17px; font-weight: 700; color: var(--gold-lt); letter-spacing: 0.22em; text-transform: uppercase; }
-.auth-hero-strip .hero-logo-mark::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--gold); border-radius: 1px; transform: rotate(45deg); margin-right: 10px; vertical-align: middle; opacity: 0.9; }
+.auth-hero-strip .hero-logo-mark { font-family: var(--ff-display); font-size: 17px; font-weight: 700; color: var(--copper-lt); letter-spacing: 0.22em; text-transform: uppercase; }
+.auth-hero-strip .hero-logo-mark::before { content: ''; display: inline-block; width: 6px; height: 6px; background: var(--copper); border-radius: 1px; transform: rotate(45deg); margin-right: 10px; vertical-align: middle; opacity: 0.9; }
 .auth-hero-strip .hero-back { position: absolute; top: 48px; right: 80px; font-size: 11px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 6px; transition: color var(--tr); background: none; border: none; font-family: var(--ff-ui); }
-.auth-hero-strip .hero-back:hover { color: var(--gold-lt); }
+.auth-hero-strip .hero-back:hover { color: var(--copper-lt); }
 
 /* LEFT HERO — Cinematic */
 .auth-hero {
@@ -500,8 +515,8 @@ body {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(160deg, rgba(13,14,16,0) 0%, rgba(13,14,16,0.6) 50%, rgba(13,14,16,0.95) 100%),
-    linear-gradient(135deg, #0d1a10 0%, #0a0f1a 40%, #0d0e10 100%);
+    linear-gradient(160deg, rgba(14,23,18,0) 0%, rgba(14,23,18,0.6) 50%, rgba(14,23,18,0.95) 100%),
+    linear-gradient(135deg, #0e1712 0%, #15211a 40%, #0e1712 100%);
   border-right: 1px solid var(--bdr);
 }
 
@@ -522,7 +537,7 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-lt) 50%, var(--gold) 70%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--copper) 30%, var(--copper-lt) 50%, var(--copper) 70%, transparent 100%);
   opacity: 0.5;
 }
 
@@ -540,7 +555,7 @@ body {
   font-family: var(--ff-display);
   font-size: 17px;
   font-weight: 700;
-  color: var(--gold-lt);
+  color: var(--copper-lt);
   letter-spacing: 0.22em;
   text-transform: uppercase;
 }
@@ -549,7 +564,7 @@ body {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: var(--gold);
+  background: var(--copper);
   border-radius: 1px;
   transform: rotate(45deg);
   margin-right: 10px;
@@ -562,7 +577,7 @@ body {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.28em;
-  color: var(--gold);
+  color: var(--copper);
   font-weight: 500;
   margin-bottom: 20px;
   animation: fadeUp 0.7s 0.15s ease both;
@@ -580,7 +595,7 @@ body {
   letter-spacing: -0.01em;
   animation: fadeUp 0.8s 0.2s ease both;
 }
-.hero-headline span { color: var(--gold-lt); }
+.hero-headline span { color: var(--copper-lt); }
 
 /* Supporting text */
 .hero-subtext {
@@ -604,9 +619,9 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  background: rgba(184,146,74,0.12);
-  color: var(--gold-lt);
-  border: 1px solid var(--gold-border);
+  background: rgba(193,122,66,0.12);
+  color: var(--copper-lt);
+  border: 1px solid var(--copper-border);
   border-radius: 8px;
   padding: 13px 28px;
   font-family: var(--ff-ui);
@@ -618,9 +633,9 @@ body {
   transition: all var(--tr);
 }
 .hero-cta-primary:hover {
-  background: rgba(184,146,74,0.20);
-  border-color: rgba(212,170,96,0.45);
-  color: var(--gold-lt);
+  background: rgba(193,122,66,0.20);
+  border-color: rgba(221,156,97,0.45);
+  color: var(--copper-lt);
   transform: translateY(-1px);
 }
 .hero-cta-secondary {
@@ -649,7 +664,7 @@ body {
 .hero-feature-dot {
   width: 1px;
   height: 14px;
-  background: var(--gold);
+  background: var(--copper);
   opacity: 0.4;
   flex-shrink: 0;
 }
@@ -715,17 +730,17 @@ body {
   transition: all var(--tr);
 }
 .auth-input:focus {
-  border-color: var(--gold);
+  border-color: var(--copper);
   background: var(--s3);
-  box-shadow: 0 0 0 3px var(--gold-dim);
+  box-shadow: 0 0 0 3px var(--copper-dim);
 }
 
 /* Auth button */
 .auth-btn {
   width: 100%;
-  background: rgba(184,146,74,0.12);
-  color: var(--gold-lt);
-  border: 1px solid var(--gold-border);
+  background: rgba(193,122,66,0.12);
+  color: var(--copper-lt);
+  border: 1px solid var(--copper-border);
   border-radius: var(--radius-sm);
   padding: 12px;
   font-family: var(--ff-ui);
@@ -738,15 +753,15 @@ body {
   text-transform: uppercase;
 }
 .auth-btn:hover {
-  background: rgba(184,146,74,0.22);
-  border-color: rgba(212,170,96,0.42);
+  background: rgba(193,122,66,0.22);
+  border-color: rgba(221,156,97,0.42);
   transform: translateY(-1px);
 }
 .auth-btn:active { transform: none; }
 
 .auth-switch { text-align:center; margin-top:22px; font-size:12px; color:var(--text-muted); }
-.auth-switch a { color:var(--gold); cursor:pointer; font-weight:400; transition:color var(--tr); text-decoration:none; }
-.auth-switch a:hover { color:var(--gold-lt); }
+.auth-switch a { color:var(--copper); cursor:pointer; font-weight:400; transition:color var(--tr); text-decoration:none; }
+.auth-switch a:hover { color:var(--copper-lt); }
 
 .auth-err {
   background: var(--error-bg);
@@ -765,7 +780,7 @@ body {
   .auth-hero-strip { display: none !important; }
   .auth-hero { display: none; }
   .auth-panel { width: 100%; min-height: 100vh; align-items: center; }
-  .auth-panel-logo { display: block; text-align: center; margin-bottom: 36px; font-family: var(--ff-display); font-size: 22px; color: var(--gold-lt); letter-spacing: 0.12em; text-transform: uppercase; }
+  .auth-panel-logo { display: block; text-align: center; margin-bottom: 36px; font-family: var(--ff-display); font-size: 22px; color: var(--copper-lt); letter-spacing: 0.12em; text-transform: uppercase; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -781,10 +796,10 @@ body {
 :root {
   --sb-w:           290px;
   --sb-collapsed:   72px;
-  --sb-bg:          linear-gradient(180deg, #11141b 0%, #0f1218 100%);
+  --sb-bg:          linear-gradient(180deg, #131f17 0%, #0e1712 100%);
   --sb-border:      rgba(255,255,255,0.055);
   --sb-hover:       rgba(255,255,255,0.038);
-  --sb-active-bg:   linear-gradient(90deg, rgba(184,146,74,0.16), rgba(184,146,74,0.04));
+  --sb-active-bg:   linear-gradient(90deg, rgba(193,122,66,0.16), rgba(193,122,66,0.04));
   --sb-section-clr: rgba(255,255,255,0.26);
 }
 
@@ -809,7 +824,7 @@ body {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: radial-gradient(circle at top left, rgba(184,146,74,0.07), transparent 38%);
+  background: radial-gradient(circle at top left, rgba(193,122,66,0.07), transparent 38%);
 }
 #sidebar.collapsed {
   width: var(--sb-collapsed);
@@ -823,7 +838,7 @@ body {
 /* TOP SECTION */
 .sb-top {
   padding: 0 0 0;
-  border-bottom: 1px solid rgba(255,255,255,0.045);
+  border-bottom: 1px solid rgba(241,234,217,0.06);
   flex-shrink: 0;
 }
 
@@ -839,8 +854,8 @@ body {
   height: 32px;
   min-width: 32px;
   border-radius: 9px;
-  background: linear-gradient(135deg, #c8a052, #8a6030);
-  box-shadow: 0 0 20px rgba(184,146,74,0.28);
+  background: linear-gradient(135deg, #dd9c61, #8f5527);
+  box-shadow: 0 0 20px rgba(193,122,66,0.28);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -865,13 +880,13 @@ body {
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: 0.24em;
-  color: #f3eee5;
+  color: var(--text-primary);
   white-space: nowrap;
 }
 .sb-brand-sub {
   font-size: 8.5px;
   letter-spacing: 0.18em;
-  color: #5a5752;
+  color: var(--text-muted);
   margin-top: 3px;
   text-transform: uppercase;
   white-space: nowrap;
@@ -883,7 +898,7 @@ body {
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.07);
   background: rgba(255,255,255,0.03);
-  color: #8a8480;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -900,8 +915,8 @@ body {
 }
 .sb-collapse-btn:hover {
   background: rgba(255,255,255,0.07);
-  color: #d4aa60;
-  border-color: rgba(184,146,74,0.2);
+  color: #dd9c61;
+  border-color: rgba(193,122,66,0.2);
 }
 
 /* SEARCH TRIGGER */
@@ -923,13 +938,13 @@ body {
   white-space: nowrap;
 }
 .sb-search-inner:hover {
-  border-color: rgba(184,146,74,0.22);
+  border-color: rgba(193,122,66,0.22);
   background: rgba(255,255,255,0.05);
 }
 .sb-search-icon {
   font-family: 'Material Symbols Outlined';
   font-size: 15px;
-  color: #8a7a6a;
+  color: var(--text-muted);
   flex-shrink: 0;
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   font-style: normal;
@@ -940,12 +955,12 @@ body {
 .sb-search-text {
   flex: 1;
   font-size: 11.5px;
-  color: #6a6560;
+  color: #7d7762;
   transition: opacity 0.2s ease;
 }
 .sb-search-kbd {
   font-size: 9.5px;
-  color: #4a4642;
+  color: var(--text-faint);
   letter-spacing: 0.08em;
   background: rgba(255,255,255,0.04);
   padding: 2px 6px;
@@ -971,7 +986,7 @@ body {
 .sb-section-label {
   font-size: 9px;
   letter-spacing: 0.24em;
-  color: #4a4743;
+  color: var(--text-faint);
   font-weight: 700;
   padding: 18px 20px 6px;
   text-transform: uppercase;
@@ -990,7 +1005,7 @@ body {
   border-radius: 10px;
   font-size: 13px;
   font-weight: 400;
-  color: #a09a93;
+  color: var(--text-secondary);
   cursor: pointer;
   border: 1px solid transparent;
   transition: all 0.18s ease;
@@ -1001,13 +1016,13 @@ body {
 }
 .sb-item:hover {
   background: var(--sb-hover);
-  color: #ddd8d0;
+  color: var(--text-primary);
 }
 .sb-item.active {
   background: var(--sb-active-bg);
-  color: #e8dcc8;
-  border-color: rgba(184,146,74,0.12);
-  box-shadow: inset 2px 0 0 rgba(184,146,74,0.55);
+  color: var(--text-primary);
+  border-color: rgba(193,122,66,0.12);
+  box-shadow: inset 2px 0 0 rgba(193,122,66,0.55);
 }
 .sb-item.nav-hidden { display: none; }
 .sb-item.nav-locked {
@@ -1022,7 +1037,7 @@ body {
   min-width: 20px;
   width: 20px;
   text-align: center;
-  color: #6e6860;
+  color: var(--text-muted);
   transition: color 0.18s ease;
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   font-style: normal;
@@ -1032,10 +1047,10 @@ body {
   flex-shrink: 0;
 }
 .sb-item.active .sb-icon {
-  color: #d4aa60;
+  color: #dd9c61;
   font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
 }
-.sb-item:hover .sb-icon { color: #c0b8ae; }
+.sb-item:hover .sb-icon { color: #b3a890; }
 
 /* ITEM LABEL */
 .sb-label {
@@ -1051,7 +1066,7 @@ body {
   bottom: 0; left: 0; right: 0;
   padding: 14px 14px 18px;
   border-top: 1px solid rgba(255,255,255,0.045);
-  background: linear-gradient(180deg, rgba(15,18,24,0) 0%, rgba(15,18,24,0.98) 28%);
+  background: linear-gradient(180deg, rgba(14,23,18,0) 0%, rgba(14,23,18,0.98) 28%);
   backdrop-filter: blur(10px);
 }
 .sb-user {
@@ -1071,14 +1086,14 @@ body {
   height: 34px;
   min-width: 34px;
   border-radius: 10px;
-  background: linear-gradient(135deg, rgba(184,146,74,0.3), rgba(184,146,74,0.1));
-  border: 1px solid rgba(184,146,74,0.2);
+  background: linear-gradient(135deg, rgba(193,122,66,0.3), rgba(193,122,66,0.1));
+  border: 1px solid rgba(193,122,66,0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 700;
-  color: #d4aa60;
+  color: #dd9c61;
   flex-shrink: 0;
   letter-spacing: 0.04em;
 }
@@ -1090,14 +1105,14 @@ body {
 }
 .sb-user-name {
   font-size: 12.5px;
-  color: #ede7de;
+  color: var(--text-primary);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .sb-user-role {
   font-size: 9.5px;
-  color: #d4aa60;
+  color: #dd9c61;
   text-transform: uppercase;
   letter-spacing: 0.13em;
   margin-top: 2px;
@@ -1114,7 +1129,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 9px;
-  color: #7a7470;
+  color: var(--text-muted);
   font-size: 12px;
   font-family: var(--ff-ui);
   cursor: pointer;
@@ -1123,9 +1138,9 @@ body {
   white-space: nowrap;
 }
 .sb-logout:hover {
-  border-color: rgba(255,100,100,0.2);
-  color: #f08080;
-  background: rgba(255,80,80,0.05);
+  border-color: rgba(226,112,92,0.2);
+  color: #e8927e;
+  background: rgba(193,77,60,0.05);
 }
 .sb-logout-icon {
   font-family: 'Material Symbols Outlined';
@@ -1185,8 +1200,8 @@ body {
   left: calc(100% + 12px);
   top: 50%;
   transform: translateY(-50%);
-  background: #1a1e28;
-  color: #e8e2d8;
+  background: #18261c;
+  color: var(--text-primary);
   font-size: 11.5px;
   padding: 6px 12px;
   border-radius: 8px;
@@ -1214,9 +1229,9 @@ body {
   width: min(680px, 92vw);
   border-radius: 18px;
   overflow: hidden;
-  background: linear-gradient(180deg, #171b23, #11141a);
+  background: linear-gradient(180deg, #182619, #131f17);
   border: 1px solid rgba(255,255,255,0.07);
-  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(184,146,74,0.06);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(193,122,66,0.06);
   animation: scaleIn 0.18s ease;
 }
 .cmd-input-row {
@@ -1230,7 +1245,7 @@ body {
 .cmd-search-icon {
   font-family: 'Material Symbols Outlined';
   font-size: 20px;
-  color: #b8924a;
+  color: #c17a42;
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   font-style: normal;
   line-height: 1;
@@ -1242,15 +1257,15 @@ body {
   background: none;
   border: none;
   outline: none;
-  color: #f3eee5;
+  color: var(--text-primary);
   font-size: 15px;
   font-family: var(--ff-ui);
   letter-spacing: 0.01em;
 }
-.cmd-input-row input::placeholder { color: #5a5754; }
+.cmd-input-row input::placeholder { color: #675f4e; }
 .cmd-esc-hint {
   font-size: 10px;
-  color: #4a4744;
+  color: #564f3f;
   background: rgba(255,255,255,0.04);
   padding: 3px 8px;
   border-radius: 6px;
@@ -1261,7 +1276,7 @@ body {
 .cmd-group-label {
   font-size: 9px;
   letter-spacing: 0.2em;
-  color: #4a4744;
+  color: #564f3f;
   padding: 8px 12px 6px;
   text-transform: uppercase;
   font-weight: 700;
@@ -1276,7 +1291,7 @@ body {
   align-items: center;
   gap: 14px;
   padding: 0 14px;
-  color: #d4cfc8;
+  color: var(--text-secondary);
   font-size: 13px;
   font-family: var(--ff-ui);
   cursor: pointer;
@@ -1285,13 +1300,13 @@ body {
 }
 .cmd-result-btn:hover,
 .cmd-result-btn.selected {
-  background: rgba(184,146,74,0.1);
-  color: #ede5d5;
+  background: rgba(193,122,66,0.1);
+  color: #f1ead9;
 }
 .cmd-result-icon {
   font-family: 'Material Symbols Outlined';
   font-size: 18px;
-  color: #b8924a;
+  color: #c17a42;
   font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
   font-style: normal;
   line-height: 1;
@@ -1301,8 +1316,8 @@ body {
   text-align: center;
 }
 .cmd-result-meta { flex: 1; }
-.cmd-result-name { font-size: 13px; color: #ede5d5; }
-.cmd-result-sub { font-size: 10.5px; color: #6a6560; margin-top: 1px; }
+.cmd-result-name { font-size: 13px; color: #f1ead9; }
+.cmd-result-sub { font-size: 10.5px; color: #7d7762; margin-top: 1px; }
 .cmd-footer-bar {
   height: 38px;
   display: flex;
@@ -1311,14 +1326,14 @@ body {
   padding: 0 20px;
   border-top: 1px solid rgba(255,255,255,0.04);
 }
-.cmd-hint { font-size: 10px; color: #4a4744; display: flex; align-items: center; gap: 5px; }
+.cmd-hint { font-size: 10px; color: #564f3f; display: flex; align-items: center; gap: 5px; }
 .cmd-kbd {
   background: rgba(255,255,255,0.05);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 5px;
   padding: 2px 6px;
   font-size: 9.5px;
-  color: #6a6560;
+  color: #7d7762;
   letter-spacing: 0.04em;
 }
 
@@ -1328,7 +1343,7 @@ body {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   height: 62px;
-  background: rgba(14,16,22,0.94);
+  background: rgba(14,23,18,0.94);
   backdrop-filter: blur(20px);
   border-top: 1px solid rgba(255,255,255,0.06);
   z-index: 260;
@@ -1352,12 +1367,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 .mobile-nav-item:active { transform: scale(0.94); }
-.mobile-nav-item.active .mobile-nav-icon { color: #d4aa60; }
-.mobile-nav-item.active .mobile-nav-label { color: #d4aa60; }
+.mobile-nav-item.active .mobile-nav-icon { color: #dd9c61; }
+.mobile-nav-item.active .mobile-nav-label { color: #dd9c61; }
 .mobile-nav-icon {
   font-family: 'Material Symbols Outlined';
   font-size: 22px;
-  color: #6a6460;
+  color: var(--text-muted);
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24;
   font-style: normal; line-height: 1; letter-spacing: normal; text-transform: none;
   transition: color 0.15s ease;
@@ -1367,7 +1382,7 @@ body {
 }
 .mobile-nav-label {
   font-size: 9px;
-  color: #5a5754;
+  color: #675f4e;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   font-weight: 600;
@@ -1536,7 +1551,7 @@ body {
 #topbar {
   height: 54px;
   flex-shrink: 0;
-  background: rgba(17,19,22,0.96);
+  background: rgba(19,31,23,0.96);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--bdr);
   display: flex;
@@ -1554,12 +1569,12 @@ body {
 }
 .topbar-sep { flex: 1; }
 .topbar-badge {
-  background: var(--gold-dim);
-  color: var(--gold);
+  background: var(--copper-dim);
+  color: var(--copper);
   font-size: 10px;
   padding: 4px 12px;
   border-radius: 5px;
-  border: 1px solid var(--gold-border);
+  border: 1px solid var(--copper-border);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -1568,14 +1583,14 @@ body {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(184,146,74,0.12);
-  border: 1px solid var(--gold-border);
+  background: rgba(193,122,66,0.12);
+  border: 1px solid var(--copper-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
   font-weight: 600;
-  color: var(--gold-lt);
+  color: var(--copper-lt);
   flex-shrink: 0;
   letter-spacing: 0.04em;
 }
@@ -1665,16 +1680,16 @@ body {
 .related-bar { display:flex; flex-wrap:wrap; gap:6px; margin: -4px 0 18px; align-items:center; }
 .related-bar-label { font-size:10px; color:var(--text-faint); letter-spacing:0.06em; text-transform:uppercase; margin-right:2px; }
 .related-link { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; border:1px solid var(--bdr); background:var(--s2); font-size:11px; color:var(--text-secondary); cursor:pointer; transition:background 0.15s, color 0.15s; white-space:nowrap; }
-.related-link:hover { background:var(--s3); color:var(--text-primary); border-color:var(--gold); }
-.related-link .rel-icon { font-family:'Material Symbols Outlined'; font-size:13px; font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; font-style:normal; line-height:1; letter-spacing:normal; text-transform:none; color:var(--gold); }
+.related-link:hover { background:var(--s3); color:var(--text-primary); border-color:var(--copper); }
+.related-link .rel-icon { font-family:'Material Symbols Outlined'; font-size:13px; font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; font-style:normal; line-height:1; letter-spacing:normal; text-transform:none; color:var(--copper); }
 
 /* Module accent colors */
-#page-assets    { --module-accent: var(--gold); }
+#page-assets    { --module-accent: var(--copper); }
 #page-livestock { --module-accent: var(--success-txt); }
-#page-crops     { --module-accent: #6aaa58; }
+#page-crops     { --module-accent: #7a9c4a; }
 #page-workers   { --module-accent: var(--info-txt); }
 #page-inventory { --module-accent: var(--warn-txt); }
-#page-finance   { --module-accent: var(--gold-lt); }
+#page-finance   { --module-accent: var(--copper-lt); }
 #page-reports   { --module-accent: var(--text-muted); }
 #page-compliance{ --module-accent: var(--error-txt); }
 #page-users     { --module-accent: var(--info-txt); }
@@ -1736,8 +1751,8 @@ body {
   box-shadow: var(--sh-md);
 }
 .stat-card.stat-accent {
-  border-color: var(--gold-border);
-  background: linear-gradient(145deg, rgba(184,146,74,0.06) 0%, var(--s1) 100%);
+  border-color: var(--copper-border);
+  background: linear-gradient(145deg, rgba(193,122,66,0.06) 0%, var(--s1) 100%);
 }
 .stat-card-icon {
   width: 34px;
@@ -1842,8 +1857,8 @@ body {
   transition: all var(--tr);
 }
 .qa-btn:hover {
-  border-color: var(--gold-border);
-  background: rgba(184,146,74,0.04);
+  border-color: var(--copper-border);
+  background: rgba(193,122,66,0.04);
   transform: translateY(-1px);
 }
 .qa-icon {
@@ -1939,9 +1954,9 @@ body {
   flex: 1;
 }
 .bar-wrap  { flex: 1; display: flex; align-items: flex-end; height: 140px; }
-.bar       { width: 100%; background: rgba(184,146,74,0.5); border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; }
+.bar       { width: 100%; background: rgba(193,122,66,0.5); border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; }
 .bar:hover { opacity: 0.75; }
-.bar-exp   { width: 100%; background: rgba(176,64,64,0.45); border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; }
+.bar-exp   { width: 100%; background: rgba(193,77,60,0.45); border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; }
 .bar-exp:hover { opacity: 0.75; }
 .bar-label { font-size: 9px; color: var(--text-muted); font-family: var(--ff-mono); }
 .bar-grid  { position: absolute; top: 0; left: 0; right: 0; bottom: 20px; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
@@ -1956,7 +1971,7 @@ body {
 .module-narrative {
   background: linear-gradient(135deg, var(--s2) 0%, var(--s3) 100%);
   border: 1px solid var(--bdr);
-  border-left: 3px solid var(--module-accent, var(--gold));
+  border-left: 3px solid var(--module-accent, var(--copper));
   border-radius: var(--radius);
   padding: 16px 20px;
   margin-bottom: 18px;
@@ -1988,7 +2003,7 @@ body {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  color: var(--module-accent, var(--gold));
+  color: var(--module-accent, var(--copper));
   opacity: 0.75;
   margin-bottom: 8px;
   font-weight: 600;
@@ -2000,7 +2015,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 18px;
-  background: linear-gradient(135deg, var(--gold-dk) 0%, var(--gold) 100%);
+  background: linear-gradient(135deg, var(--copper-dk) 0%, var(--copper) 100%);
   color: var(--bg);
   border: none;
   border-radius: var(--radius);
@@ -2011,7 +2026,7 @@ body {
   transition: all 0.18s ease;
   letter-spacing: 0.02em;
 }
-.digest-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(184,146,74,0.3); }
+.digest-btn:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(193,122,66,0.3); }
 .digest-btn:active { transform: translateY(0); }
 .digest-btn-icon {
   font-family: 'Material Symbols Outlined';
@@ -2058,12 +2073,12 @@ body {
 .progress-fill {
   height: 100%;
   border-radius: 2px;
-  background: rgba(184,146,74,0.6);
+  background: rgba(193,122,66,0.6);
   transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
 }
-.progress-fill.moss { background: rgba(90,160,80,0.6); }
-.progress-fill.info-fill { background: rgba(58,120,152,0.6); }
-.progress-fill.low { background: rgba(176,64,64,0.65); }
+.progress-fill.moss { background: rgba(126,150,74,0.6); }
+.progress-fill.info-fill { background: rgba(70,131,160,0.6); }
+.progress-fill.low { background: rgba(193,77,60,0.65); }
 
 /* ─── DATA TABLE ─────────────────────────────────────────────────────────── */
 .table-wrap { overflow-x: auto; }
@@ -2137,7 +2152,7 @@ body {
 .pill-error    { background: var(--error-bg);   color: var(--error-txt);   border: 1px solid var(--error-bdr); }
 .pill-info     { background: var(--info-bg);    color: var(--info-txt);    border: 1px solid var(--info-bdr); }
 .pill-neutral  { background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--bdr); }
-.pill-gold     { background: var(--gold-dim); color: var(--gold-lt); border: 1px solid var(--gold-border); }
+.pill-copper   { background: var(--copper-dim); color: var(--copper-lt); border: 1px solid var(--copper-border); }
 
 /* ─── BUTTONS ────────────────────────────────────────────────────────────── */
 .btn {
@@ -2159,13 +2174,13 @@ body {
   user-select: none;
 }
 .btn-primary {
-  background: rgba(184,146,74,0.12);
-  color: var(--gold-lt);
-  border-color: var(--gold-border);
+  background: rgba(193,122,66,0.12);
+  color: var(--copper-lt);
+  border-color: var(--copper-border);
 }
 .btn-primary:hover {
-  background: rgba(184,146,74,0.22);
-  border-color: rgba(212,170,96,0.42);
+  background: rgba(193,122,66,0.22);
+  border-color: rgba(221,156,97,0.42);
   transform: translateY(-1px);
 }
 .btn-secondary {
@@ -2184,7 +2199,7 @@ body {
   border-color: var(--error-bdr);
 }
 .btn-danger:hover {
-  background: rgba(176,64,64,0.18);
+  background: rgba(193,77,60,0.18);
   border-color: var(--error-lt);
 }
 .btn-sm { padding: 5px 11px; font-size: 10.5px; border-radius: 5px; }
@@ -2202,7 +2217,7 @@ body {
   padding-left: 0;
 }
 .list-item:last-child { border-bottom: none; }
-.list-item:hover { border-left-color: var(--gold); padding-left: 8px; }
+.list-item:hover { border-left-color: var(--copper); padding-left: 8px; }
 .list-dot {
   width: 6px;
   height: 6px;
@@ -2229,8 +2244,8 @@ body {
 
 /* ─── AI ADVISORY PANEL ──────────────────────────────────────────────────── */
 .ai-panel {
-  background: rgba(184,146,74,0.04);
-  border: 1px solid var(--gold-border);
+  background: rgba(193,122,66,0.04);
+  border: 1px solid var(--copper-border);
   border-radius: var(--radius);
   padding: 24px 26px;
   margin-bottom: 20px;
@@ -2243,7 +2258,7 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), var(--gold-lt), var(--gold), transparent);
+  background: linear-gradient(90deg, transparent, var(--copper), var(--copper-lt), var(--copper), transparent);
   background-size: 200% 100%;
   animation: shimmer 5s linear infinite;
   opacity: 0.4;
@@ -2267,8 +2282,8 @@ body {
 .ai-brain-icon {
   width: 24px;
   height: 24px;
-  background: var(--gold-dim);
-  border: 1px solid var(--gold-border);
+  background: var(--copper-dim);
+  border: 1px solid var(--copper-border);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -2276,9 +2291,9 @@ body {
   font-size: 12px;
 }
 .ai-refresh-btn {
-  background: var(--gold-dim);
-  border: 1px solid var(--gold-border);
-  color: var(--gold);
+  background: var(--copper-dim);
+  border: 1px solid var(--copper-border);
+  color: var(--copper);
   font-size: 10px;
   padding: 5px 12px;
   border-radius: 5px;
@@ -2292,7 +2307,7 @@ body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.ai-refresh-btn:hover { background: rgba(184,146,74,0.18); border-color: rgba(212,170,96,0.38); }
+.ai-refresh-btn:hover { background: rgba(193,122,66,0.18); border-color: rgba(221,156,97,0.38); }
 .ai-refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .ai-refresh-btn .spin { display: inline-block; animation: spin 0.8s linear infinite; }
 
@@ -2326,8 +2341,8 @@ body {
 .ai-insight-type.crop .ai-insight-dot { background: var(--success-txt); }
 .ai-insight-type.livestock { color: var(--warn-txt); }
 .ai-insight-type.livestock .ai-insight-dot { background: var(--warn-txt); }
-.ai-insight-type.finance { color: var(--gold-lt); }
-.ai-insight-type.finance .ai-insight-dot { background: var(--gold); }
+.ai-insight-type.finance { color: var(--copper-lt); }
+.ai-insight-type.finance .ai-insight-dot { background: var(--copper); }
 .ai-insight-type.recommendation { color: var(--info-txt); }
 .ai-insight-type.recommendation .ai-insight-dot { background: var(--info-txt); }
 .ai-insight-type.alert { color: var(--error-txt); }
@@ -2339,7 +2354,7 @@ body {
   margin-top: 10px;
   background: none;
   border: none;
-  color: var(--gold);
+  color: var(--copper);
   font-family: var(--ff-ui);
   font-size: 10.5px;
   cursor: pointer;
@@ -2347,7 +2362,7 @@ body {
   transition: color var(--tr);
   letter-spacing: 0.04em;
 }
-.ai-insight-action:hover { color: var(--gold-lt); }
+.ai-insight-action:hover { color: var(--copper-lt); }
 .ai-loading-state { padding: 20px; text-align: center; color: var(--text-muted); font-size: 12px; }
 
 /* ─── INVENTORY ROWS ─────────────────────────────────────────────────────── */
@@ -2377,7 +2392,7 @@ body {
   padding-left: 0;
 }
 .finance-line:last-child { border-bottom: none; }
-.finance-line:hover { border-left-color: var(--gold); padding-left: 8px; }
+.finance-line:hover { border-left-color: var(--copper); padding-left: 8px; }
 
 /* ─── WORKER CARDS ───────────────────────────────────────────────────────── */
 .worker-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
@@ -2398,8 +2413,8 @@ body {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(90,160,80,0.10);
-  border: 1px solid rgba(90,160,80,0.20);
+  background: rgba(126,150,74,0.10);
+  border: 1px solid rgba(126,150,74,0.20);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2424,12 +2439,12 @@ body {
   padding-left: 0;
 }
 .report-item:last-child { border-bottom: none; }
-.report-item:hover { border-left-color: var(--gold); padding-left: 8px; }
+.report-item:hover { border-left-color: var(--copper); padding-left: 8px; }
 .report-icon {
   width: 38px;
   height: 38px;
-  background: var(--gold-dim);
-  border: 1px solid var(--gold-border);
+  background: var(--copper-dim);
+  border: 1px solid var(--copper-border);
   border-radius: 9px;
   display: flex;
   align-items: center;
@@ -2438,7 +2453,7 @@ body {
   flex-shrink: 0;
   transition: all var(--tr);
 }
-.report-item:hover .report-icon { background: rgba(184,146,74,0.18); }
+.report-item:hover .report-icon { background: rgba(193,122,66,0.18); }
 .report-title   { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
 .report-meta    { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
 .report-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
@@ -2452,7 +2467,7 @@ body {
   color: var(--text-primary); font-family: var(--ff-ui); font-size: 12.5px; font-weight: 300;
   padding: 9px 12px; outline: none; transition: all var(--tr); width: 100%;
 }
-.rep-input:focus, .rep-select:focus { border-color: var(--gold); background: var(--s3); box-shadow: 0 0 0 3px var(--gold-dim); }
+.rep-input:focus, .rep-select:focus { border-color: var(--copper); background: var(--s3); box-shadow: 0 0 0 3px var(--copper-dim); }
 .rep-select option { background: var(--s3); }
 .rep-textarea { resize: vertical; min-height: 56px; line-height: 1.55; }
 .rep-type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -2462,10 +2477,10 @@ body {
   padding: 14px 14px; cursor: pointer; transition: all var(--tr); text-align: left;
 }
 .rep-type-btn:hover { border-color: var(--bdr-hv); background: var(--s3); }
-.rep-type-btn.active { border-color: var(--gold-border); background: var(--gold-dim); }
+.rep-type-btn.active { border-color: var(--copper-border); background: var(--copper-dim); }
 .rep-type-icon { font-size: 20px; line-height: 1; margin-bottom: 2px; }
 .rep-type-name { font-size: 12px; font-weight: 500; color: var(--text-secondary); }
-.rep-type-btn.active .rep-type-name { color: var(--gold-lt); }
+.rep-type-btn.active .rep-type-name { color: var(--copper-lt); }
 .rep-type-desc { font-size: 10.5px; color: var(--text-muted); line-height: 1.4; }
 .rep-options-row { display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; }
 .rep-format-row { display: flex; gap: 6px; }
@@ -2475,7 +2490,7 @@ body {
   font-weight: 500; color: var(--text-muted); cursor: pointer; transition: all var(--tr);
 }
 .rep-fmt-btn:hover { border-color: var(--bdr-hv); color: var(--text-secondary); }
-.rep-fmt-btn.active { border-color: var(--gold-border); background: var(--gold-dim); color: var(--gold-lt); }
+.rep-fmt-btn.active { border-color: var(--copper-border); background: var(--copper-dim); color: var(--copper-lt); }
 .rep-actions-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .rep-custom-dates.hidden { display: none; }
 
@@ -2485,11 +2500,11 @@ body {
   padding: 28px 32px; font-size: 13px; line-height: 1.75; color: var(--text-primary);
   max-height: 600px; overflow-y: auto;
 }
-.rep-preview-estate { font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em; color: var(--gold); margin-bottom: 6px; }
+.rep-preview-estate { font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em; color: var(--copper); margin-bottom: 6px; }
 .rep-preview-h1 { font-family: var(--ff-display); font-size: 26px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
 .rep-preview-meta { font-size: 11px; color: var(--text-muted); margin-bottom: 24px; font-family: var(--ff-mono); }
 .rep-preview-section { margin-bottom: 24px; }
-.rep-preview-h2 { font-family: var(--ff-display); font-size: 17px; font-weight: 600; color: var(--gold-lt); border-bottom: 1px solid var(--bdr); padding-bottom: 6px; margin-bottom: 12px; }
+.rep-preview-h2 { font-family: var(--ff-display); font-size: 17px; font-weight: 600; color: var(--copper-lt); border-bottom: 1px solid var(--bdr); padding-bottom: 6px; margin-bottom: 12px; }
 .rep-preview-p { margin-bottom: 10px; color: var(--text-secondary); }
 .rep-preview-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
 .rep-preview-kpi { background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); padding: 14px 16px; }
@@ -2502,7 +2517,7 @@ body {
 .rep-preview-table tr:last-child td { border-bottom: none; }
 .rep-preview-disclaimer { font-size: 10px; color: var(--text-faint); border-top: 1px solid var(--bdr); padding-top: 14px; margin-top: 8px; font-style: italic; }
 .rep-generating { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; gap: 16px; text-align: center; }
-.rep-generating-spinner { width: 32px; height: 32px; border: 2px solid var(--bdr); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.9s linear infinite; }
+.rep-generating-spinner { width: 32px; height: 32px; border: 2px solid var(--bdr); border-top-color: var(--copper); border-radius: 50%; animation: spin 0.9s linear infinite; }
 .rep-generating-label { font-family: var(--ff-display); font-size: 17px; color: var(--text-secondary); }
 .rep-generating-sub { font-size: 12px; color: var(--text-faint); max-width: 300px; line-height: 1.6; }
 
@@ -2519,7 +2534,7 @@ body {
   padding-left: 0;
 }
 .comp-item:last-child { border-bottom: none; }
-.comp-item:hover { border-left-color: var(--gold); padding-left: 8px; }
+.comp-item:hover { border-left-color: var(--copper); padding-left: 8px; }
 .comp-status { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
 .comp-title  { font-size: 13px; color: var(--text-secondary); font-weight: 400; }
 .comp-due    { font-size: 10.5px; color: var(--text-muted); margin-top: 3px; }
@@ -2540,8 +2555,8 @@ body {
   width: 36px;
   height: 20px;
   border-radius: 10px;
-  background: var(--gold-dim);
-  border: 1px solid var(--gold-border);
+  background: var(--copper-dim);
+  border: 1px solid var(--copper-border);
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
@@ -2552,7 +2567,7 @@ body {
   position: absolute;
   width: 14px;
   height: 14px;
-  background: var(--gold);
+  background: var(--copper);
   border-radius: 50%;
   top: 2px;
   right: 2px;
@@ -2573,7 +2588,7 @@ body {
   outline: none;
   transition: all var(--tr);
 }
-.setting-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-dim); }
+.setting-input:focus { border-color: var(--copper); box-shadow: 0 0 0 3px var(--copper-dim); }
 
 /* ─── FIELD MAP ──────────────────────────────────────────────────────────── */
 .field-map {
@@ -2582,7 +2597,7 @@ body {
   height: 190px;
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(90,160,80,0.18);
+  border: 1px solid rgba(126,150,74,0.18);
 }
 .field-patch {
   position: absolute;
@@ -2617,7 +2632,7 @@ body {
   margin-bottom: -1px;
 }
 .fin-tab:hover { color: var(--text-secondary); }
-.fin-tab.active { color: var(--gold-lt); border-bottom-color: var(--gold); }
+.fin-tab.active { color: var(--copper-lt); border-bottom-color: var(--copper); }
 .fin-tab-panel { display: none; }
 .fin-tab-panel.active { display: block; animation: fadeUp 0.25s ease both; }
 
@@ -2660,8 +2675,8 @@ body {
 .fin-profit-label    { flex: 1; font-size: 12px; color: var(--text-secondary); font-weight: 400; }
 .fin-profit-bar-wrap { width: 140px; height: 4px; background: rgba(255,255,255,0.04); border-radius: 2px; overflow: hidden; }
 .fin-profit-bar { height: 100%; border-radius: 2px; }
-.fin-profit-bar.pos { background: rgba(90,160,80,0.6); }
-.fin-profit-bar.neg { background: rgba(176,64,64,0.6); }
+.fin-profit-bar.pos { background: rgba(126,150,74,0.6); }
+.fin-profit-bar.neg { background: rgba(193,77,60,0.6); }
 .fin-profit-amount { font-family: var(--ff-mono); font-size: 12.5px; font-weight: 400; min-width: 80px; text-align: right; }
 
 .fin-donut-wrap   { display: flex; align-items: center; gap: 28px; padding: 8px 0; }
@@ -2677,8 +2692,8 @@ body {
 .fin-trend-bars { display: flex; gap: 2px; align-items: flex-end; width: 100%; flex: 1; }
 .fin-trend-bar { flex: 1; border-radius: 3px 3px 0 0; min-height: 2px; transition: opacity 0.2s; }
 .fin-trend-bar:hover { opacity: 0.75; }
-.fin-trend-bar.rev { background: rgba(184,146,74,0.5); }
-.fin-trend-bar.exp { background: rgba(176,64,64,0.45); }
+.fin-trend-bar.rev { background: rgba(193,122,66,0.5); }
+.fin-trend-bar.exp { background: rgba(193,77,60,0.45); }
 .fin-trend-label { font-size: 9px; color: var(--text-muted); font-family: var(--ff-mono); white-space: nowrap; }
 
 .fin-mom-table  { width: 100%; }
@@ -2702,12 +2717,12 @@ body {
   opacity: 0; pointer-events: none;
 }
 #conn-banner.offline {
-  background: linear-gradient(90deg, rgba(122,40,40,0.97), rgba(100,28,28,0.97));
+  background: linear-gradient(90deg, rgba(138,51,40,0.97), rgba(96,38,30,0.97));
   border-bottom: 1px solid var(--error-bdr);
   height: 38px; opacity: 1; pointer-events: all;
 }
 #conn-banner.restored {
-  background: linear-gradient(90deg, rgba(42,82,36,0.97), rgba(34,68,28,0.97));
+  background: linear-gradient(90deg, rgba(74,138,63,0.97), rgba(52,100,46,0.97));
   border-bottom: 1px solid var(--success-bdr);
   height: 38px; opacity: 1; pointer-events: all;
 }
@@ -2715,8 +2730,8 @@ body {
 #conn-banner.offline  .conn-dot { background: var(--error-txt); animation: pulse 1.4s ease-in-out infinite; }
 #conn-banner.restored .conn-dot { background: var(--success-txt); }
 .conn-msg { flex: 1; color: var(--text-secondary); letter-spacing: 0.02em; }
-#conn-banner.offline  .conn-msg { color: #f09090; }
-#conn-banner.restored .conn-msg { color: #a0e098; }
+#conn-banner.offline  .conn-msg { color: #f0a08e; }
+#conn-banner.restored .conn-msg { color: #a8d692; }
 .conn-retry  { background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.18); color: #fff; font-family: var(--ff-ui); font-size: 10.5px; font-weight: 500; padding: 3px 10px; border-radius: 4px; cursor: pointer; transition: all var(--tr-fast); white-space: nowrap; }
 .conn-retry:hover { background: rgba(255,255,255,0.20); }
 .conn-dismiss { background: none; border: none; color: rgba(255,255,255,0.4); font-size: 15px; cursor: pointer; padding: 0 4px; line-height: 1; flex-shrink: 0; transition: color var(--tr-fast); }
@@ -2741,7 +2756,7 @@ body {
 .inline-error-code    { font-family: var(--ff-mono); font-size: 10px; color: var(--text-faint); margin-bottom: 20px; letter-spacing: 0.06em; }
 .inline-error-actions { display: flex; gap: 10px; align-items: center; }
 .inline-error-retry   { background: var(--error-bg); border: 1px solid var(--error-bdr); color: var(--error-txt); font-family: var(--ff-ui); font-size: 11.5px; font-weight: 500; padding: 7px 18px; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--tr); display: flex; align-items: center; gap: 7px; }
-.inline-error-retry:hover { background: rgba(176,64,64,0.18); border-color: var(--error-lt); }
+.inline-error-retry:hover { background: rgba(193,77,60,0.18); border-color: var(--error-lt); }
 .inline-error-help    { font-size: 11px; color: var(--text-faint); cursor: pointer; text-decoration: underline; text-decoration-style: dotted; }
 .inline-error-help:hover { color: var(--text-muted); }
 
@@ -2757,7 +2772,7 @@ body {
 #del-confirm-overlay.open { opacity: 1; pointer-events: all; }
 #del-confirm-box {
   background: var(--s1);
-  border: 1px solid rgba(176,64,64,0.30);
+  border: 1px solid rgba(193,77,60,0.30);
   border-radius: var(--radius-lg);
   padding: 32px;
   width: 420px;
@@ -2781,7 +2796,7 @@ body {
 .btn-cancel-confirm:hover { background: rgba(255,255,255,0.07); }
 .btn-execute-delete { background: var(--error-bg); color: var(--error-txt); border: 1px solid var(--error-bdr); border-radius: var(--radius-sm); padding: 9px 20px; font-family: var(--ff-ui); font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--tr); opacity: 0.4; }
 .btn-execute-delete[aria-disabled="false"] { opacity: 1; }
-.btn-execute-delete:hover:not([aria-disabled="true"]) { background: rgba(176,64,64,0.20); border-color: var(--error-lt); }
+.btn-execute-delete:hover:not([aria-disabled="true"]) { background: rgba(193,77,60,0.20); border-color: var(--error-lt); }
 
 /* ─── MODAL ──────────────────────────────────────────────────────────────── */
 .modal-overlay {
@@ -2840,9 +2855,9 @@ body {
   transition: all var(--tr);
 }
 .form-input:focus, .form-select:focus, .form-textarea:focus {
-  border-color: var(--gold);
+  border-color: var(--copper);
   background: var(--s3);
-  box-shadow: 0 0 0 3px var(--gold-dim);
+  box-shadow: 0 0 0 3px var(--copper-dim);
   color: var(--text-primary);
 }
 .form-select {
@@ -2888,19 +2903,19 @@ body {
 }
 
 /* ─── ROLE PILLS ─────────────────────────────────────────────────────────── */
-.role-owner   { background: var(--gold-dim); color: var(--gold-lt); border: 1px solid var(--gold-border); }
+.role-owner   { background: var(--copper-dim); color: var(--copper-lt); border: 1px solid var(--copper-border); }
 .role-manager { background: var(--info-bg); color: var(--info-txt); border: 1px solid var(--info-bdr); }
 .role-finance { background: var(--warn-bg); color: var(--warn-txt); border: 1px solid var(--warn-bdr); }
 .role-field   { background: var(--success-bg); color: var(--success-txt); border: 1px solid var(--success-bdr); }
 
 /* ─── SKIP LINK ──────────────────────────────────────────────────────────── */
-.skip-link { position: absolute; top: -100px; left: 16px; background: var(--gold); color: var(--bg); padding: 7px 14px; border-radius: 0 0 6px 6px; font-size: 11.5px; font-weight: 600; z-index: 9999; transition: top 0.2s ease; text-decoration: none; }
+.skip-link { position: absolute; top: -100px; left: 16px; background: var(--copper); color: var(--bg); padding: 7px 14px; border-radius: 0 0 6px 6px; font-size: 11.5px; font-weight: 600; z-index: 9999; transition: top 0.2s ease; text-decoration: none; }
 .skip-link:focus { top: 0; }
 
 /* ─── FOCUS RINGS ────────────────────────────────────────────────────────── */
-:focus-visible { outline: 2px solid var(--gold-lt); outline-offset: 2px; border-radius: 4px; }
-button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--gold-lt); outline-offset: 2px; }
-.nav-item:focus-visible { outline: 2px solid var(--gold-lt); outline-offset: -2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--copper-lt); outline-offset: 2px; border-radius: 4px; }
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--copper-lt); outline-offset: 2px; }
+.nav-item:focus-visible { outline: 2px solid var(--copper-lt); outline-offset: -2px; border-radius: 4px; }
 .auth-input:focus-visible, .form-input:focus-visible, .form-select:focus-visible, .form-textarea:focus-visible { outline: none; }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -3068,7 +3083,7 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
   #auth-screen { flex-direction: column; }
   .auth-hero { display: none; }
   .auth-panel { width: 100%; min-height: 100dvh; align-items: center; padding: 40px 24px; }
-  .auth-panel-logo { display: block; text-align: center; margin-bottom: 32px; font-family: var(--ff-display); font-size: 22px; color: var(--gold-lt); letter-spacing: 0.14em; text-transform: uppercase; }
+  .auth-panel-logo { display: block; text-align: center; margin-bottom: 32px; font-family: var(--ff-display); font-size: 22px; color: var(--copper-lt); letter-spacing: 0.14em; text-transform: uppercase; }
   .auth-box { max-width: 400px; width: 100%; }
 
   /* Stat cards: 2 per row, compact */
@@ -3246,9 +3261,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
 
 /* ─── STAT CARD ICON COLOR VARIANTS ──────────────────────────────────────── */
 .stat-card-icon.bronze, .stat-card-icon.gold {
-  background: var(--gold-dim);
-  border: 1px solid var(--gold-border);
-  color: var(--gold-lt);
+  background: var(--copper-dim);
+  border: 1px solid var(--copper-border);
+  color: var(--copper-lt);
 }
 .stat-card-icon.green {
   background: var(--success-bg);
@@ -3272,68 +3287,69 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 2px s
 }
 
 /* ─── LIGHT MODE ════════════════════════════════════════════════════════════
-   Warm cream / off-white institutional palette
-   Mirrors the dark theme's structure with inverted surfaces and
-   carefully calibrated contrast for the gold accent system.
+   "Estate Ledger" in daylight — parchment paper surfaces, deep loam-green
+   ink (not charcoal, not terracotta — the ink itself carries the estate's
+   colour), copper used only as a highlight. Mirrors the dark theme's
+   structure with inverted surfaces.
    ═══════════════════════════════════════════════════════════════════════════ */
 body.light-mode {
-  /* Surfaces — warm white to cream */
-  --bg:  #f5f2ec;
-  --s1:  #ffffff;
-  --s2:  #f0ece4;
-  --s3:  #e8e3d8;
-  --s4:  #ddd8cc;
-  --s5:  #d2ccbe;
+  /* Surfaces — aged parchment, not stark cream */
+  --bg:  #f6f1e6;
+  --s1:  #fffdf8;
+  --s2:  #efe7d6;
+  --s3:  #e6dcc5;
+  --s4:  #d8cbab;
+  --s5:  #c7b890;
 
-  /* Gold — slightly richer for light bg */
-  --gold:        #8a6520;
-  --gold-lt:     #a07828;
-  --gold-dk:     #6a4e18;
-  --gold-dim:    rgba(138,101,32,0.09);
-  --gold-glow:   rgba(138,101,32,0.10);
-  --gold-border: rgba(138,101,32,0.22);
+  /* Copper — deeper and richer for legibility on light ground */
+  --copper:        #9a5a26;
+  --copper-lt:     #b3702f;
+  --copper-dk:     #74431c;
+  --copper-dim:    rgba(154,90,38,0.09);
+  --copper-glow:   rgba(154,90,38,0.10);
+  --copper-border: rgba(154,90,38,0.24);
 
-  /* Typography — charcoal on cream */
-  --text-primary:   #1a1814;
-  --text-secondary: #4a4540;
-  --text-muted:     #7a7268;
-  --text-faint:     #b0aa9e;
+  /* Typography — deep loam-green ink on parchment */
+  --text-primary:   #16241a;
+  --text-secondary: #3f4f3d;
+  --text-muted:     #6b7363;
+  --text-faint:     #a3a895;
 
   /* Status */
-  --success:     #2a5820;
-  --success-lt:  #3a7830;
-  --success-txt: #2e6428;
-  --success-bg:  rgba(44,100,40,0.07);
-  --success-bdr: rgba(44,100,40,0.20);
+  --success:     #2f6b27;
+  --success-lt:  #3f8a35;
+  --success-txt: #2f6b27;
+  --success-bg:  rgba(63,138,53,0.08);
+  --success-bdr: rgba(63,138,53,0.22);
 
-  --warn:     #7a5010;
-  --warn-lt:  #9a6820;
-  --warn-txt: #8a5818;
-  --warn-bg:  rgba(122,80,16,0.07);
-  --warn-bdr: rgba(122,80,16,0.20);
+  --warn:     #8a5c12;
+  --warn-lt:  #aa7820;
+  --warn-txt: #8a5c12;
+  --warn-bg:  rgba(170,120,32,0.08);
+  --warn-bdr: rgba(170,120,32,0.22);
 
-  --error:     #8a2020;
-  --error-lt:  #b03030;
-  --error-txt: #8a2020;
-  --error-bg:  rgba(138,32,32,0.06);
-  --error-bdr: rgba(138,32,32,0.18);
+  --error:     #8a3024;
+  --error-lt:  #b8483a;
+  --error-txt: #8a3024;
+  --error-bg:  rgba(184,72,58,0.07);
+  --error-bdr: rgba(184,72,58,0.20);
 
-  --info:     #1a4860;
-  --info-lt:  #2a6080;
-  --info-txt: #1a4860;
-  --info-bg:  rgba(26,72,96,0.06);
-  --info-bdr: rgba(26,72,96,0.18);
+  --info:     #1f4f60;
+  --info-lt:  #2d6f86;
+  --info-txt: #1f4f60;
+  --info-bg:  rgba(45,111,134,0.07);
+  --info-bdr: rgba(45,111,134,0.20);
 
-  /* Borders */
-  --bdr:     rgba(0,0,0,0.09);
-  --bdr2:    rgba(0,0,0,0.05);
-  --bdr-hv:  rgba(0,0,0,0.16);
+  /* Borders — green-ink tinted, not flat black */
+  --bdr:     rgba(22,36,26,0.10);
+  --bdr2:    rgba(22,36,26,0.055);
+  --bdr-hv:  rgba(22,36,26,0.18);
 
-  /* Shadows — light, warm */
-  --sh-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
-  --sh-md: 0 4px 14px rgba(0,0,0,0.10), 0 2px 5px rgba(0,0,0,0.06);
-  --sh-lg: 0 12px 36px rgba(0,0,0,0.13), 0 4px 10px rgba(0,0,0,0.07);
-  --sh-gold: 0 4px 20px rgba(138,101,32,0.12);
+  /* Shadows — warm-toned black */
+  --sh-sm: 0 1px 3px rgba(22,36,26,0.08), 0 1px 2px rgba(22,36,26,0.05);
+  --sh-md: 0 4px 14px rgba(22,36,26,0.10), 0 2px 5px rgba(22,36,26,0.06);
+  --sh-lg: 0 12px 36px rgba(22,36,26,0.13), 0 4px 10px rgba(22,36,26,0.07);
+  --sh-copper: 0 4px 20px rgba(154,90,38,0.14);
 }
 
 /* Sidebar — warm white, no gradient needed */
@@ -3342,7 +3358,7 @@ body.light-mode #sidebar {
   border-right: 1px solid var(--bdr);
 }
 body.light-mode #sidebar::after {
-  background: linear-gradient(180deg, transparent, rgba(138,101,32,0.10) 40%, rgba(138,101,32,0.05) 70%, transparent);
+  background: linear-gradient(180deg, transparent, rgba(154,90,38,0.10) 40%, rgba(154,90,38,0.05) 70%, transparent);
 }
 
 /* Topbar */
@@ -3354,8 +3370,8 @@ body.light-mode #topbar {
 /* Auth hero — warm cream with subtle grain */
 body.light-mode .auth-hero {
   background:
-    linear-gradient(160deg, rgba(245,242,236,0) 0%, rgba(245,242,236,0.5) 50%, rgba(245,242,236,0.97) 100%),
-    linear-gradient(135deg, #e8f0e0 0%, #f0ece4 40%, #f5f2ec 100%);
+    linear-gradient(160deg, rgba(246,241,230,0) 0%, rgba(246,241,230,0.5) 50%, rgba(246,241,230,0.97) 100%),
+    linear-gradient(135deg, #eee6d2 0%, #efe7d6 40%, #f6f1e6 100%);
   border-right: 1px solid var(--bdr);
 }
 body.light-mode .auth-hero::before {
@@ -3364,14 +3380,14 @@ body.light-mode .auth-hero::before {
     repeating-linear-gradient(90deg, transparent, transparent 79px, rgba(0,0,0,0.02) 80px);
 }
 body.light-mode .auth-hero::after {
-  background: linear-gradient(90deg, transparent 0%, var(--gold) 30%, var(--gold-lt) 50%, var(--gold) 70%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, var(--copper) 30%, var(--copper-lt) 50%, var(--copper) 70%, transparent 100%);
   opacity: 0.35;
 }
 
 /* Auth panel */
 body.light-mode .auth-panel { background: var(--s1); }
 body.light-mode .auth-input { background: var(--s2); border-color: var(--bdr); color: var(--text-primary); }
-body.light-mode .auth-input:focus { background: var(--s1); border-color: var(--gold); }
+body.light-mode .auth-input:focus { background: var(--s1); border-color: var(--copper); }
 
 /* Cards */
 body.light-mode .card {
@@ -3392,8 +3408,8 @@ body.light-mode .stat-card {
 }
 body.light-mode .stat-card:hover { box-shadow: var(--sh-md); }
 body.light-mode .stat-card.stat-accent {
-  background: linear-gradient(145deg, rgba(138,101,32,0.05) 0%, var(--s1) 100%);
-  border-color: var(--gold-border);
+  background: linear-gradient(145deg, rgba(154,90,38,0.05) 0%, var(--s1) 100%);
+  border-color: var(--copper-border);
 }
 
 /* Tables */
@@ -3407,11 +3423,11 @@ body.light-mode .data-table td {
   color: var(--text-secondary);
 }
 body.light-mode .data-table td:first-child { color: var(--text-primary); }
-body.light-mode .data-table tbody tr:hover td { background: rgba(0,0,0,0.022); color: var(--text-primary); }
+body.light-mode .data-table tbody tr:hover td { background: rgba(22,36,26,0.03); color: var(--text-primary); }
 
 /* Nav */
-body.light-mode .nav-item:hover { background: rgba(0,0,0,0.03); }
-body.light-mode .nav-item.active { background: rgba(138,101,32,0.07); }
+body.light-mode .nav-item:hover { background: rgba(22,36,26,0.04); }
+body.light-mode .nav-item.active { background: rgba(154,90,38,0.07); }
 
 /* Skeletons */
 body.light-mode .skel {
@@ -3420,18 +3436,18 @@ body.light-mode .skel {
 }
 
 /* Chart gridlines */
-body.light-mode .bar-grid-line { border-color: rgba(0,0,0,0.09); }
+body.light-mode .bar-grid-line { border-color: rgba(22,36,26,0.10); }
 
 /* Bars */
-body.light-mode .bar     { background: rgba(138,101,32,0.55); }
-body.light-mode .bar-exp { background: rgba(138,32,32,0.45); }
+body.light-mode .bar     { background: rgba(154,90,38,0.55); }
+body.light-mode .bar-exp { background: rgba(138,48,36,0.45); }
 
 /* Progress */
-body.light-mode .progress-bar { background: rgba(0,0,0,0.06); }
-body.light-mode .progress-fill { background: rgba(138,101,32,0.55); }
-body.light-mode .progress-fill.moss { background: rgba(44,100,40,0.55); }
-body.light-mode .progress-fill.info-fill { background: rgba(26,72,96,0.55); }
-body.light-mode .progress-fill.low { background: rgba(138,32,32,0.55); }
+body.light-mode .progress-bar { background: rgba(22,36,26,0.08); }
+body.light-mode .progress-fill { background: rgba(154,90,38,0.55); }
+body.light-mode .progress-fill.moss { background: rgba(47,107,39,0.55); }
+body.light-mode .progress-fill.info-fill { background: rgba(31,79,96,0.55); }
+body.light-mode .progress-fill.low { background: rgba(138,48,36,0.55); }
 
 
 
@@ -3455,7 +3471,7 @@ body.light-mode .form-input:focus,
 body.light-mode .form-select:focus,
 body.light-mode .form-textarea:focus {
   background: var(--s1);
-  border-color: var(--gold);
+  border-color: var(--copper);
 }
 body.light-mode .form-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7268' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -3465,8 +3481,8 @@ body.light-mode .form-select option { background: var(--s1); color: var(--text-p
 
 /* AI panel */
 body.light-mode .ai-panel {
-  background: rgba(138,101,32,0.04);
-  border-color: var(--gold-border);
+  background: rgba(154,90,38,0.04);
+  border-color: var(--copper-border);
 }
 body.light-mode .ai-insight {
   background: var(--s1);
@@ -3490,10 +3506,10 @@ body.light-mode .chart-tooltip-val { color: var(--text-primary); }
 
 /* Connectivity banner */
 body.light-mode #conn-banner.offline {
-  background: linear-gradient(90deg, rgba(180,60,60,0.92), rgba(160,40,40,0.92));
+  background: linear-gradient(90deg, rgba(184,72,58,0.92), rgba(138,48,36,0.92));
 }
 body.light-mode #conn-banner.restored {
-  background: linear-gradient(90deg, rgba(44,120,36,0.92), rgba(36,100,28,0.92));
+  background: linear-gradient(90deg, rgba(63,138,53,0.92), rgba(47,107,39,0.92));
 }
 
 /* Toasts */
@@ -3506,12 +3522,12 @@ body.light-mode .toast {
 
 /* Sidebar footer avatar */
 body.light-mode .sf-avatar {
-  background: var(--gold-dim);
-  border-color: var(--gold-border);
+  background: var(--copper-dim);
+  border-color: var(--copper-border);
 }
 body.light-mode .topbar-avatar {
-  background: var(--gold-dim);
-  border-color: var(--gold-border);
+  background: var(--copper-dim);
+  border-color: var(--copper-border);
 }
 
 /* Session warn banner */
@@ -3523,7 +3539,7 @@ body.light-mode #session-warn-banner {
 }
 
 /* Settings toggle */
-body.light-mode .toggle { background: var(--gold-dim); border-color: var(--gold-border); }
+body.light-mode .toggle { background: var(--copper-dim); border-color: var(--copper-border); }
 body.light-mode .toggle.off { background: var(--s3); border-color: var(--bdr); }
 
 /* Delete confirm */
@@ -3551,9 +3567,9 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   flex-shrink: 0;
 }
 #theme-toggle:hover {
-  border-color: var(--gold-border);
-  color: var(--gold);
-  background: var(--gold-dim);
+  border-color: var(--copper-border);
+  color: var(--copper);
+  background: var(--copper-dim);
 }
 
 
@@ -3563,10 +3579,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero-strip,
 .auth-hero {
   background:
-    linear-gradient(160deg, rgba(13,14,16,0.15) 0%, rgba(13,14,16,0.72) 55%, rgba(13,14,16,0.97) 100%),
+    linear-gradient(160deg, rgba(14,23,18,0.15) 0%, rgba(14,23,18,0.72) 55%, rgba(14,23,18,0.97) 100%),
     url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=75&fit=crop&auto=format&sat=-30') center 40% / cover no-repeat !important;
 }
-/* Keep grid overlay and gold rule above the photo */
+/* Keep grid overlay and copper rule above the photo */
 .auth-hero-strip::before,
 .auth-hero::before { z-index: 1; }
 .auth-hero-strip::after,
@@ -3589,9 +3605,9 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   flex-shrink: 0;
 }
 #theme-toggle:hover {
-  border-color: var(--gold-border);
-  color: var(--gold);
-  background: var(--gold-dim);
+  border-color: var(--copper-border);
+  color: var(--copper);
+  background: var(--copper-dim);
 }
 
 
@@ -3601,10 +3617,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero-strip,
 .auth-hero {
   background:
-    linear-gradient(160deg, rgba(13,14,16,0.15) 0%, rgba(13,14,16,0.72) 55%, rgba(13,14,16,0.97) 100%),
+    linear-gradient(160deg, rgba(14,23,18,0.15) 0%, rgba(14,23,18,0.72) 55%, rgba(14,23,18,0.97) 100%),
     url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=75&fit=crop&auto=format&sat=-30') center 40% / cover no-repeat !important;
 }
-/* Keep grid overlay and gold rule above the photo */
+/* Keep grid overlay and copper rule above the photo */
 .auth-hero-strip::before,
 .auth-hero::before { z-index: 1; }
 .auth-hero-strip::after,
@@ -3638,8 +3654,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   width: 1px;
   background: linear-gradient(180deg,
     transparent 0%,
-    rgba(184,146,74,0.18) 20%,
-    rgba(184,146,74,0.08) 60%,
+    rgba(193,122,66,0.18) 20%,
+    rgba(193,122,66,0.08) 60%,
     transparent 100%);
   pointer-events: none; z-index: 1;
 }
@@ -3650,9 +3666,9 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   position: absolute;
   left: 6px; top: 50%; transform: translateY(-50%);
   width: 3px; height: 3px;
-  background: var(--gold);
+  background: var(--copper);
   border-radius: 50%;
-  box-shadow: 0 0 6px var(--gold);
+  box-shadow: 0 0 6px var(--copper);
 }
 
 /* ── LOCKED NAV ITEMS ───────────────────────────────────────────────────── */
@@ -3687,7 +3703,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   width: min(580px, 94vw);
   box-shadow:
     0 48px 96px rgba(0,0,0,0.75),
-    0 0 0 1px rgba(184,146,74,0.06),
+    0 0 0 1px rgba(193,122,66,0.06),
     inset 0 1px 0 rgba(255,255,255,0.06);
   overflow: hidden;
 }
@@ -3708,7 +3724,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   flex: 1; background: none; border: none; outline: none;
   color: var(--text-primary); font-family: var(--ff-ui);
   font-size: 15px; font-weight: 300; letter-spacing: 0.015em;
-  caret-color: var(--gold);
+  caret-color: var(--copper);
 }
 #cmd-input::placeholder { color: var(--text-faint); }
 .cmd-kbd {
@@ -3730,7 +3746,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   transition: background 0.12s ease;
 }
 .cmd-item:hover { background: rgba(255,255,255,0.035); }
-.cmd-item.selected { background: rgba(184,146,74,0.09); }
+.cmd-item.selected { background: rgba(193,122,66,0.09); }
 .cmd-item-icon {
   font-family: 'Material Symbols Outlined'; font-size: 16px;
   color: var(--text-muted); width: 20px; text-align: center; flex-shrink: 0;
@@ -3738,7 +3754,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   font-variation-settings: 'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
 }
-.cmd-item.selected .cmd-item-icon { color: var(--gold); font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; }
+.cmd-item.selected .cmd-item-icon { color: var(--copper); font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20; }
 .cmd-item-label { font-size: 13px; color: var(--text-primary); flex: 1; letter-spacing: 0.01em; }
 .cmd-item-group {
   font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.08em; text-transform: uppercase;
@@ -3755,11 +3771,11 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 #fab-btn {
   position: fixed; bottom: 28px; right: 28px; z-index: 200;
   width: 46px; height: 46px; border-radius: 50%;
-  background: linear-gradient(145deg, var(--gold-lt), var(--gold-dk));
-  color: #0d0e10; border: none; cursor: pointer;
+  background: linear-gradient(145deg, var(--copper-lt), var(--copper-dk));
+  color: #0e1712; border: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   box-shadow:
-    0 4px 20px rgba(184,146,74,0.50),
+    0 4px 20px rgba(193,122,66,0.50),
     0 2px 6px rgba(0,0,0,0.35),
     inset 0 1px 0 rgba(255,255,255,0.2);
   transition: transform 0.22s var(--tr-spr), box-shadow 0.22s ease;
@@ -3770,13 +3786,13 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 }
 #fab-btn:hover {
   transform: scale(1.08) rotate(45deg);
-  box-shadow: 0 8px 32px rgba(184,146,74,0.6), 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 8px 32px rgba(193,122,66,0.6), 0 4px 10px rgba(0,0,0,0.4);
 }
 #fab-menu {
   position: fixed; bottom: 82px; right: 28px; z-index: 200;
   background: var(--s2); border: 1px solid rgba(255,255,255,0.08);
   border-radius: 12px; padding: 6px 0;
-  box-shadow: 0 24px 56px rgba(0,0,0,0.65), 0 0 0 1px rgba(184,146,74,0.06);
+  box-shadow: 0 24px 56px rgba(0,0,0,0.65), 0 0 0 1px rgba(193,122,66,0.06);
   min-width: 210px; display: none; animation: fadeUp 0.18s ease;
 }
 #fab-menu.open { display: block; }
@@ -3788,7 +3804,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .fab-item:hover { background: rgba(255,255,255,0.04); color: var(--text-primary); }
 .fab-item-icon {
   font-family: 'Material Symbols Outlined'; font-size: 15px;
-  color: var(--gold); font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
+  color: var(--copper); font-style: normal; line-height: 1; letter-spacing: 0; text-transform: none;
   font-variation-settings: 'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;
   -webkit-font-feature-settings: 'liga'; font-feature-settings: 'liga';
   width: 16px; text-align: center;
@@ -3828,15 +3844,15 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .nav-unlock-hint {
   margin: 8px 20px 4px;
   padding: 10px 14px;
-  background: rgba(184,146,74,0.05);
-  border: 1px solid var(--gold-border);
+  background: rgba(193,122,66,0.05);
+  border: 1px solid var(--copper-border);
   border-radius: 8px;
   font-size: 10.5px;
   color: var(--text-muted);
   line-height: 1.55;
   letter-spacing: 0.01em;
 }
-.nav-unlock-hint strong { color: var(--gold); font-weight: 500; }
+.nav-unlock-hint strong { color: var(--copper); font-weight: 500; }
 .nav-unlock-bar {
   height: 2px;
   background: rgba(255,255,255,0.05);
@@ -3846,7 +3862,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 }
 .nav-unlock-bar-fill {
   height: 100%;
-  background: var(--gold);
+  background: var(--copper);
   border-radius: 2px;
   transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
 }
@@ -3892,12 +3908,24 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   transition: opacity 1s ease;
   filter: saturate(0.7);
 }
+/* Topographic contour-line texture — the hero's one atmospheric signature,
+   evoking a land-survey map. Kept to this single location per the design's
+   "spend the boldness once" principle; nowhere else in the app repeats it. */
+.lp-hero-contours {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%27240%27%20height%3D%27160%27%3E%0A%3Cpath%20d%3D%27M0%2C20%20C30%2C8%2030%2C32%2060%2C20%20C90%2C8%2090%2C32%20120%2C20%20C150%2C8%20150%2C32%20180%2C20%20C210%2C8%20210%2C32%20240%2C20%27%20stroke%3D%27%23c17a42%27%20stroke-width%3D%271%27%20fill%3D%27none%27%20opacity%3D%270.55%27/%3E%0A%3Cpath%20d%3D%27M0%2C58%20C30%2C70%2030%2C46%2060%2C58%20C90%2C70%2090%2C46%20120%2C58%20C150%2C70%20150%2C46%20180%2C58%20C210%2C70%20210%2C46%20240%2C58%27%20stroke%3D%27%23c17a42%27%20stroke-width%3D%271%27%20fill%3D%27none%27%20opacity%3D%270.4%27/%3E%0A%3Cpath%20d%3D%27M0%2C98%20C30%2C92%2030%2C104%2060%2C98%20C90%2C92%2090%2C104%20120%2C98%20C150%2C92%20150%2C104%20180%2C98%20C210%2C92%20210%2C104%20240%2C98%27%20stroke%3D%27%23c17a42%27%20stroke-width%3D%271%27%20fill%3D%27none%27%20opacity%3D%270.5%27/%3E%0A%3Cpath%20d%3D%27M0%2C138%20C30%2C124%2030%2C152%2060%2C138%20C90%2C124%2090%2C152%20120%2C138%20C150%2C124%20150%2C152%20180%2C138%20C210%2C124%20210%2C152%20240%2C138%27%20stroke%3D%27%23c17a42%27%20stroke-width%3D%271%27%20fill%3D%27none%27%20opacity%3D%270.35%27/%3E%0A%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 240px 160px;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
 .lp-hero-bg-overlay {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(13,14,16,0.97) 0%, rgba(13,14,16,0.75) 55%, rgba(13,14,16,0.45) 100%),
-    linear-gradient(180deg, rgba(13,14,16,0.4) 0%, rgba(13,14,16,0) 30%, rgba(13,14,16,0) 60%, rgba(13,14,16,0.9) 100%);
+    linear-gradient(90deg, rgba(14,23,18,0.97) 0%, rgba(14,23,18,0.75) 55%, rgba(14,23,18,0.45) 100%),
+    linear-gradient(180deg, rgba(14,23,18,0.4) 0%, rgba(14,23,18,0) 30%, rgba(14,23,18,0) 60%, rgba(14,23,18,0.9) 100%);
 }
 .lp-hero-section .lp-hero { position: relative; z-index: 1; }
 
@@ -3928,10 +3956,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   font-family: var(--ff-display); font-size: 26px; font-weight: 600;
   color: var(--text-primary); line-height: 1.25; max-width: 480px; letter-spacing: -0.01em;
 }
-.lp-field-caption-text span { color: var(--gold-lt); }
+.lp-field-caption-text span { color: var(--copper-lt); }
 .lp-field-caption-tag {
   font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em;
-  color: var(--gold); opacity: 0.75; white-space: nowrap; font-weight: 500;
+  color: var(--copper); opacity: 0.75; white-space: nowrap; font-weight: 500;
 }
 
 /* ─── PROOF SECTION IMAGE BACKGROUND ─────────────────────────────────────── */
@@ -3958,16 +3986,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 }
 .lp-cta-section > *:not(.lp-cta-bg):not(.lp-cta-bg-overlay) { position: relative; z-index: 1; }
 
-/* ─── STATS BAND GOLD RULES ───────────────────────────────────────────────── */
-.lp-stats-band { position: relative; overflow: hidden; }
-.lp-stats-band::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(184,146,74,0.3), transparent);
-}
-.lp-stats-band::after {
-  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(184,146,74,0.3), transparent);
-}
+/* Stats band edges kept plain — the signature ledger rule lives on each
+   figure itself (see .lp-stat-num above), not as a decorative band frame. */
 
 /* ─── FEATURE IMAGE PAIR ──────────────────────────────────────────────────── */
 .lp-feat-image-row {
@@ -3984,12 +4004,12 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .lp-feat-image-side:hover img { transform: scale(1.04); filter: brightness(0.7) saturate(0.85); }
 .lp-feat-image-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(13,14,16,0.7) 0%, rgba(13,14,16,0.2) 60%, rgba(13,14,16,0.5) 100%);
+  background: linear-gradient(135deg, rgba(14,23,18,0.7) 0%, rgba(14,23,18,0.2) 60%, rgba(14,23,18,0.5) 100%);
   display: flex; flex-direction: column; justify-content: flex-end; padding: 28px 30px;
 }
 .lp-feat-image-tag {
   font-size: 9px; text-transform: uppercase; letter-spacing: 0.24em;
-  color: var(--gold); font-weight: 500; margin-bottom: 8px; opacity: 0.85;
+  color: var(--copper); font-weight: 500; margin-bottom: 8px; opacity: 0.85;
 }
 .lp-feat-image-title {
   font-family: var(--ff-display); font-size: 22px; font-weight: 600;
@@ -4094,14 +4114,14 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .af-action {
   font-size: 10.5px;
   font-weight: 500;
-  color: var(--gold);
+  color: var(--copper);
   margin-top: 5px;
   display: flex;
   align-items: center;
   gap: 4px;
   transition: color var(--tr);
 }
-.af-action:hover { color: var(--gold-lt); }
+.af-action:hover { color: var(--copper-lt); }
 .af-arrow { font-size: 12px; }
 
 .af-all-clear {
@@ -4140,14 +4160,14 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   flex-shrink: 0;
 }
 #erp-mode-btn:hover {
-  border-color: var(--gold-border);
-  color: var(--gold-lt);
-  background: var(--gold-dim);
+  border-color: var(--copper-border);
+  color: var(--copper-lt);
+  background: var(--copper-dim);
 }
 #erp-mode-btn.erp-active {
-  background: var(--gold-dim);
-  border-color: var(--gold-border);
-  color: var(--gold-lt);
+  background: var(--copper-dim);
+  border-color: var(--copper-border);
+  color: var(--copper-lt);
 }
 #erp-mode-btn .erp-btn-icon {
   font-family: 'Material Symbols Outlined';
@@ -4167,13 +4187,13 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .erp-mode-strip {
   display: none;
   padding: 8px 24px;
-  background: linear-gradient(90deg, rgba(184,146,74,0.08), transparent);
-  border-bottom: 1px solid var(--gold-border);
+  background: linear-gradient(90deg, rgba(193,122,66,0.08), transparent);
+  border-bottom: 1px solid var(--copper-border);
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--copper);
   align-items: center;
   gap: 8px;
 }
@@ -4267,6 +4287,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <!-- Hero — cinematic aerial background -->
     <section class="lp-hero-section">
       <div class="lp-hero-bg" role="presentation" aria-hidden="true"></div>
+      <div class="lp-hero-contours" aria-hidden="true"></div>
       <div class="lp-hero-bg-overlay" aria-hidden="true"></div>
       <div class="lp-hero">
         <div class="lp-hero-left">
@@ -4319,32 +4340,32 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
                 <div class="lp-preview-chart-label">Monthly Revenue vs Expenses</div>
                 <div class="lp-mini-bars">
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.55);width:100%;height:28px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:19px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.55);width:100%;height:28px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:19px"></div>
                   </div>
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.55);width:100%;height:24px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:17px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.55);width:100%;height:24px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:17px"></div>
                   </div>
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.55);width:100%;height:34px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:20px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.55);width:100%;height:34px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:20px"></div>
                   </div>
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.55);width:100%;height:19px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:15px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.55);width:100%;height:19px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:15px"></div>
                   </div>
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.55);width:100%;height:26px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:17px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.55);width:100%;height:26px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:17px"></div>
                   </div>
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.55);width:100%;height:31px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:20px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.55);width:100%;height:31px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:20px"></div>
                   </div>
                   <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;justify-content:flex-end">
-                    <div class="lp-mini-bar" style="background:rgba(184,146,74,0.7);width:100%;height:38px"></div>
-                    <div class="lp-mini-bar" style="background:rgba(176,64,64,0.4);width:100%;height:22px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,122,66,0.7);width:100%;height:38px"></div>
+                    <div class="lp-mini-bar" style="background:rgba(193,77,60,0.4);width:100%;height:22px"></div>
                   </div>
                 </div>
                 <div style="display:flex;justify-content:space-between;margin-top:6px">
@@ -4366,10 +4387,10 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <!-- Stats band -->
     <div class="lp-stats-band">
       <div class="lp-stats-inner">
-        <div class="lp-stat"><div class="lp-stat-num">120+</div><div class="lp-stat-label">Farms managed</div></div>
-        <div class="lp-stat"><div class="lp-stat-num">$42M+</div><div class="lp-stat-label">Assets tracked</div></div>
-        <div class="lp-stat"><div class="lp-stat-num">11</div><div class="lp-stat-label">Modules in one platform</div></div>
-        <div class="lp-stat"><div class="lp-stat-num">99.4%</div><div class="lp-stat-label">Uptime SLA</div></div>
+        <div class="lp-stat"><div class="lp-stat-label">Farms managed</div><div class="lp-stat-num">120+</div></div>
+        <div class="lp-stat"><div class="lp-stat-label">Assets tracked</div><div class="lp-stat-num">$42M+</div></div>
+        <div class="lp-stat"><div class="lp-stat-label">Modules in one platform</div><div class="lp-stat-num">11</div></div>
+        <div class="lp-stat"><div class="lp-stat-label">Uptime SLA</div><div class="lp-stat-num">99.4%</div></div>
       </div>
     </div>
 
@@ -4380,43 +4401,43 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <p class="lp-section-sub">From herd health to regulatory compliance — every operational dimension of your farm, intelligently integrated.</p>
       <div class="lp-feat-grid">
         <div class="lp-feat-card">
-          <div class="lp-feat-icon-wrap" style="background:rgba(94,170,80,0.10);border:1px solid rgba(94,170,80,0.22)">
-            <span class="ms-icon" style="color:#7ecc74">pets</span>
+          <div class="lp-feat-icon-wrap" style="background:rgba(108,179,94,0.10);border:1px solid rgba(108,179,94,0.22)">
+            <span class="ms-icon" style="color:#8ed47e">pets</span>
           </div>
           <div class="lp-feat-title">Livestock Intelligence</div>
           <div class="lp-feat-desc">Track herds, health events, weight records and breeding cycles. Flag anomalies before they become vet bills.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-icon-wrap" style="background:rgba(58,120,152,0.10);border:1px solid rgba(58,120,152,0.22)">
-            <span class="ms-icon" style="color:#5aaece">grass</span>
+          <div class="lp-feat-icon-wrap" style="background:rgba(70,131,160,0.10);border:1px solid rgba(70,131,160,0.22)">
+            <span class="ms-icon" style="color:#6fb0cc">grass</span>
           </div>
           <div class="lp-feat-title">Crop & Field Management</div>
           <div class="lp-feat-desc">Monitor planting schedules, irrigation status, expected yields and field-by-field profitability in real time.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-icon-wrap" style="background:rgba(184,146,74,0.10);border:1px solid rgba(184,146,74,0.22)">
-            <span class="ms-icon" style="color:#d4aa60">account_balance</span>
+          <div class="lp-feat-icon-wrap" style="background:rgba(193,122,66,0.10);border:1px solid rgba(193,122,66,0.22)">
+            <span class="ms-icon" style="color:#dd9c61">account_balance</span>
           </div>
           <div class="lp-feat-title">Financial Reporting</div>
           <div class="lp-feat-desc">Full P&amp;L, income vs expense tracking, per-crop profitability, and month-on-month trend analysis built in.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-icon-wrap" style="background:rgba(176,64,64,0.08);border:1px solid rgba(176,64,64,0.20)">
-            <span class="ms-icon" style="color:#e06060">verified_user</span>
+          <div class="lp-feat-icon-wrap" style="background:rgba(193,77,60,0.08);border:1px solid rgba(193,77,60,0.20)">
+            <span class="ms-icon" style="color:#e2705c">verified_user</span>
           </div>
           <div class="lp-feat-title">Compliance Register</div>
           <div class="lp-feat-desc">Never miss a permit renewal. Track ZINWA, EMA, veterinary and fire authority requirements with deadline alerts.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-icon-wrap" style="background:rgba(196,134,42,0.08);border:1px solid rgba(196,134,42,0.20)">
-            <span class="ms-icon" style="color:#e0a840">groups</span>
+          <div class="lp-feat-icon-wrap" style="background:rgba(201,143,46,0.08);border:1px solid rgba(201,143,46,0.20)">
+            <span class="ms-icon" style="color:#e3ad4c">groups</span>
           </div>
           <div class="lp-feat-title">Workforce & Payroll</div>
           <div class="lp-feat-desc">Manage staff attendance, roles and monthly payroll. See who's on-site vs on leave at a glance.</div>
         </div>
         <div class="lp-feat-card">
-          <div class="lp-feat-icon-wrap" style="background:rgba(90,174,206,0.08);border:1px solid rgba(90,174,206,0.18)">
-            <span class="ms-icon" style="color:#5aaece">neurology</span>
+          <div class="lp-feat-icon-wrap" style="background:rgba(111,176,204,0.08);border:1px solid rgba(111,176,204,0.18)">
+            <span class="ms-icon" style="color:#6fb0cc">neurology</span>
           </div>
           <div class="lp-feat-title">AI Decision Support</div>
           <div class="lp-feat-desc">Get plain-English recommendations on your operational data — when to restock, flag risks, or act on trends.</div>
@@ -4542,13 +4563,13 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <!-- LOGIN -->
       <div id="login-box" class="auth-box" role="region" aria-label="Sign in">
         <div class="auth-title">Welcome back</div>
-        <div class="auth-sub">Sign in to your estate account · <a onclick="goToLanding()" style="color:var(--gold);cursor:pointer;font-size:11px">← Back to site</a></div>
+        <div class="auth-sub">Sign in to your estate account · <a onclick="goToLanding()" style="color:var(--copper);cursor:pointer;font-size:11px">← Back to site</a></div>
         <div class="auth-err" id="login-error" role="alert" aria-live="polite"></div>
         <div class="auth-fg"><label class="auth-label" for="login-email">Email Address</label><input class="auth-input" id="login-email" name="email" type="email" autocomplete="email" placeholder="you@myfarm.com"></div>
         <div class="auth-fg">
           <label class="auth-label" for="login-password" style="display:flex;justify-content:space-between;align-items:center;">
             Password
-            <a onclick="showForgot()" style="font-size:11px;font-weight:400;color:var(--gold-lt);cursor:pointer;text-decoration:none;" tabindex="0" role="button" onkeydown="if(event.key==='Enter')showForgot()">Forgot password?</a>
+            <a onclick="showForgot()" style="font-size:11px;font-weight:400;color:var(--copper-lt);cursor:pointer;text-decoration:none;" tabindex="0" role="button" onkeydown="if(event.key==='Enter')showForgot()">Forgot password?</a>
           </label>
           <input class="auth-input" id="login-password" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
         </div>
@@ -4894,7 +4915,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="card ai-insight-card">
               <div class="card-title" style="display:flex;align-items:center;gap:7px;justify-content:space-between">
                 <span style="display:flex;align-items:center;gap:6px">
-                  <span style="font-family:'Material Symbols Outlined';font-size:14px;color:var(--gold);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;vertical-align:middle">neurology</span>
+                  <span style="font-family:'Material Symbols Outlined';font-size:14px;color:var(--copper);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;vertical-align:middle">neurology</span>
                   AI Insight
                 </span>
                 <button class="ai-refresh-btn" id="ai-refresh-btn" onclick="refreshAI()">↻</button>
@@ -4954,7 +4975,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="card"><div class="card-title">Field Map <span style="font-size:9px;color:var(--text-faint);text-transform:none;letter-spacing:0;font-weight:300;margin-left:4px">· Schematic view — not to scale</span></div>
               <div class="field-map" id="field-map">
                 <div style="position:absolute;top:8px;right:10px;font-family:var(--ff-mono);font-size:8.5px;color:var(--text-faint);letter-spacing:0.06em;z-index:3;opacity:0.7">SCHEMATIC</div>
-                <div style="position:absolute;bottom:10px;left:14px;display:flex;gap:12px;z-index:2"><span style="font-size:9.5px;color:#82b070">▪ Growing</span><span style="font-size:9.5px;color:#d4a050">▪ Seedling</span><span style="font-size:9.5px;color:#60a0bc">▪ Ripening</span><span style="font-size:9.5px;color:#5a5650">▪ Fallow</span></div>
+                <div style="position:absolute;bottom:10px;left:14px;display:flex;gap:12px;z-index:2"><span style="font-size:9.5px;color:#5f8c4f">▪ Growing</span><span style="font-size:9.5px;color:#c08a3e">▪ Seedling</span><span style="font-size:9.5px;color:#4f7088">▪ Ripening</span><span style="font-size:9.5px;color:#7d7762">▪ Fallow</span></div>
               </div>
             </div>
             <div class="card"><div class="card-title">Irrigation Status</div><div id="irrigation-status"></div></div>
@@ -4989,7 +5010,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div class="page" id="page-finance">
         <div class="page-header"><h1><span class="ph-icon">account_balance</span>Finance</h1><p>Revenue, expenses, profitability and smart insights</p></div>
         <div id="finance-related"></div>
-        <div class="module-narrative" id="finance-narrative" style="--module-accent:var(--gold-lt)">
+        <div class="module-narrative" id="finance-narrative" style="--module-accent:var(--copper-lt)">
           <div class="module-narrative-badge">&#9679; Live Summary</div>
           <div class="module-narrative-text"><div class="skel skel-row" style="max-width:90%"></div></div>
         </div>
@@ -5087,13 +5108,13 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
           <p>Generate, export and schedule estate intelligence reports</p>
         </div>
         <div id="reports-related"></div>
-        <div class="card" style="border-color:var(--gold-border);background:linear-gradient(135deg,var(--s2),var(--s3));margin-bottom:18px">
+        <div class="card" style="border-color:var(--copper-border);background:linear-gradient(135deg,var(--s2),var(--s3));margin-bottom:18px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--gold);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">auto_awesome</span>
-                <span style="font-family:var(--ff-display);font-size:18px;color:var(--gold-lt);font-weight:600;letter-spacing:0.02em">Estate Intelligence Digest</span>
-                <span style="font-size:9px;background:var(--gold-dim);border:1px solid var(--gold-border);color:var(--gold);padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.14em;font-weight:600">Weekly</span>
+                <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--copper);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">auto_awesome</span>
+                <span style="font-family:var(--ff-display);font-size:18px;color:var(--copper-lt);font-weight:600;letter-spacing:0.02em">Estate Intelligence Digest</span>
+                <span style="font-size:9px;background:var(--copper-dim);border:1px solid var(--copper-border);color:var(--copper);padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:0.14em;font-weight:600">Weekly</span>
               </div>
               <p style="font-size:13px;color:var(--text-secondary);line-height:1.65;max-width:560px;margin-bottom:0">
                 Every Monday morning, MyFarm automatically generates a comprehensive estate summary — revenue vs target, livestock health, crop status by block, compliance items due, and the top 3 AI-recommended actions. Delivered to your inbox as a polished PDF. The report that justifies the subscription.
@@ -5106,13 +5127,13 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
               </button>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:7px;cursor:pointer">
-                  <input type="checkbox" id="digest-schedule-toggle" onchange="toggleDigestSchedule(this)" style="accent-color:var(--gold)">
+                  <input type="checkbox" id="digest-schedule-toggle" onchange="toggleDigestSchedule(this)" style="accent-color:var(--copper)">
                   Auto-send every Monday 6:00 AM
                 </label>
               </div>
               <div id="digest-email-row" style="display:none;font-size:11.5px;color:var(--text-muted)">
                 <input type="email" id="digest-email-input" placeholder="your@email.com" style="background:var(--s4);border:1px solid var(--bdr);border-radius:6px;padding:6px 10px;font-size:11.5px;color:var(--text-primary);font-family:var(--ff-ui);outline:none;width:200px">
-                <button onclick="saveDigestEmail()" style="margin-left:8px;padding:6px 12px;background:var(--s4);border:1px solid var(--gold-border);border-radius:6px;color:var(--gold);font-size:11px;cursor:pointer;font-family:var(--ff-ui)">Save</button>
+                <button onclick="saveDigestEmail()" style="margin-left:8px;padding:6px 12px;background:var(--s4);border:1px solid var(--copper-border);border-radius:6px;color:var(--copper);font-size:11px;cursor:pointer;font-family:var(--ff-ui)">Save</button>
               </div>
             </div>
           </div>
@@ -5133,7 +5154,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
                 <label class="rep-label">Report Type</label>
                 <div class="rep-type-grid" id="rep-type-grid">
                   <button class="rep-type-btn active" data-type="executive_summary" onclick="selectRepType(this)">
-                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">bar_chart</span></span>
+                    <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">bar_chart</span></span>
                     <span class="rep-type-name">Executive Summary</span>
                     <span class="rep-type-desc">High-level KPIs &amp; insights</span>
                   </button>
@@ -5305,7 +5326,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 <div id="onboarding-overlay" class="hidden" role="dialog" aria-modal="true" aria-labelledby="ob-title">
   <div id="onboarding-box">
     <div class="ob-header">
-      <div class="ob-logo"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">agriculture</span></div>
+      <div class="ob-logo"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">agriculture</span></div>
       <div class="ob-title" id="ob-title">Welcome to Thornfield Estate</div>
       <div class="ob-sub">Let's get your farm set up in 3 quick steps — it only takes a minute.</div>
     </div>
@@ -5338,7 +5359,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-panel-desc">Define your crop blocks so you can track planting schedules, irrigation, and yield projections across the estate.</div>
         <div class="ob-actions">
           <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=crops]').click();openModal('crop');},400)">
-            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">map</span></div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">map</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Add a crop field now</div>
               <div class="ob-action-hint">Takes under 2 minutes — block name, crop, area and status</div>
@@ -5362,7 +5383,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-panel-desc">Add your livestock herds to track headcount, health events, and body-condition scores across paddocks.</div>
         <div class="ob-actions">
           <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=livestock]').click();openModal('herd');},400)">
-            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Add a herd now</div>
               <div class="ob-action-hint">Breed, headcount, weight and health status</div>
@@ -5386,7 +5407,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-panel-desc">Add staff with the right role — Field, Manager, Finance — so your whole team can access the data they need.</div>
         <div class="ob-actions">
           <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=users]')?.click();},400)">
-            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">mail</span></div>
+            <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">mail</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Invite a team member</div>
               <div class="ob-action-hint">Generate an invite code and share it</div>
@@ -6176,7 +6197,7 @@ function _sessionWarn(){
   el.innerHTML=`<div id="swb-title" style="font-weight:500;margin-bottom:4px">Session expiring soon</div>
 <div id="swb-sub" style="font-size:12px;opacity:0.85">You'll be signed out in <strong id="swb-countdown">5:00</strong> due to inactivity.</div>
 <div style="display:flex;gap:8px;margin-top:12px">
-  <button onclick="_sessionReset()" style="flex:1;padding:8px 0;background:var(--gold);color:var(--bg);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--ff-ui)">Stay signed in</button>
+  <button onclick="_sessionReset()" style="flex:1;padding:8px 0;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--ff-ui)">Stay signed in</button>
   <button onclick="doLogout()" style="padding:8px 16px;background:transparent;color:var(--text-secondary);border:1px solid var(--bdr);border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--ff-ui)">Sign out</button>
 </div>`;
   el.style.cssText='position:fixed;bottom:80px;right:20px;z-index:9999;background:var(--s2);border:1px solid var(--warn-bdr);border-radius:12px;padding:16px 18px;max-width:300px;box-shadow:var(--sh-lg);animation:fadeUp 0.25s ease;';
@@ -6369,7 +6390,7 @@ function enterApp(){
           <div><div class="mobile-field-card-title">My Tasks Today</div><div class="mobile-field-card-sub">View assignments and daily operations for your herds and fields</div></div>
         </div>
         <div class="mobile-field-card" onclick="document.querySelector('[data-page=livestock]').click()">
-          <span class="mobile-field-card-icon" style="color:var(--gold)">agriculture</span>
+          <span class="mobile-field-card-icon" style="color:var(--copper)">agriculture</span>
           <div><div class="mobile-field-card-title">Herd & Crop Status</div><div class="mobile-field-card-sub">Check health status and field conditions across your assignments</div></div>
         </div>
         <div class="mobile-field-card" onclick="document.querySelector('[data-page=reports]').click()">
@@ -6523,7 +6544,7 @@ function loadPage(pg){
 }
 
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
-function rpill(r){const m={owner:'gold',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
+function rpill(r){const m={owner:'copper',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
 function hc(s){return s==='Overdue'?'var(--error-txt)':s==='Due Soon'||s==='Monitor'?'var(--warn-txt)':'var(--success-txt)';}
 function addBtn(label,action){return canWrite()?`<button class="btn btn-primary btn-sm" onclick="${action}">${label}</button>`:'';}
 
@@ -6837,11 +6858,11 @@ async function loadDashboard(){
 
   // ── ERP Quick Links — inject into quick actions ──────────────────────────────
   const erpQuickBtns = `
-  <div class="qa-btn" onclick="loadErpDashboard()" style="border-color:var(--gold-border)">
-    <div class="qa-icon" style="background:var(--gold-dim);border:1px solid var(--gold-border)">
-      <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1">insights</span>
+  <div class="qa-btn" onclick="loadErpDashboard()" style="border-color:var(--copper-border)">
+    <div class="qa-icon" style="background:var(--copper-dim);border:1px solid var(--copper-border)">
+      <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1">insights</span>
     </div>
-    <div><div class="qa-label" style="color:var(--gold-lt)">Farm Overview</div><div class="qa-sub">P&L &amp; KPIs</div></div>
+    <div><div class="qa-label" style="color:var(--copper-lt)">Farm Overview</div><div class="qa-sub">P&L &amp; KPIs</div></div>
   </div>
   <div class="qa-btn" onclick="loadErpActivities()">
     <div class="qa-icon" style="background:var(--success-bg);border:1px solid var(--success-bdr)">
@@ -6878,7 +6899,7 @@ async function loadDashboard(){
 
   // ── Render stat cards — all clickable, navigate to module ────────────────
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card stat-accent" onclick="loadPage('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
+    <div class="stat-card stat-accent" onclick="loadPage('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
     <div class="stat-card" onclick="loadPage('livestock')" style="cursor:pointer" title="Open Livestock"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
     <div class="stat-card" onclick="loadPage('crops')" style="cursor:pointer" title="Open Crops"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
     <div class="stat-card" onclick="loadPage('workers')" style="cursor:pointer" title="Open Workers"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
@@ -7025,7 +7046,7 @@ async function loadDashboard(){
   // Build tooltip element
   const tip=document.createElement('div');
   tip.className='chart-tooltip';
-  tip.innerHTML='<div class="chart-tooltip-label" id="tip-label"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:rgba(184,146,74,0.9)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Revenue</span><span class="chart-tooltip-val" id="tip-inc"></span></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:rgba(176,64,64,0.9)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Expenses</span><span class="chart-tooltip-val" id="tip-exp"></span></div><div style="height:1px;background:var(--bdr2);margin:6px 0"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--success-txt)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Net profit</span><span class="chart-tooltip-val" id="tip-net"></span></div>';
+  tip.innerHTML='<div class="chart-tooltip-label" id="tip-label"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:rgba(193,122,66,0.9)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Revenue</span><span class="chart-tooltip-val" id="tip-inc"></span></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:rgba(193,77,60,0.9)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Expenses</span><span class="chart-tooltip-val" id="tip-exp"></span></div><div style="height:1px;background:var(--bdr2);margin:6px 0"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--success-txt)"></div><span style="color:var(--text-muted);font-size:10px;min-width:64px">Net profit</span><span class="chart-tooltip-val" id="tip-net"></span></div>';
   const chartWrap=document.createElement('div');
   chartWrap.className='bar-chart-wrap';
   chartWrap.style.cssText='position:relative;margin-left:36px;';
@@ -7064,7 +7085,7 @@ async function loadDashboard(){
   chartWrap.appendChild(tip);
   // Legend
   const legend=document.createElement('div');legend.className='bar-chart-legend';
-  legend.innerHTML=`<div class="bar-legend-item"><div class="bar-legend-dot" style="background:var(--gold)"></div>Revenue</div><div class="bar-legend-item"><div class="bar-legend-dot" style="background:var(--error-light)"></div>Expenses</div>`;
+  legend.innerHTML=`<div class="bar-legend-item"><div class="bar-legend-dot" style="background:var(--copper)"></div>Revenue</div><div class="bar-legend-item"><div class="bar-legend-dot" style="background:var(--error-light)"></div>Expenses</div>`;
   chart.appendChild(chartWrap);
   chart.appendChild(legend);
   chart.style.cssText='display:flex;flex-direction:column;gap:0;';
@@ -7184,10 +7205,10 @@ async function loadCrops(){
     :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;grass</div><span class="empty-title">No fields in the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Define your crop blocks to track planting schedules, irrigation status, estimated yields and field-by-field profitability.</span>${cw?`<button class="empty-cta" onclick="openModal('crop')">+ Add first field block</button>`:''}</td></tr>`;
   const active=rows.filter(r=>r.irrigation&&r.irrigation!=='—'&&r.status!=='Fallow'&&r.status!=='Harvested');
   document.getElementById('irrigation-status').innerHTML=active.map(r=>{const p=r.irrigation_pct||0,c=p>60?'moss':p>30?'':'info-fill';return`<div class="inv-row"><div class="inv-header"><span class="inv-name">${r.block} — ${r.crop}</span><span class="inv-qty" style="color:${p>40?'var(--success-txt)':'var(--warn-txt)'}">${r.irrigation} · ${p>40?'Active':'Paused'}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${p}%"></div></div></div>`}).join('')||'<div class="loading">No active irrigation</div>';
-  const colors={Growing:'#5a7a52',Seedling:'#B8893C',Ripening:'#4A6A7C',Harvested:'#4a7a40',Fallow:'#3a3a30'};
+  const colors={Growing:'#5f8c4f',Seedling:'#c08a3e',Ripening:'#4f7088',Harvested:'#3f7a35',Fallow:'#3a362a'};
   const map=document.getElementById('field-map');map.querySelectorAll('.field-patch').forEach(e=>e.remove());
   const pos=[{t:18,l:18,w:118,h:82},{t:60,l:148,w:92,h:88},{t:18,l:252,w:64,h:52},{t:95,l:278,w:68,h:62},{t:110,l:22,w:52,h:52}];
-  rows.slice(0,5).forEach((r,i)=>{const p=pos[i];if(!p)return;const el=document.createElement('div');el.className='field-patch';el.title=`${r.block}${r.crop?' — '+r.crop:''} (${r.status})`;el.style.cssText=`background:${colors[r.status]||'#3a3a30'};width:${p.w}px;height:${p.h}px;top:${p.t}px;left:${p.l}px;opacity:0.7`;map.insertBefore(el,map.firstChild);});
+  rows.slice(0,5).forEach((r,i)=>{const p=pos[i];if(!p)return;const el=document.createElement('div');el.className='field-patch';el.title=`${r.block}${r.crop?' — '+r.crop:''} (${r.status})`;el.style.cssText=`background:${colors[r.status]||'#3a362a'};width:${p.w}px;height:${p.h}px;top:${p.t}px;left:${p.l}px;opacity:0.7`;map.insertBefore(el,map.firstChild);});
 }
 
 async function loadWorkers(){
@@ -7421,7 +7442,7 @@ async function loadFinance(){
   const revPct=revenueTarget>0?Math.min(100,Math.round(totalIncome/revenueTarget*100)):null;
   const expPct=expenseBudget>0?Math.min(100,Math.round(totalExpense/expenseBudget*100)):null;
   document.getElementById('finance-stats').innerHTML=`
-    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--gold-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">YTD Revenue</div><div class="stat-value">$${totalIncome.toLocaleString()}</div><div class="stat-delta ${revPct!==null?(revPct>=100?'delta-up':'delta-down'):''}">▲ ${revPct!==null?`${revPct}% of $${revenueTarget.toLocaleString()} target`:income.length+' transaction'+(income.length!==1?'s':'')}</div></div></div></div>
+    <div class="stat-card stat-accent"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">YTD Revenue</div><div class="stat-value">$${totalIncome.toLocaleString()}</div><div class="stat-delta ${revPct!==null?(revPct>=100?'delta-up':'delta-down'):''}">▲ ${revPct!==null?`${revPct}% of $${revenueTarget.toLocaleString()} target`:income.length+' transaction'+(income.length!==1?'s':'')}</div></div></div></div>
     <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon red"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_down</span></div><div class="stat-card-body"><div class="stat-label">YTD Expenses</div><div class="stat-value">$${totalExpense.toLocaleString()}</div><div class="stat-delta ${expPct!==null?(expPct>=100?'delta-down':'delta-up'):'delta-down'}">${expPct!==null?`${expPct}% of $${expenseBudget.toLocaleString()} budget`:expense.length+' categor'+(expense.length!==1?'ies':'y')}</div></div></div></div>
     <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${netProfit>=0?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="stat-card-body"><div class="stat-label">Net Profit</div><div class="stat-value">$${netProfit.toLocaleString()}</div><div class="stat-delta ${margin>=marginTarget?'delta-up':'delta-down'}">${margin>=marginTarget?'▲':'▼'} ${margin}% of ${marginTarget}% target</div></div></div></div>
     <div class="stat-card"><div class="stat-card-inner"><div class="stat-card-icon ${roi>=30?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">gps_fixed</span></div><div class="stat-card-body"><div class="stat-label">Return on Cost</div><div class="stat-value">${roi}%</div><div class="stat-delta" style="color:var(--text-faint)">profit ÷ expenses</div></div></div></div>`;
@@ -7447,7 +7468,7 @@ async function loadFinance(){
   // ── BUDGET TARGETS CARD ───────────────────────────────────────────────────
   const budgetEl=document.getElementById('fin-budget-targets');
   if(budgetEl){
-    const _bar=(pct,over)=>`<div style="background:var(--s4);border-radius:4px;height:5px;width:100%;margin-top:5px"><div style="width:${Math.min(100,pct)}%;height:5px;border-radius:4px;background:${over?'var(--error-txt)':'var(--gold)'};transition:width 0.7s ease"></div></div>`;
+    const _bar=(pct,over)=>`<div style="background:var(--s4);border-radius:4px;height:5px;width:100%;margin-top:5px"><div style="width:${Math.min(100,pct)}%;height:5px;border-radius:4px;background:${over?'var(--error-txt)':'var(--copper)'};transition:width 0.7s ease"></div></div>`;
     const _row=(label,val,target,pct,over,sub)=>`
       <div style="padding:10px 0;border-bottom:1px solid var(--bdr)">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
@@ -7478,7 +7499,7 @@ async function loadFinance(){
       <div style="margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <div style="font-size:11.5px;color:var(--text-faint)">
           ${hasErpBudget
-            ? `<span style="color:var(--gold);font-weight:500">● </span>Linked to ERP season: <strong>${seasonName}</strong>`
+            ? `<span style="color:var(--copper);font-weight:500">● </span>Linked to ERP season: <strong>${seasonName}</strong>`
             : `<span style="color:var(--text-faint)">○ </span>No active ERP season — using manual targets`}
         </div>
         <button class="btn btn-sm btn-secondary" onclick="loadPage('erp-budgets')" style="font-size:11px">
@@ -7524,7 +7545,7 @@ async function loadFinance(){
   }
 
   // ── OVERVIEW: CATEGORY BREAKDOWNS ────────────────────────────────────────
-  const catColors=['#c4a068','#7ec46a','#60b0d4','#e0a840','#e07060','#a07898','#70a8b0','#b89060'];
+  const catColors=['#c17a42','#7a9c4a','#5b8aa3','#c98f2e','#b25d45','#8d6f8a','#6fa893','#a98b5a'];
   const renderCatBreakdown=(bycat,total,elId,colorOffset=0)=>{
     const sorted=Object.entries(bycat).sort((a,b)=>b[1]-a[1]);
     const max=sorted[0]?.[1]||1;
@@ -7589,8 +7610,8 @@ async function loadFinance(){
         ${arcs.map(a=>a.arc).join('')}
       </g>
       <circle cx="${cx}" cy="${cy}" r="${R-22}" fill="var(--s2)" stroke="none"/>
-      <text x="${cx}" y="${cy-6}" text-anchor="middle" dominant-baseline="middle" fill="var(--text-secondary)" font-size="11" font-family="DM Mono" font-weight="500">${expCats.length}</text>
-      <text x="${cx}" y="${cy+8}" text-anchor="middle" dominant-baseline="middle" fill="var(--text-faint)" font-size="8.5" font-family="DM Mono">categor${expCats.length===1?'y':'ies'}</text>
+      <text x="${cx}" y="${cy-6}" text-anchor="middle" dominant-baseline="middle" fill="var(--text-secondary)" font-size="11" font-family="Spline Sans Mono" font-weight="500">${expCats.length}</text>
+      <text x="${cx}" y="${cy+8}" text-anchor="middle" dominant-baseline="middle" fill="var(--text-faint)" font-size="8.5" font-family="Spline Sans Mono">categor${expCats.length===1?'y':'ies'}</text>
     </svg>`;
     const wrap=`<div class="fin-donut-wrap" style="position:relative">
       ${svg}${svgTip}
@@ -7645,7 +7666,7 @@ async function loadFinance(){
   const maxVal=Math.max(...allVals,1);
   const chartH=130;
   const trendTip=document.createElement('div');trendTip.className='chart-tooltip';trendTip.id='trend-tip';
-  trendTip.innerHTML='<div class="chart-tooltip-label" id="trend-tip-label"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--gold)"></div><span id="trend-tip-inc"></span></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--error-light)"></div><span id="trend-tip-exp"></span></div><div class="chart-tooltip-row" style="margin-top:3px;border-top:1px solid var(--bdr2);padding-top:4px"><div class="chart-tooltip-dot" style="background:var(--success-lt)"></div><span id="trend-tip-net"></span></div>';
+  trendTip.innerHTML='<div class="chart-tooltip-label" id="trend-tip-label"></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--copper)"></div><span id="trend-tip-inc"></span></div><div class="chart-tooltip-row"><div class="chart-tooltip-dot" style="background:var(--error-light)"></div><span id="trend-tip-exp"></span></div><div class="chart-tooltip-row" style="margin-top:3px;border-top:1px solid var(--bdr2);padding-top:4px"><div class="chart-tooltip-dot" style="background:var(--success-lt)"></div><span id="trend-tip-net"></span></div>';
   const trendWrap=document.createElement('div');trendWrap.style.cssText='position:relative;';
   const trendChart=document.createElement('div');trendChart.className='fin-trend-chart';
   // Gridlines (3)
@@ -7677,7 +7698,7 @@ async function loadFinance(){
   trendWrap.appendChild(trendTip);
   document.getElementById('fin-trend-chart').replaceWith(trendWrap);
   trendWrap.id='fin-trend-chart';trendWrap.className='';
-  document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--gold);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`;
+  document.getElementById('fin-trend-legend').innerHTML=`<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--copper);border-radius:2px;display:inline-block"></span>Revenue</span>&nbsp;&nbsp;<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:4px;background:var(--error-light);border-radius:2px;display:inline-block"></span>Expenses</span>`;
 
   // ── MONTH-ON-MONTH TABLE — all months, newest first ───────────────────────
   const momKeys=[...sortedKeys].reverse(); // all months, newest first
@@ -8467,7 +8488,7 @@ ${!d.id?`<div class="form-group" style="background:var(--s2);border-radius:8px;p
 </div>`:''}
 <div style="background:var(--s2);border-radius:8px;padding:12px;font-size:11.5px;color:var(--text-muted);line-height:1.8">
 <strong style="color:var(--text-secondary)">Role permissions</strong><br>
-<span style="color:var(--gold-lt)">Owner</span> — full access including user management<br>
+<span style="color:var(--copper-lt)">Owner</span> — full access including user management<br>
 <span style="color:var(--info-txt)">Manager</span> — all pages except users<br>
 <span style="color:var(--warn-txt)">Finance</span> — dashboard, finance and reports only<br>
 <span style="color:var(--success-txt)">Field</span> — dashboard, assets, livestock and crops only</div>`;}
@@ -8716,14 +8737,14 @@ async function generateDigestNow() {
     if (previewEl) {
       previewEl.style.display = 'block';
       previewEl.innerHTML = `
-        <div style="border:1px solid var(--gold-border);border-radius:10px;overflow:hidden;margin-top:4px">
-          <div style="background:linear-gradient(135deg,var(--s3),var(--s4));padding:16px 20px;border-bottom:1px solid var(--gold-border)">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.20em;color:var(--gold);margin-bottom:6px;font-weight:600">THORNFIELD ESTATE · WEEKLY INTELLIGENCE DIGEST · ${today.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
+        <div style="border:1px solid var(--copper-border);border-radius:10px;overflow:hidden;margin-top:4px">
+          <div style="background:linear-gradient(135deg,var(--s3),var(--s4));padding:16px 20px;border-bottom:1px solid var(--copper-border)">
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.20em;color:var(--copper);margin-bottom:6px;font-weight:600">THORNFIELD ESTATE · WEEKLY INTELLIGENCE DIGEST · ${today.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}</div>
             <div style="font-family:var(--ff-display);font-size:17px;color:var(--text-primary);line-height:1.4">${digest.headline||''}</div>
           </div>
           <div style="padding:16px 20px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
             <div>
-              <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--gold);font-weight:600;margin-bottom:5px">Revenue</div>
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--copper);font-weight:600;margin-bottom:5px">Revenue</div>
               <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55">${digest.revenue_status||''}</div>
             </div>
             <div>
@@ -8731,7 +8752,7 @@ async function generateDigestNow() {
               <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55">${digest.livestock_summary||''}</div>
             </div>
             <div>
-              <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#6aaa58;font-weight:600;margin-bottom:5px">Crop Pipeline</div>
+              <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#7a9c4a;font-weight:600;margin-bottom:5px">Crop Pipeline</div>
               <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.55">${digest.crop_status||''}</div>
             </div>
             <div>
@@ -8740,18 +8761,18 @@ async function generateDigestNow() {
             </div>
           </div>
           <div style="padding:0 20px 16px">
-            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--gold);font-weight:600;margin-bottom:10px">Top 3 Recommended Actions</div>
+            <div style="font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:var(--copper);font-weight:600;margin-bottom:10px">Top 3 Recommended Actions</div>
             <div style="display:flex;flex-direction:column;gap:7px">
               ${(digest.top_3_actions||[]).map((a,i)=>`
                 <div style="display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--text-secondary)">
-                  <span style="width:20px;height:20px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:9.5px;color:var(--gold);flex-shrink:0;margin-top:1px">${i+1}</span>
+                  <span style="width:20px;height:20px;background:var(--copper-dim);border:1px solid var(--copper-border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:9.5px;color:var(--copper);flex-shrink:0;margin-top:1px">${i+1}</span>
                   <span style="line-height:1.5">${a}</span>
                 </div>`).join('')}
             </div>
           </div>
           <div style="padding:10px 20px 14px;border-top:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between">
             <span style="font-size:10px;color:var(--text-faint)">Generated by MyFarm Estate Intelligence · ${today.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
-            <button onclick="downloadDigest()" style="padding:6px 14px;background:var(--gold);color:var(--bg);border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--ff-ui);display:flex;align-items:center;gap:5px">
+            <button onclick="downloadDigest()" style="padding:6px 14px;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--ff-ui);display:flex;align-items:center;gap:5px">
               <span style="font-family:'Material Symbols Outlined';font-size:14px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">download</span>
               Save PDF
             </button>
@@ -8773,16 +8794,16 @@ function downloadDigest() {
   if (!previewEl) return;
   // Simple download as HTML printable — in prod this would be server-side PDF
   const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Thornfield Estate — Weekly Digest</title>
-<style>body{font-family:'DM Sans',sans-serif;background:#fff;color:#1a1a1a;padding:40px;max-width:700px;margin:0 auto}
+<style>body{font-family:Georgia,serif;background:#fff;color:#1a1a1a;padding:40px;max-width:700px;margin:0 auto}
 h1{font-family:Georgia,serif;font-size:24px;margin-bottom:4px}
-.label{font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#8a6030;font-weight:600;margin:16px 0 5px}
+.label{font-size:9px;text-transform:uppercase;letter-spacing:0.16em;color:#8f5527;font-weight:600;margin:16px 0 5px}
 .section{margin-bottom:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .action{display:flex;gap:10px;margin-bottom:8px}
-.num{width:20px;height:20px;background:#f4e9d8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#8a6030;font-weight:600;flex-shrink:0;margin-top:2px}
+.num{width:20px;height:20px;background:#ecd9bf;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;color:#8f5527;font-weight:600;flex-shrink:0;margin-top:2px}
 footer{margin-top:40px;font-size:10px;color:#999;border-top:1px solid #eee;padding-top:12px}
 </style></head><body>
-<div style="margin-bottom:6px;font-size:9px;color:#8a6030;text-transform:uppercase;letter-spacing:0.2em">THORNFIELD ESTATE · ESTATE INTELLIGENCE DIGEST</div>
+<div style="margin-bottom:6px;font-size:9px;color:#8f5527;text-transform:uppercase;letter-spacing:0.2em">THORNFIELD ESTATE · ESTATE INTELLIGENCE DIGEST</div>
 <h1>${window._lastDigest?.headline||'Weekly Estate Summary'}</h1>
 <div style="font-size:10px;color:#999;margin-bottom:24px">${(window._lastDigestDate||new Date()).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
 <div class="grid">
@@ -9152,18 +9173,18 @@ function copyInviteCode(){
 @media(max-width:900px){ .erp-grid-2,.erp-grid-3{ grid-template-columns:1fr; } }
 
 .kpi-card { background: var(--s2); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; }
-.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--gold-dk), var(--gold)); }
+.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background: linear-gradient(90deg, var(--copper-dk), var(--copper)); }
 .kpi-card .kpi-label { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
 .kpi-card .kpi-value { font-size: 26px; font-weight: 600; color: var(--text-primary); line-height: 1; }
 .kpi-card .kpi-sub { font-size: 13px; color: var(--text-secondary); margin-top: 6px; }
-.kpi-card .kpi-icon { position:absolute; top:16px; right:16px; font-size:22px; opacity:.22; color: var(--gold); }
+.kpi-card .kpi-icon { position:absolute; top:16px; right:16px; font-size:22px; opacity:.22; color: var(--copper); }
 .kpi-positive { color: var(--success-txt) !important; }
 .kpi-negative { color: var(--error-txt) !important; }
 .kpi-warn { color: var(--warn-txt) !important; }
 
 .erp-panel { background: var(--s2); border: 1px solid var(--bdr); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
 .erp-panel-title { font-size: 14px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing:.05em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-.erp-panel-title .nav-icon { font-size: 16px; color: var(--gold); }
+.erp-panel-title .nav-icon { font-size: 16px; color: var(--copper); }
 
 .erp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .erp-table th { background: var(--s3); color: var(--text-muted); font-weight: 500; padding: 10px 12px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--bdr); }
@@ -9179,16 +9200,16 @@ function copyInviteCode(){
 .profit-row.total { font-weight: 700; font-size: 16px; padding-top: 12px; margin-top: 4px; border-top: 2px solid var(--bdr); }
 .profit-row .label { color: var(--text-secondary); }
 .profit-row .value { font-family: var(--ff-mono); font-weight: 500; }
-.profit-row.contingency-row { background: rgba(184,146,74,0.04); border-radius: 6px; padding: 8px 10px; margin: 4px 0; }
+.profit-row.contingency-row { background: rgba(193,122,66,0.04); border-radius: 6px; padding: 8px 10px; margin: 4px 0; }
 
 .activity-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-.activity-badge.fertilizer_application { background: rgba(94,170,80,0.12); color: var(--success-txt); }
-.activity-badge.feeding { background: rgba(58,120,152,0.12); color: var(--info-txt); }
-.activity-badge.fuel_usage { background: rgba(196,134,42,0.12); color: var(--warn-txt); }
-.activity-badge.planting { background: rgba(94,170,80,0.12); color: var(--success-txt); }
-.activity-badge.harvesting { background: rgba(184,146,74,0.12); color: var(--gold-lt); }
-.activity-badge.spraying { background: rgba(176,64,64,0.12); color: var(--error-txt); }
-.activity-badge.vaccination { background: rgba(58,120,152,0.12); color: var(--info-txt); }
+.activity-badge.fertilizer_application { background: rgba(108,179,94,0.12); color: var(--success-txt); }
+.activity-badge.feeding { background: rgba(70,131,160,0.12); color: var(--info-txt); }
+.activity-badge.fuel_usage { background: rgba(201,143,46,0.12); color: var(--warn-txt); }
+.activity-badge.planting { background: rgba(108,179,94,0.12); color: var(--success-txt); }
+.activity-badge.harvesting { background: rgba(193,122,66,0.12); color: var(--copper-lt); }
+.activity-badge.spraying { background: rgba(193,77,60,0.12); color: var(--error-txt); }
+.activity-badge.vaccination { background: rgba(70,131,160,0.12); color: var(--info-txt); }
 
 .variance-bar { display: flex; align-items: center; gap: 10px; }
 .variance-track { flex: 1; height: 6px; background: var(--s4); border-radius: 3px; overflow: hidden; }
@@ -9198,20 +9219,20 @@ function copyInviteCode(){
 
 .erp-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: var(--radius-sm); border: 1px solid var(--bdr); background: var(--s3); color: var(--text-primary); font-size: 13px; cursor: pointer; transition: var(--tr); min-height: 42px; }
 .erp-btn:hover { background: var(--s4); border-color: var(--bdr-hv); }
-.erp-btn.primary { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold-lt); }
-.erp-btn.primary:hover { background: rgba(184,146,74,0.2); }
+.erp-btn.primary { background: var(--copper-dim); border-color: var(--copper-border); color: var(--copper-lt); }
+.erp-btn.primary:hover { background: rgba(193,122,66,0.2); }
 
 .erp-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
 .erp-form-row.triple { grid-template-columns: 1fr 1fr 1fr; }
 @media(max-width:600px){ .erp-form-row,.erp-form-row.triple { grid-template-columns: 1fr; } }
 .erp-label { font-size: 13px; text-transform: uppercase; letter-spacing:.05em; color: var(--text-muted); margin-bottom: 5px; display: block; }
 .erp-input { width: 100%; padding: 11px 14px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
-.erp-input:focus { outline: none; border-color: var(--gold-border); }
+.erp-input:focus { outline: none; border-color: var(--copper-border); }
 .erp-select { width: 100%; padding: 11px 14px; background: var(--s3); border: 1px solid var(--bdr); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 13px; }
 
 .mini-chart { display: flex; align-items: flex-end; gap: 3px; height: 40px; }
 .mini-bar { flex: 1; border-radius: 2px 2px 0 0; min-width: 6px; transition: height 0.3s; }
-.mini-bar.income { background: var(--gold); opacity: 0.7; }
+.mini-bar.income { background: var(--copper); opacity: 0.7; }
 .mini-bar.expense { background: var(--error-lt); opacity: 0.5; }
 
 .season-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
@@ -9219,10 +9240,10 @@ function copyInviteCode(){
 .season-badge.Planning { background: var(--info-bg); color: var(--info-txt); border: 1px solid var(--info-bdr); }
 .season-badge.Closed { background: var(--s4); color: var(--text-muted); border: 1px solid var(--bdr); }
 
-.donut-ring { display: inline-block; width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(var(--gold) 0% var(--pct, 0%), var(--s4) var(--pct, 0%) 100%); position: relative; }
+.donut-ring { display: inline-block; width: 80px; height: 80px; border-radius: 50%; background: conic-gradient(var(--copper) 0% var(--pct, 0%), var(--s4) var(--pct, 0%) 100%); position: relative; }
 .donut-ring::after { content: attr(data-pct) '%'; position:absolute; inset:8px; background: var(--s2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--text-primary); }
 
-.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); display: inline-block; }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--copper); display: inline-block; }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px) scale(0.97); }
@@ -9235,7 +9256,7 @@ function copyInviteCode(){
 .profit-row { font-size: 15px; padding: 10px 0; }
 .erp-table td { font-size: 14px !important; }
 .erp-table th { font-size: 12px !important; }
-.notif-count { background: var(--gold); color: var(--bg); font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 5px; display: inline-block; }
+.notif-count { background: var(--copper); color: var(--bg); font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 5px; display: inline-block; }
 </style>
 
 <script>
@@ -9483,7 +9504,7 @@ async function loadErpDashboard(){
   currentPage = 'erp-dashboard';
   erpContent(`<div class="page-header"><h1>Farm Overview</h1></div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-    <div style="width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+    <div style="width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--copper);border-radius:50%;animation:spin 0.8s linear infinite"></div>
     <span style="color:var(--text-muted);font-size:14px">Loading your farm data…</span>
   </div>`);
 
@@ -9515,8 +9536,8 @@ async function loadErpDashboard(){
     <div class="kpi-sub">Margin: ${erpFmt.pct(dash.margin_pct)}</div>
     <span class="material-symbols-outlined kpi-icon">trending_up</span>
   </div>
-  <div class="kpi-card" style="border-top-color:var(--gold-lt)">
-    <div class="kpi-label">Adjusted Profit <span style="font-size:10px;color:var(--gold)">(+contingency)</span></div>
+  <div class="kpi-card" style="border-top-color:var(--copper-lt)">
+    <div class="kpi-label">Adjusted Profit <span style="font-size:10px;color:var(--copper)">(+contingency)</span></div>
     <div class="kpi-value ${adjProfitColor}">${erpFmt.usd(dash.adjusted_profit)}</div>
     <div class="kpi-sub">Contingency: ${erpFmt.usd(dash.contingency_value)} | Margin: ${erpFmt.pct(dash.adjusted_margin_pct)}</div>
     <span class="material-symbols-outlined kpi-icon">shield</span>
@@ -9562,8 +9583,8 @@ async function loadErpDashboard(){
         <span class="value ${profitColor}">${erpFmt.usd(dash.original_profit)}</span>
       </div>
       <div class="profit-row contingency-row" style="margin-top:12px">
-        <span class="label" style="color:var(--gold)">+ Contingency Allowance</span>
-        <span class="value" style="color:var(--gold)">+ ${erpFmt.usd(dash.contingency_value)}</span>
+        <span class="label" style="color:var(--copper)">+ Contingency Allowance</span>
+        <span class="value" style="color:var(--copper)">+ ${erpFmt.usd(dash.contingency_value)}</span>
       </div>
       <div class="profit-row">
         <span class="label">Adjusted Expenses</span>
@@ -9584,7 +9605,7 @@ async function loadErpDashboard(){
     <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">bar_chart</span> Revenue vs Expense — 6 Month Trend</div>
     <div id="erp-monthly-chart" style="min-height:160px;display:flex;align-items:flex-end;gap:6px;padding:10px 0"></div>
     <div style="display:flex;gap:16px;margin-top:8px;font-size:11px;color:var(--text-muted)">
-      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--gold);margin-right:4px"></span>Revenue</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--copper);margin-right:4px"></span>Revenue</span>
       <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--error-lt);margin-right:4px"></span>Expense</span>
     </div>
   </div>
@@ -9669,8 +9690,8 @@ async function loadErpProfitability(){
     erpFetch('/erp/budgets' + (seasonId ? `?season_id=${seasonId}` : ''))
   ]);
 
-  const profColor = prof.original_profit >= 0 ? '#7ecc74' : '#e06060';
-  const adjColor = prof.adjusted_profit >= 0 ? '#7ecc74' : '#e06060';
+  const profColor = prof.original_profit >= 0 ? '#8ed47e' : '#e2705c';
+  const adjColor = prof.adjusted_profit >= 0 ? '#8ed47e' : '#e2705c';
 
   erpContent(`
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -9700,12 +9721,12 @@ async function loadErpProfitability(){
     <div class="kpi-value" style="color:${profColor}">${erpFmt.usd(prof.original_profit)}</div>
     <div class="kpi-sub">Margin: ${erpFmt.pct(prof.margin_pct)}</div>
   </div>
-  <div class="kpi-card" style="border-top-color:var(--gold)">
+  <div class="kpi-card" style="border-top-color:var(--copper)">
     <div class="kpi-label">Contingency</div>
-    <div class="kpi-value" style="color:var(--gold-lt)">${erpFmt.usd(prof.contingency_value)}</div>
+    <div class="kpi-value" style="color:var(--copper-lt)">${erpFmt.usd(prof.contingency_value)}</div>
     <div class="kpi-sub">${cont?.contingency_type==='percentage' ? erpFmt.pct(cont.contingency_pct)+' of expenses' : 'Fixed amount'}</div>
   </div>
-  <div class="kpi-card" style="border-top-color:var(--gold-lt)">
+  <div class="kpi-card" style="border-top-color:var(--copper-lt)">
     <div class="kpi-label">Adjusted Profit</div>
     <div class="kpi-value" style="color:${adjColor}">${erpFmt.usd(prof.adjusted_profit)}</div>
     <div class="kpi-sub">Margin: ${erpFmt.pct(prof.adjusted_margin_pct)}</div>
@@ -9764,20 +9785,20 @@ async function loadErpProfitability(){
           ${(projections||[]).map(p=>`
           <tr>
             <td>${p.description}</td>
-            <td class="amount" style="color:var(--gold-lt)">${erpFmt.usd(p.projected_amount)}</td>
+            <td class="amount" style="color:var(--copper-lt)">${erpFmt.usd(p.projected_amount)}</td>
             <td class="amount" style="color:var(--success-txt)">${erpFmt.usd(p.actual_amount)}</td>
           </tr>`).join('') || '<tr><td colspan="3" style="color:var(--text-muted);padding:12px;text-align:center">No projections added</td></tr>'}
-          ${projections?.length ? `<tr style="font-weight:600"><td>Total</td><td class="amount" style="color:var(--gold-lt)">${erpFmt.usd(projections.reduce((s,p)=>s+parseFloat(p.projected_amount||0),0))}</td><td class="amount" style="color:var(--success-txt)">${erpFmt.usd(projections.reduce((s,p)=>s+parseFloat(p.actual_amount||0),0))}</td></tr>` : ''}
+          ${projections?.length ? `<tr style="font-weight:600"><td>Total</td><td class="amount" style="color:var(--copper-lt)">${erpFmt.usd(projections.reduce((s,p)=>s+parseFloat(p.projected_amount||0),0))}</td><td class="amount" style="color:var(--success-txt)">${erpFmt.usd(projections.reduce((s,p)=>s+parseFloat(p.actual_amount||0),0))}</td></tr>` : ''}
         </tbody>
       </table>
     </div>
 
     <!-- Contingency Summary -->
-    <div class="erp-panel" style="background:linear-gradient(135deg,var(--s2),rgba(184,146,74,0.05));border-color:var(--gold-border)">
+    <div class="erp-panel" style="background:linear-gradient(135deg,var(--s2),rgba(193,122,66,0.05));border-color:var(--copper-border)">
       <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">shield</span> Contingency Engine</div>
       <div class="profit-block">
         <div class="profit-row"><span class="label">Original Expenses</span><span class="value">${erpFmt.usd(prof.base_expenses)}</span></div>
-        <div class="profit-row contingency-row"><span class="label" style="color:var(--gold)">Contingency (${cont?.contingency_type==='percentage'?erpFmt.pct(cont?.contingency_pct||0):erpFmt.usd(cont?.contingency_fixed||0)})</span><span class="value" style="color:var(--gold)">+ ${erpFmt.usd(prof.contingency_value)}</span></div>
+        <div class="profit-row contingency-row"><span class="label" style="color:var(--copper)">Contingency (${cont?.contingency_type==='percentage'?erpFmt.pct(cont?.contingency_pct||0):erpFmt.usd(cont?.contingency_fixed||0)})</span><span class="value" style="color:var(--copper)">+ ${erpFmt.usd(prof.contingency_value)}</span></div>
         <div class="profit-row"><span class="label">Adjusted Expenses</span><span class="value">${erpFmt.usd(prof.adjusted_expenses)}</span></div>
         <div class="profit-row total"><span class="label">Adjusted Profit</span><span class="value" style="color:${adjColor}">${erpFmt.usd(prof.adjusted_profit)}</span></div>
       </div>
@@ -9874,7 +9895,7 @@ async function loadErpBudgets(){
   <button class="erp-btn primary" onclick="openAddBudgetForm(${seasonId||'null'})">+ Add Budget Line</button>
 </div>
 <div style="padding:8px 0 16px;font-size:11.5px;color:var(--text-faint)">
-  <span style="color:var(--gold)">●</span> Budget lines set here feed directly into the Finance module's Budget &amp; Targets card. Actual spend is pulled live from finance transactions.
+  <span style="color:var(--copper)">●</span> Budget lines set here feed directly into the Finance module's Budget &amp; Targets card. Actual spend is pulled live from finance transactions.
 </div>
 
 <div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
@@ -10231,7 +10252,7 @@ async function loadErpCosting(){
 <div class="erp-panel">
   <div class="erp-panel-title" style="justify-content:space-between">
     <span><span class="material-symbols-outlined nav-icon">inventory_2</span> Inventory Valuation</span>
-    <span style="font-size:13px;color:var(--gold)">Total: ${erpFmt.usd(invVal.total_value)}</span>
+    <span style="font-size:13px;color:var(--copper)">Total: ${erpFmt.usd(invVal.total_value)}</span>
   </div>
   <table class="erp-table">
     <thead><tr><th>Item</th><th>Category</th><th>On Hand</th><th class="amount">Unit Cost</th><th class="amount">Total Value</th><th class="amount">Consumed</th><th>Status</th></tr></thead>
@@ -10536,7 +10557,7 @@ async function loadEntProfitability(){
   ${entKpi('OpEx',             entFmt.usd(adv.operating_expenses),'Labour: '+entFmt.usd(adv.labour_cost), 'payments', 'var(--error-txt)')}
   ${entKpi('Operating Profit', entFmt.usd(adv.operating_profit), '', 'bar_chart', entFmt.clr(adv.operating_profit))}
   ${entKpi('EBITDA',           entFmt.usd(adv.ebitda),           `${entFmt.pct(adv.ebitda_margin_pct)} margin`, 'account_balance', entFmt.clr(adv.ebitda))}
-  ${entKpi('Contingency',      entFmt.usd(adv.contingency_provision), '', 'shield', 'var(--gold-lt)')}
+  ${entKpi('Contingency',      entFmt.usd(adv.contingency_provision), '', 'shield', 'var(--copper-lt)')}
   ${entKpi('Net Profit',       entFmt.usd(adv.net_profit),       `${entFmt.pct(adv.net_margin_pct)} margin`, 'savings', entFmt.clr(adv.net_profit))}
 </div>
 <div class="erp-grid-2">
@@ -10860,7 +10881,7 @@ async function loadEntInventoryOpt(){
   ${entKpi('Total Consumed',    entFmt.usd(data.total_consumed_value),  '', 'output')}
   ${entKpi('Turnover Ratio',    entFmt.dec(data.inventory_turnover)+'x','', 'autorenew')}
   ${entKpi('Below Reorder',     data.items_below_reorder + ' items',    '', 'warning', data.items_below_reorder>0?'var(--error-txt)':'')}
-  ${entKpi('Dead Stock Items',  data.dead_stock_count + ' items',       '', 'do_not_disturb', data.dead_stock_count>0?'var(--gold-lt)':'')}
+  ${entKpi('Dead Stock Items',  data.dead_stock_count + ' items',       '', 'do_not_disturb', data.dead_stock_count>0?'var(--copper-lt)':'')}
 </div>
 ${reorder.length ? `<div class="erp-panel"><div class="erp-panel-title" style="color:var(--error-txt)"><span class="material-symbols-outlined nav-icon">warning</span> Purchase Recommendations (${reorder.length})</div>${entTable(['Item','On Hand','Reorder Point','EOQ','Urgency'],rorRows)}</div>` : ''}
 <div class="erp-panel">
@@ -11119,7 +11140,7 @@ async function loadEntCalculations(){
       <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">functions</span> ${mod}</div>
       <table class="erp-table"><thead><tr><th>Formula</th><th>Version</th><th>Description</th><th></th></tr></thead><tbody>
         ${fmls.map(f=>`<tr>
-          <td><code style="font-family:var(--ff-mono);font-size:12px;color:var(--gold-lt)">${f.name}</code></td>
+          <td><code style="font-family:var(--ff-mono);font-size:12px;color:var(--copper-lt)">${f.name}</code></td>
           <td>${f.version}</td>
           <td style="color:var(--text-muted)">${f.description}</td>
           <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="openEntFormulaInvoker('${f.name}')">▶ Invoke</button></td>
@@ -11163,7 +11184,7 @@ async function loadEntScenarios(){
   const wiCards = wiKeys.map(k=>{
     const s = wi[k]||{};
     const label = k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
-    const clr = k==='worst_case'?'var(--error-txt)':k==='best_case'?'var(--success-txt)':'var(--gold-lt)';
+    const clr = k==='worst_case'?'var(--error-txt)':k==='best_case'?'var(--success-txt)':'var(--copper-lt)';
     return `<div class="erp-panel" style="border-color:${clr}20">
       <div class="erp-panel-title" style="color:${clr}">${label}</div>
       <div style="font-size:22px;font-family:var(--ff-mono);font-weight:600;color:${clr};margin-bottom:8px">${entFmt.usd(s.profit)}</div>
