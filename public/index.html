@@ -24,7 +24,7 @@
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
   connect-src 'self';
-  img-src 'self' data: https://images.unsplash.com;
+  img-src 'self' data:;
   base-uri 'self';
   form-action 'self';
 ">
@@ -277,9 +277,7 @@ body {
 .auth-hero-photo {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=85&fit=crop&auto=format');
-  background-size: cover;
-  background-position: center 30%;
+  background: var(--s2);
   transform: scale(1.04);
   transition: transform 10s cubic-bezier(0.25,0.46,0.45,0.94);
 }
@@ -3429,8 +3427,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero-strip,
 .auth-hero {
   background:
-    linear-gradient(160deg, rgba(14,23,18,0.15) 0%, rgba(14,23,18,0.72) 55%, rgba(14,23,18,0.97) 100%),
-    url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=75&fit=crop&auto=format&sat=-30') center 40% / cover no-repeat !important;
+    linear-gradient(160deg, rgba(14,23,18,0.15) 0%, rgba(14,23,18,0.72) 55%, rgba(14,23,18,0.97) 100%) !important;
 }
 /* Keep grid overlay and copper rule above the photo */
 .auth-hero-strip::before,
@@ -3467,8 +3464,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .auth-hero-strip,
 .auth-hero {
   background:
-    linear-gradient(160deg, rgba(14,23,18,0.15) 0%, rgba(14,23,18,0.72) 55%, rgba(14,23,18,0.97) 100%),
-    url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1400&q=75&fit=crop&auto=format&sat=-30') center 40% / cover no-repeat !important;
+    linear-gradient(160deg, rgba(14,23,18,0.15) 0%, rgba(14,23,18,0.72) 55%, rgba(14,23,18,0.97) 100%) !important;
 }
 /* Keep grid overlay and copper rule above the photo */
 .auth-hero-strip::before,
@@ -3750,9 +3746,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .lp-hero-bg {
   position: absolute;
   inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1800&q=80&fit=crop&auto=format');
-  background-size: cover;
-  background-position: center 40%;
+  background: none;
   opacity: 0.18;
   transform: scale(1.04);
   transition: opacity 1s ease;
@@ -3816,8 +3810,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .lp-proof { position: relative; overflow: hidden; }
 .lp-proof-bg {
   position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=1800&q=80&fit=crop&auto=format');
-  background-size: cover; background-position: center 30%;
+  background: none;
   opacity: 0.08; filter: saturate(0.5) brightness(1.1);
 }
 .lp-proof-inner { position: relative; z-index: 1; }
@@ -3826,8 +3819,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 .lp-cta-section { position: relative; overflow: hidden; }
 .lp-cta-bg {
   position: absolute; inset: 0;
-  background-image: url('https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=1800&q=80&fit=crop&auto=format');
-  background-size: cover; background-position: center 60%;
+  background: none;
   opacity: 0.12; filter: saturate(0.7);
 }
 .lp-cta-bg-overlay {
@@ -4117,7 +4109,6 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
   <!-- LEFT: Immersive estate hero panel -->
   <div class="auth-hero-strip">
-    <div class="auth-hero-photo" aria-hidden="true"></div>
     <div class="auth-hero-overlay" aria-hidden="true"></div>
 
     <div class="auth-hero-brand">
