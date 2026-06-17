@@ -21,7 +21,7 @@
      ══════════════════════════════════════════════════════════════════════════ -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'nonce-%%CSP_NONCE%%' 'unsafe-inline';
+  script-src 'self' 'nonce-%%CSP_NONCE%%';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
   font-src 'self' https://fonts.gstatic.com;
   connect-src 'self';
@@ -4216,7 +4216,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 </div>
 
 <!-- MOBILE SIDEBAR OVERLAY -->
-<div id="mob-overlay" onclick="closeMobileNav()"></div>
+<div id="mob-overlay"></div>
 
 
 <div id="app" class="hidden">
@@ -4237,7 +4237,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
       <!-- SEARCH -->
       <div class="sb-search">
-        <div class="sb-search-inner" onclick="openCmdPalette()" role="button" tabindex="0" aria-label="Search — Ctrl K">
+        <div class="sb-search-inner" id="sb-search-inner" role="button" tabindex="0" aria-label="Search — Ctrl K">
           <span class="sb-search-icon">search</span>
           <span class="sb-search-text">Search modules, records…</span>
           <span class="sb-search-kbd">⌘K</span>
@@ -4250,7 +4250,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <div class="erp-mode-strip" id="erp-mode-strip">
       <span style="font-family:'Material Symbols Outlined';font-size:13px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">insights</span>
       Farm Intelligence
-      <button class="erp-mode-back" onclick="toggleErpMode()">← Back</button>
+      <button class="erp-mode-back" id="erp-mode-back">← Back</button>
     </div>
 
     <!-- NAV -->
@@ -4365,14 +4365,14 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
     <!-- FOOTER -->
     <div class="sb-footer">
-      <div class="sb-user" onclick="document.querySelector('[data-page=settings]')?.click()">
+      <div class="sb-user" id="sb-user">
         <div class="sb-avatar" id="sf-avatar">—</div>
         <div class="sb-user-meta">
           <div class="sb-user-name" id="sf-name">—</div>
           <div class="sb-user-role" id="sf-role">—</div>
         </div>
       </div>
-      <button class="sb-logout" onclick="confirmLogout()">
+      <button class="sb-logout" id="sb-logout">
         <span class="sb-logout-icon">logout</span>
         <span class="sb-logout-text">Sign out</span>
       </button>
@@ -4381,7 +4381,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
   </aside>
 
   <!-- COMMAND PALETTE -->
-  <div class="cmd-palette-overlay" id="cmd-palette-overlay" onclick="closeCmdPaletteIfBg(event)">
+  <div class="cmd-palette-overlay" id="cmd-palette-overlay">
     <div class="cmd-palette-box" id="cmd-palette-box">
       <div class="cmd-input-row">
         <span class="cmd-search-icon">search</span>
@@ -4399,51 +4399,51 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
   <!-- MOBILE BOTTOM NAV BAR -->
   <nav class="mobile-nav-bar" id="mobile-nav-bar">
-    <button class="mobile-nav-item active" data-page="dashboard" onclick="mobileNavTo('dashboard')">
+    <button class="mobile-nav-item active" data-page="dashboard">
       <span class="mobile-nav-icon">grid_view</span>
       <span class="mobile-nav-label">Home</span>
     </button>
-    <button class="mobile-nav-item" data-page="livestock" onclick="mobileNavTo('livestock')">
+    <button class="mobile-nav-item" data-page="livestock">
       <span class="mobile-nav-icon">pets</span>
       <span class="mobile-nav-label">Livestock</span>
     </button>
-    <button class="mobile-nav-item" data-page="crops" onclick="mobileNavTo('crops')">
+    <button class="mobile-nav-item" data-page="crops">
       <span class="mobile-nav-icon">eco</span>
       <span class="mobile-nav-label">Crops</span>
     </button>
-    <button class="mobile-nav-item" data-page="finance" onclick="mobileNavTo('finance')">
+    <button class="mobile-nav-item" data-page="finance">
       <span class="mobile-nav-icon">account_balance</span>
       <span class="mobile-nav-label">Finance</span>
     </button>
-    <button class="mobile-nav-item" onclick="openCmdPalette()">
+    <button class="mobile-nav-item" id="mob-nav-cmd-btn">
       <span class="mobile-nav-icon">search</span>
       <span class="mobile-nav-label">Search</span>
     </button>
   </nav>
 
   <!-- QUICK CREATE FAB -->
-  <button id="fab-btn" onclick="toggleFabMenu()" title="Quick create" aria-label="Quick create">add</button>
+  <button id="fab-btn" title="Quick create" aria-label="Quick create">add</button>
   <div id="fab-menu">
-    <div class="fab-item" onclick="fabAction('livestock')"><span class="fab-item-icon">pets</span>Add Livestock Record</div>
-    <div class="fab-item" onclick="fabAction('crops')"><span class="fab-item-icon">eco</span>Log Crop Activity</div>
-    <div class="fab-item" onclick="fabAction('finance')"><span class="fab-item-icon">receipt_long</span>Record Transaction</div>
-    <div class="fab-item" onclick="fabAction('inventory')"><span class="fab-item-icon">inventory_2</span>Receive Stock</div>
-    <div class="fab-item" onclick="fabAction('workers')"><span class="fab-item-icon">person_add</span>Add Worker</div>
+    <div class="fab-item" data-fab-action="livestock"><span class="fab-item-icon">pets</span>Add Livestock Record</div>
+    <div class="fab-item" data-fab-action="crops"><span class="fab-item-icon">eco</span>Log Crop Activity</div>
+    <div class="fab-item" data-fab-action="finance"><span class="fab-item-icon">receipt_long</span>Record Transaction</div>
+    <div class="fab-item" data-fab-action="inventory"><span class="fab-item-icon">inventory_2</span>Receive Stock</div>
+    <div class="fab-item" data-fab-action="workers"><span class="fab-item-icon">person_add</span>Add Worker</div>
   </div>
 
     <div id="main">
     <div id="topbar">
-      <button id="mob-toggle" aria-label="Toggle navigation" onclick="toggleMobileNav()">
+      <button id="mob-toggle" aria-label="Toggle navigation">
         <span></span><span></span><span></span>
       </button>
       <div class="topbar-title" id="topbar-title">Dashboard</div>
       <div class="topbar-sep"></div>
       <div class="topbar-badge" id="topbar-season">Season: —</div>
-      <button id="erp-mode-btn" onclick="toggleErpMode()" title="Farm Intelligence — full-screen ERP workspace">
+      <button id="erp-mode-btn" title="Farm Intelligence — full-screen ERP workspace">
         <span class="erp-btn-icon">insights</span>
         <span id="erp-btn-label">Intelligence</span>
       </button>
-      <button id="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">☀</button>
+      <button id="theme-toggle" title="Toggle light/dark mode">☀</button>
       <div class="topbar-avatar" id="topbar-av">—</div>
     </div>
     <div id="content">
@@ -4451,8 +4451,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div id="conn-banner" aria-live="polite" aria-atomic="true">
         <div class="conn-dot"></div>
         <div class="conn-msg" id="conn-msg"></div>
-        <button class="conn-retry" onclick="retryConnection()" style="display:none">↻ Retry now</button>
-        <button class="conn-dismiss" onclick="dismissBanner()" aria-label="Dismiss" style="display:none">×</button>
+        <button class="conn-retry" id="conn-retry" style="display:none">↻ Retry now</button>
+        <button class="conn-dismiss" id="conn-dismiss" aria-label="Dismiss" style="display:none">×</button>
       </div>
 
       <div class="page active" id="page-dashboard">
@@ -4526,7 +4526,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
                   <span style="font-family:'Material Symbols Outlined';font-size:14px;color:var(--copper);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;vertical-align:middle">neurology</span>
                   AI Insight
                 </span>
-                <button class="ai-refresh-btn" id="ai-refresh-btn" onclick="refreshAI()">↻</button>
+                <button class="ai-refresh-btn" id="ai-refresh-btn">↻</button>
               </div>
               <div id="ai-insights-body"><div class="ai-loading-state">Analysing farm data…</div></div>
             </div>
@@ -4631,11 +4631,11 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
         <!-- TABS -->
         <div class="fin-tabs">
-          <button class="fin-tab active" data-tab="overview" onclick="finTab(this,'overview')">Overview</button>
-          <button class="fin-tab" data-tab="income" onclick="finTab(this,'income')">Income</button>
-          <button class="fin-tab" data-tab="expenses" onclick="finTab(this,'expenses')">Expenses</button>
-          <button class="fin-tab" data-tab="profitability" onclick="finTab(this,'profitability')">Profitability</button>
-          <button class="fin-tab" data-tab="trends" onclick="finTab(this,'trends')">Monthly Trends</button>
+          <button class="fin-tab active" data-tab="overview">Overview</button>
+          <button class="fin-tab" data-tab="income">Income</button>
+          <button class="fin-tab" data-tab="expenses">Expenses</button>
+          <button class="fin-tab" data-tab="profitability">Profitability</button>
+          <button class="fin-tab" data-tab="trends">Monthly Trends</button>
         </div>
 
         <!-- OVERVIEW TAB -->
@@ -4659,8 +4659,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
               <span>Budget &amp; Targets</span>
               <div style="display:flex;gap:8px">
-                <button class="btn btn-secondary btn-sm" onclick="loadPage('erp-budgets')">ERP Budgets →</button>
-                <button class="btn btn-primary btn-sm" onclick="openMarginTargetEditor()">Set Margin Target</button>
+                <button class="btn btn-secondary btn-sm" id="fin-erp-budgets-btn">ERP Budgets →</button>
+                <button class="btn btn-primary btn-sm" id="fin-margin-target-btn">Set Margin Target</button>
               </div>
             </div>
             <div id="fin-budget-targets" style="padding:8px 0"></div>
@@ -4729,19 +4729,19 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
               </p>
             </div>
             <div style="display:flex;flex-direction:column;gap:10px;flex-shrink:0;align-items:flex-end">
-              <button class="digest-btn" onclick="generateDigestNow()">
+              <button class="digest-btn" id="digest-btn">
                 <span class="digest-btn-icon">picture_as_pdf</span>
                 Generate This Week's Digest
               </button>
               <div style="display:flex;align-items:center;gap:8px">
                 <label style="font-size:11.5px;color:var(--text-muted);display:flex;align-items:center;gap:7px;cursor:pointer">
-                  <input type="checkbox" id="digest-schedule-toggle" onchange="toggleDigestSchedule(this)" style="accent-color:var(--copper)">
+                  <input type="checkbox" id="digest-schedule-toggle" style="accent-color:var(--copper)">
                   Auto-send every Monday 6:00 AM
                 </label>
               </div>
               <div id="digest-email-row" style="display:none;font-size:11.5px;color:var(--text-muted)">
                 <input type="email" id="digest-email-input" placeholder="your@email.com" style="background:var(--s4);border:1px solid var(--bdr);border-radius:6px;padding:6px 10px;font-size:11.5px;color:var(--text-primary);font-family:var(--ff-ui);outline:none;width:200px">
-                <button onclick="saveDigestEmail()" style="margin-left:8px;padding:6px 12px;background:var(--s4);border:1px solid var(--copper-border);border-radius:6px;color:var(--copper);font-size:11px;cursor:pointer;font-family:var(--ff-ui)">Save</button>
+                <button id="save-digest-email-btn" style="margin-left:8px;padding:6px 12px;background:var(--s4);border:1px solid var(--copper-border);border-radius:6px;color:var(--copper);font-size:11px;cursor:pointer;font-family:var(--ff-ui)">Save</button>
               </div>
             </div>
           </div>
@@ -4761,32 +4761,32 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
               <div class="rep-field-group">
                 <label class="rep-label">Report Type</label>
                 <div class="rep-type-grid" id="rep-type-grid">
-                  <button class="rep-type-btn active" data-type="executive_summary" onclick="selectRepType(this)">
+                  <button class="rep-type-btn active" data-type="executive_summary">
                     <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">bar_chart</span></span>
                     <span class="rep-type-name">Executive Summary</span>
                     <span class="rep-type-desc">High-level KPIs &amp; insights</span>
                   </button>
-                  <button class="rep-type-btn" data-type="financial" onclick="selectRepType(this)">
+                  <button class="rep-type-btn" data-type="financial">
                     <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></span>
                     <span class="rep-type-name">Financial Report</span>
                     <span class="rep-type-desc">Revenue, expenses &amp; P&amp;L</span>
                   </button>
-                  <button class="rep-type-btn" data-type="livestock" onclick="selectRepType(this)">
+                  <button class="rep-type-btn" data-type="livestock">
                     <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></span>
                     <span class="rep-type-name">Livestock Report</span>
                     <span class="rep-type-desc">Herd health &amp; performance</span>
                   </button>
-                  <button class="rep-type-btn" data-type="crop" onclick="selectRepType(this)">
+                  <button class="rep-type-btn" data-type="crop">
                     <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></span>
                     <span class="rep-type-name">Crop &amp; Field Report</span>
                     <span class="rep-type-desc">Yield, status &amp; forecasts</span>
                   </button>
-                  <button class="rep-type-btn" data-type="workforce" onclick="selectRepType(this)">
+                  <button class="rep-type-btn" data-type="workforce">
                     <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></span>
                     <span class="rep-type-name">Workforce Report</span>
                     <span class="rep-type-desc">Staff, payroll &amp; attendance</span>
                   </button>
-                  <button class="rep-type-btn" data-type="compliance" onclick="selectRepType(this)">
+                  <button class="rep-type-btn" data-type="compliance">
                     <span class="rep-type-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></span>
                     <span class="rep-type-name">Compliance Report</span>
                     <span class="rep-type-desc">Regulatory status &amp; audits</span>
@@ -4798,7 +4798,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
               <div class="rep-options-row">
                 <div class="rep-field-group" style="flex:1">
                   <label class="rep-label">Period</label>
-                  <select class="rep-select" id="rep-period" onchange="onRepPeriodChange()">
+                  <select class="rep-select" id="rep-period">
                     <option value="this_month">This Month</option>
                     <option value="last_month">Last Month</option>
                     <option value="last_3_months" selected>Last 3 Months</option>
@@ -4819,9 +4819,9 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
                 <div class="rep-field-group" style="flex:1">
                   <label class="rep-label">Format</label>
                   <div class="rep-format-row">
-                    <button class="rep-fmt-btn active" data-fmt="pdf" onclick="selectRepFmt(this)">PDF</button>
-                    <button class="rep-fmt-btn" data-fmt="csv" onclick="selectRepFmt(this)">CSV</button>
-                    <button class="rep-fmt-btn" data-fmt="html" onclick="selectRepFmt(this)">HTML</button>
+                    <button class="rep-fmt-btn active" data-fmt="pdf">PDF</button>
+                    <button class="rep-fmt-btn" data-fmt="csv">CSV</button>
+                    <button class="rep-fmt-btn" data-fmt="html">HTML</button>
                   </div>
                 </div>
               </div>
@@ -4834,7 +4834,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 
               <!-- Actions -->
               <div class="rep-actions-row">
-                <button class="btn btn-primary" id="rep-generate-btn" onclick="generateReport()">
+                <button class="btn btn-primary" id="rep-generate-btn">
                   <span class="nav-icon" style="font-size:14px;opacity:1;color:inherit">summarize</span>
                   Generate Report
                 </button>
@@ -4849,9 +4849,9 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
           <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
             <span id="rep-preview-title">Report Preview</span>
             <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-secondary btn-sm" onclick="printReport()"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">print</span> Print</button>
-              <button class="btn btn-secondary btn-sm" id="rep-download-btn" onclick="downloadReport()"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">download</span> Download</button>
-              <button class="btn btn-secondary btn-sm" onclick="closeReportPreview()">✕ Close</button>
+              <button class="btn btn-secondary btn-sm" id="rep-print-btn"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">print</span> Print</button>
+              <button class="btn btn-secondary btn-sm" id="rep-download-btn"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">download</span> Download</button>
+              <button class="btn btn-secondary btn-sm" id="rep-close-btn">✕ Close</button>
             </div>
           </div>
           <div id="report-preview-body" style="margin-top:8px"></div>
@@ -4861,7 +4861,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="card">
           <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
             <span>Generated Reports</span>
-            <button class="btn btn-secondary btn-sm" onclick="clearReportHistory()" id="rep-clear-btn" style="display:none">Clear History</button>
+            <button class="btn btn-secondary btn-sm" id="rep-clear-btn" style="display:none">Clear History</button>
           </div>
           <div id="reports-list"></div>
         </div>
@@ -4877,7 +4877,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       <div class="page" id="page-users">
         <div class="page-header"><h1><span class="ph-icon">manage_accounts</span>Users</h1><p>Manage who has access to the estate system</p></div>
         <div class="card">
-          <div class="card-title">System Users <button class="btn btn-primary btn-sm" onclick="openModal('user')">+ Add User</button></div>
+          <div class="card-title">System Users <button class="btn btn-primary btn-sm" id="add-user-btn">+ Add User</button></div>
           <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last Login</th><th></th></tr></thead><tbody id="users-tbody"></tbody></table>
         </div>
       </div>
@@ -4910,23 +4910,23 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     <div class="del-confirm-item" id="del-confirm-item-name">—</div>
     <div class="del-confirm-warn">This cannot be undone. Any linked data (events, records, history) will also be removed.</div>
     <label class="del-confirm-type-label" for="del-confirm-input">Type DELETE to confirm</label>
-    <input class="del-confirm-input" id="del-confirm-input" type="text" placeholder="DELETE" autocomplete="off" spellcheck="false" aria-required="true" oninput="onDelConfirmInput(this)">
+    <input class="del-confirm-input" id="del-confirm-input" type="text" placeholder="DELETE" autocomplete="off" spellcheck="false" aria-required="true">
     <div class="del-confirm-actions">
-      <button class="btn-cancel-confirm" onclick="closeDelConfirm()">Cancel</button>
-      <button class="btn-execute-delete" id="del-execute-btn" aria-disabled="true" onclick="executeDelete()"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">delete</span> Delete permanently</button>
+      <button class="btn-cancel-confirm" id="del-cancel-btn">Cancel</button>
+      <button class="btn-execute-delete" id="del-execute-btn" aria-disabled="true"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--error-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">delete</span> Delete permanently</button>
     </div>
   </div>
 </div>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="closeModalOutside(event)">
+<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div class="modal">
     <div class="modal-title" id="modal-title"></div>
     <div id="modal-body"></div>
     <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-danger" id="modal-del-btn" style="display:none" onclick="modalDelete()">Delete</button>
-      <button class="btn btn-primary" onclick="modalSave()">Save</button>
+      <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+      <button class="btn btn-danger" id="modal-del-btn" style="display:none">Delete</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save</button>
     </div>
   </div>
 </div>
@@ -4966,7 +4966,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-panel-title">Add your first field</div>
         <div class="ob-panel-desc">Define your crop blocks so you can track planting schedules, irrigation, and yield projections across the estate.</div>
         <div class="ob-actions">
-          <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=crops]').click();openModal('crop');},400)">
+          <div class="ob-action-card" id="ob-card-crops">
             <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">map</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Add a crop field now</div>
@@ -4974,7 +4974,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             </div>
             <div class="ob-action-arrow">→</div>
           </div>
-          <div class="ob-action-card" onclick="obNext()">
+          <div class="ob-action-card" id="ob-card-next-1">
             <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">skip_next</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Skip — I'll do this later</div>
@@ -4990,7 +4990,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-panel-title">Register your herds</div>
         <div class="ob-panel-desc">Add your livestock herds to track headcount, health events, and body-condition scores across paddocks.</div>
         <div class="ob-actions">
-          <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=livestock]').click();openModal('herd');},400)">
+          <div class="ob-action-card" id="ob-card-livestock">
             <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Add a herd now</div>
@@ -4998,7 +4998,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             </div>
             <div class="ob-action-arrow">→</div>
           </div>
-          <div class="ob-action-card" onclick="obNext()">
+          <div class="ob-action-card" id="ob-card-next-2">
             <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--text-muted);font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">skip_next</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Skip — I'll do this later</div>
@@ -5014,7 +5014,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
         <div class="ob-panel-title">Invite a team member</div>
         <div class="ob-panel-desc">Add staff with the right role — Field, Manager, Finance — so your whole team can access the data they need.</div>
         <div class="ob-actions">
-          <div class="ob-action-card" onclick="dismissOnboarding();setTimeout(()=>{document.querySelector('[data-page=users]')?.click();},400)">
+          <div class="ob-action-card" id="ob-card-users">
             <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">mail</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">Invite a team member</div>
@@ -5022,7 +5022,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
             </div>
             <div class="ob-action-arrow">→</div>
           </div>
-          <div class="ob-action-card" onclick="dismissOnboarding()">
+          <div class="ob-action-card" id="ob-card-dismiss">
             <div class="ob-action-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">check_circle</span></div>
             <div class="ob-action-text">
               <div class="ob-action-label">I'm set — take me to the dashboard</div>
@@ -5035,8 +5035,8 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
     </div>
     <!-- Footer -->
     <div class="ob-footer">
-      <button class="ob-skip" onclick="dismissOnboarding()">Skip setup — go to dashboard</button>
-      <button class="ob-next" id="ob-next-btn" onclick="obNext()">Next step →</button>
+      <button class="ob-skip" id="ob-skip-btn">Skip setup — go to dashboard</button>
+      <button class="ob-next" id="ob-next-btn">Next step →</button>
     </div>
   </div>
 </div>
@@ -8782,6 +8782,104 @@ function copyInviteCode(){
 })();
 
 // ─── DEMO MODE — enter app without a backend ──────────────────────────────────
+
+// ── CSP-SAFE STATIC HTML EVENT WIRING ────────────────────────────────────────
+// All inline onclick/onchange handlers have been removed from HTML to comply
+// with the nonce-based CSP. This block wires them via addEventListener.
+(function wireStaticHandlers() {
+  function on(id, evt, fn) {
+    const el = document.getElementById(id);
+    if (el && !el._wired_static) { el.addEventListener(evt, fn); el._wired_static = true; }
+  }
+  function wire() {
+    // ── Navigation / layout
+    on('mob-overlay',         'click',  () => closeMobileNav());
+    on('sb-search-inner',     'click',  () => openCmdPalette());
+    on('erp-mode-back',       'click',  () => toggleErpMode());
+    on('sb-user',             'click',  () => document.querySelector('[data-page=settings]')?.click());
+    on('sb-logout',           'click',  () => confirmLogout());
+    on('cmd-palette-overlay', 'click',  (e) => closeCmdPaletteIfBg(e));
+    on('mob-toggle',          'click',  () => toggleMobileNav());
+    on('erp-mode-btn',        'click',  () => toggleErpMode());
+    on('theme-toggle',        'click',  () => toggleTheme());
+    // ── Connectivity banner
+    on('conn-retry',          'click',  () => retryConnection());
+    on('conn-dismiss',        'click',  () => dismissBanner());
+    // ── FAB menu
+    on('fab-btn',             'click',  () => toggleFabMenu());
+    document.querySelectorAll('.fab-item[data-fab-action]').forEach(el => {
+      if (!el._wired_static) {
+        el.addEventListener('click', () => fabAction(el.dataset.fabAction));
+        el._wired_static = true;
+      }
+    });
+    // ── Mobile nav items (supplement existing sb-item wiring)
+    on('mob-nav-cmd-btn',     'click',  () => openCmdPalette());
+    document.querySelectorAll('.mobile-nav-item[data-page]').forEach(el => {
+      if (!el._wired_static) {
+        el.addEventListener('click', () => mobileNavTo(el.dataset.page));
+        el._wired_static = true;
+      }
+    });
+    // ── AI panel
+    on('ai-refresh-btn',      'click',  () => refreshAI());
+    // ── Finance tabs
+    document.querySelectorAll('.fin-tab[data-tab]').forEach(el => {
+      if (!el._wired_static) {
+        el.addEventListener('click', () => finTab(el, el.dataset.tab));
+        el._wired_static = true;
+      }
+    });
+    on('fin-erp-budgets-btn', 'click',  () => loadPage('erp-budgets'));
+    on('fin-margin-target-btn','click', () => openMarginTargetEditor());
+    // ── Digest
+    on('digest-btn',          'click',  () => generateDigestNow());
+    on('digest-schedule-toggle','change',(e) => toggleDigestSchedule(e.target));
+    on('save-digest-email-btn','click', () => saveDigestEmail());
+    // ── Reports
+    document.querySelectorAll('.rep-type-btn[data-type]').forEach(el => {
+      if (!el._wired_static) {
+        el.addEventListener('click', () => selectRepType(el));
+        el._wired_static = true;
+      }
+    });
+    on('rep-period',          'change', () => onRepPeriodChange());
+    document.querySelectorAll('.rep-fmt-btn[data-fmt]').forEach(el => {
+      if (!el._wired_static) {
+        el.addEventListener('click', () => selectRepFmt(el));
+        el._wired_static = true;
+      }
+    });
+    on('rep-generate-btn',    'click',  () => generateReport());
+    on('rep-print-btn',       'click',  () => printReport());
+    on('rep-download-btn',    'click',  () => downloadReport());
+    on('rep-close-btn',       'click',  () => closeReportPreview());
+    on('rep-clear-btn',       'click',  () => clearReportHistory());
+    // ── Users
+    on('add-user-btn',        'click',  () => openModal('user'));
+    // ── Delete confirm dialog
+    on('del-confirm-input',   'input',  (e) => onDelConfirmInput(e.target));
+    on('del-cancel-btn',      'click',  () => closeDelConfirm());
+    on('del-execute-btn',     'click',  () => executeDelete());
+    // ── Modal
+    on('modal-overlay',       'click',  (e) => closeModalOutside(e));
+    on('modal-cancel-btn',    'click',  () => closeModal());
+    on('modal-del-btn',       'click',  () => modalDelete());
+    on('modal-save-btn',      'click',  () => modalSave());
+    // ── Onboarding cards
+    on('ob-card-crops',    'click', () => { dismissOnboarding(); setTimeout(()=>{ document.querySelector('[data-page=crops]').click(); openModal('crop'); }, 400); });
+    on('ob-card-next-1',   'click', () => obNext());
+    on('ob-card-livestock','click', () => { dismissOnboarding(); setTimeout(()=>{ document.querySelector('[data-page=livestock]').click(); openModal('herd'); }, 400); });
+    on('ob-card-next-2',   'click', () => obNext());
+    on('ob-card-users',    'click', () => { dismissOnboarding(); setTimeout(()=>{ document.querySelector('[data-page=users]')?.click(); }, 400); });
+    on('ob-card-dismiss',  'click', () => dismissOnboarding());
+    on('ob-skip-btn',      'click', () => dismissOnboarding());
+    on('ob-next-btn',      'click', () => obNext());
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+})();
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════════

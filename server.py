@@ -789,7 +789,7 @@ def add_security_headers(response):
     nonce = getattr(g, "csp_nonce", secrets.token_urlsafe(16))
     response.headers["Content-Security-Policy"] = (
         f"default-src 'self'; "
-        f"script-src 'self' 'nonce-{nonce}' 'unsafe-inline'; "
+        f"script-src 'self' 'nonce-{nonce}'; "
         f"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         f"font-src 'self' https://fonts.gstatic.com; "
         f"connect-src 'self'; "
