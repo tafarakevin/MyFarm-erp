@@ -6139,17 +6139,27 @@ document.querySelectorAll('.sb-item[data-page]').forEach(item=>{
     loadPage(pg);
     if(window.innerWidth<=768)closeMobileNav();
 
-    // 5. Reset scroll after paint so newly active page is already laid out
-    requestAnimationFrame(()=>{
-      const contentEl=document.getElementById('content');
-      if(contentEl){ contentEl.style.scrollBehavior='auto'; contentEl.scrollTop=0; contentEl.style.scrollBehavior=''; }
-    });
+    // 5. Reset scroll — immediate + rAF + setTimeout to cover all paint timings
+    (()=>{
+      const _scrollReset=()=>{
+        const el=document.getElementById('content');
+        if(el){el.style.scrollBehavior='auto';el.scrollTop=0;}
+      };
+      _scrollReset();
+      requestAnimationFrame(_scrollReset);
+      requestAnimationFrame(()=>requestAnimationFrame(_scrollReset));
+      setTimeout(_scrollReset,50);
+      setTimeout(_scrollReset,150);
+    })();
   };
   item.addEventListener('click',activate);
   item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}});
 });
 
 function loadPage(pg){
+  // Always reset scroll when switching pages
+  const contentEl=document.getElementById('content');
+  if(contentEl){contentEl.style.scrollBehavior='auto';contentEl.scrollTop=0;}
   const loaders={
     dashboard:loadDashboard,assets:loadAssets,livestock:loadLivestock,crops:loadCrops,
     workers:loadWorkers,inventory:loadInventory,finance:loadFinance,reports:loadReports,
@@ -6289,10 +6299,15 @@ function navigateTo(page) {
   loadPage(page);
   if (window.innerWidth <= 768) closeMobileNav();
 
-  requestAnimationFrame(()=>{
-    const contentEl = document.getElementById('content');
-    if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; contentEl.style.scrollBehavior = ''; }
-  });
+  (()=>{
+    const contentEl=document.getElementById('content');
+    if(contentEl){contentEl.style.scrollBehavior='auto';contentEl.scrollTop=0;}
+    requestAnimationFrame(()=>{
+      const el=document.getElementById('content');
+      if(el){el.scrollTop=0;}
+      requestAnimationFrame(()=>{const el2=document.getElementById('content');if(el2)el2.scrollTop=0;});
+    });
+  })();
 }
 
 // ── RELATED BAR RENDERER ────────────────────────────────────────────────────
@@ -6526,9 +6541,9 @@ async function loadDashboard(){
 
   // ── Render stat cards — all clickable, navigate to module ────────────────
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card stat-accent" onclick="loadPage('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
-    <div class="stat-card" onclick="loadPage('livestock')" style="cursor:pointer" title="Open Livestock"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
-    <div class="stat-card" onclick="loadPage('crops')" style="cursor:pointer" title="Open Crops"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
+    <div class="stat-card stat-accent" onclick="navigateTo('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
+    <div class="stat-card" onclick="navigateTo('livestock')" style="cursor:pointer" title="Open Livestock"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
+    <div class="stat-card" onclick="navigateTo('crops')" style="cursor:pointer" title="Open Crops"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
     <div class="stat-card" onclick="loadPage('workers')" style="cursor:pointer" title="Open Workers"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
 
   // ── Summary strip — clickable ─────────────────────────────────────────────
@@ -6536,8 +6551,8 @@ async function loadDashboard(){
   const compOk=d.compliance_overdue===0;
   const stockOk=d.low_stock_items===0;
   document.getElementById('dash-summary').innerHTML=`
-    <div class="summary-card" onclick="loadPage('finance')" style="cursor:pointer" title="Open Finance"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
-    <div class="summary-card" onclick="loadPage('compliance')" style="cursor:pointer" title="Open Compliance"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
+    <div class="summary-card" onclick="navigateTo('finance')" style="cursor:pointer" title="Open Finance"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
+    <div class="summary-card" onclick="navigateTo('compliance')" style="cursor:pointer" title="Open Compliance"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
     <div class="summary-card" onclick="loadPage('inventory')" style="cursor:pointer" title="Open Inventory"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
 
   // ── Alert Feed — cross-module exception summary ────────────────────────────
@@ -7129,7 +7144,7 @@ async function loadFinance(){
             ? `<span style="color:var(--copper);font-weight:500">● </span>Linked to ERP season: <strong>${seasonName}</strong>`
             : `<span style="color:var(--text-faint)">○ </span>No active ERP season — using manual targets`}
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="loadPage('erp-budgets')" style="font-size:11px">
+        <button class="btn btn-sm btn-secondary" onclick="navigateTo('erp-budgets')" style="font-size:11px">
           Manage in ERP →
         </button>
       </div>
@@ -7151,7 +7166,7 @@ async function loadFinance(){
       </div>
       ${cw?`<div style="padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-sm btn-secondary" onclick="openMarginTargetEditor()">Set Margin Target</button>
-        <button class="btn btn-sm btn-primary" onclick="loadPage('erp-budgets')">Add Budget Line</button>
+        <button class="btn btn-sm btn-primary" onclick="navigateTo('erp-budgets')">Add Budget Line</button>
       </div>`:''}
     `;
   }
