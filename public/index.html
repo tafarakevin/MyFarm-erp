@@ -1967,7 +1967,7 @@ body {
 .data-table td:first-child { color: var(--text-primary); font-weight: 400; }
 
 /* ─── PERFORMANCE: content-visibility for off-screen pages ─────────────── */
-.page { content-visibility: auto; contain-intrinsic-size: 0 600px; }
+.page { content-visibility: visible; }
 .page.active-page { content-visibility: visible; contain-intrinsic-size: none; }
 
 /* ─── PERFORMANCE: GPU-accelerated transitions only ───────────────────── */
@@ -6135,13 +6135,15 @@ document.querySelectorAll('.sb-item[data-page]').forEach(item=>{
     const titleEl=document.getElementById('topbar-title');
     if(titleEl) titleEl.textContent=pageLabels[pg]||pg;
 
-    // 5. Reset scroll AFTER DOM changes are applied
-    const contentEl=document.getElementById('content');
-    if(contentEl){ contentEl.style.scrollBehavior='auto'; contentEl.scrollTop=0; contentEl.style.scrollBehavior=''; }
-
     currentPage=pg;
     loadPage(pg);
     if(window.innerWidth<=768)closeMobileNav();
+
+    // 5. Reset scroll after paint so newly active page is already laid out
+    requestAnimationFrame(()=>{
+      const contentEl=document.getElementById('content');
+      if(contentEl){ contentEl.style.scrollBehavior='auto'; contentEl.scrollTop=0; contentEl.style.scrollBehavior=''; }
+    });
   };
   item.addEventListener('click',activate);
   item.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate();}});
@@ -6283,12 +6285,14 @@ function navigateTo(page) {
   const titleEl = document.getElementById('topbar-title');
   if (titleEl) titleEl.textContent = pageLabels[page] || page;
 
-  const contentEl = document.getElementById('content');
-  if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; contentEl.style.scrollBehavior = ''; }
-
   currentPage = page;
   loadPage(page);
   if (window.innerWidth <= 768) closeMobileNav();
+
+  requestAnimationFrame(()=>{
+    const contentEl = document.getElementById('content');
+    if (contentEl) { contentEl.style.scrollBehavior = 'auto'; contentEl.scrollTop = 0; contentEl.style.scrollBehavior = ''; }
+  });
 }
 
 // ── RELATED BAR RENDERER ────────────────────────────────────────────────────
