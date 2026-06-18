@@ -5148,7 +5148,7 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
       for (let i = 0; i < argsStr.length; i++) {
         const ch = argsStr[i];
         if (!inStr && (ch === "'" || ch === '"')) { inStr = ch; cur += ch; }
-        else if (inStr && ch === inStr && argsStr[i-1] !== '\') { inStr = null; cur += ch; }
+        else if (inStr && ch === inStr) { inStr = null; cur += ch; }
         else if (!inStr && (ch === '(' || ch === '[' || ch === '{')) { depth++; cur += ch; }
         else if (!inStr && (ch === ')' || ch === ']' || ch === '}')) { depth--; cur += ch; }
         else if (!inStr && ch === ',' && depth === 0) { argParts.push(cur.trim()); cur = ''; }
