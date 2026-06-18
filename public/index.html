@@ -5044,6 +5044,164 @@ body.light-mode .btn-cancel-confirm:hover { background: var(--s3); }
 <div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
 
 <script nonce="%%CSP_NONCE%%">
+
+// ── CSP EVENT DELEGATION ──────────────────────────────────────────────────────
+// All onclick= attributes have been converted to data-action= to comply with
+// the nonce-based CSP. This single listener handles all dynamic HTML buttons.
+(function installActionDispatcher() {
+  // Safe dispatcher — only calls known functions, never evals arbitrary code.
+  // data-action values are matched against this whitelist.
+  const _W = {
+    // Navigation
+    navigateTo:            (a)=>navigateTo(a[0]),
+    loadPage:              (a)=>navigateTo(a[0]),   // redirect loadPage nav calls to navigateTo
+    cmdNavigate:           (a)=>cmdNavigate(a[0]),
+    loadErpDashboard:      ()=>{ navigateTo('erp-dashboard'); },
+    loadErpActivities:     ()=>{ navigateTo('erp-activities'); },
+    loadErpProfitability:  ()=>{ navigateTo('erp-profitability'); },
+    loadErpBudgets:        ()=>{ navigateTo('erp-budgets'); },
+    loadErpProduction:     ()=>{ navigateTo('erp-production'); },
+    // CRUD
+    openModal:             (a)=>openModal(...a),
+    editRecord:            (a)=>editRecord(a[0],a[1]),
+    delRec:                (a)=>delRec(a[0],a[1]),
+    retryFromError:        (a)=>retryFromError(a[0]),
+    // Settings
+    toggleSetting:         (a,el)=>toggleSetting(el,a[0]),
+    // Session
+    _sessionReset:         ()=>_sessionReset(),
+    doLogout:              ()=>doLogout(),
+    // Reports
+    _viewHistoryReport:    (a)=>_viewHistoryReport(a[0]),
+    _downloadHistoryReport:(a)=>_downloadHistoryReport(a[0]),
+    // Finance
+    openMarginTargetEditor:()=>openMarginTargetEditor(),
+    openReceiveStockPicker:()=>openReceiveStockPicker(),
+    // AI
+    refreshAI:             ()=>refreshAI(),
+    // Digest
+    downloadDigest:        ()=>downloadDigest(),
+    generateInviteCode:    ()=>generateInviteCode(),
+    copyInviteCode:        ()=>copyInviteCode(),
+    // ERP
+    openAddBudgetForm:     (a)=>openAddBudgetForm(a[0]),
+    openRevProjectionForm: (a)=>openRevProjectionForm(a[0]),
+    openContingencyEditor: (a)=>openContingencyEditor(...a),
+    saveContingency:       ()=>saveContingency(),
+    closeContEditor:       ()=>closeContEditor(),
+    openActivityForm:      ()=>openActivityForm(),
+    addInventoryLine:      ()=>addInventoryLine(),
+    saveActivity:          ()=>saveActivity(),
+    openProductionForm:    ()=>openProductionForm(),
+    saveProdBatch:         ()=>saveProdBatch(),
+    openDepreciationForm:  ()=>openDepreciationForm(),
+    saveDepreciation:      ()=>saveDepreciation(),
+    runDepreciation:       (a)=>runDepreciation(a[0]),
+    deleteEntCogs:         (a)=>deleteEntCogs(a[0]),
+    openEntCogsForm:       ()=>openEntCogsForm(),
+    openEntAllocRuleForm:  ()=>openEntAllocRuleForm(),
+    openEntScenarioForm:   ()=>openEntScenarioForm(),
+    runEntScenario:        (a)=>runEntScenario(a[0]),
+    openEntLivestockSnapshotForm:(a)=>openEntLivestockSnapshotForm(...a),
+    openEntCropRecordForm: (a)=>openEntCropRecordForm(...a),
+    openEntFormulaInvoker: (a)=>openEntFormulaInvoker(a[0]),
+  };
+
+  // Parse a data-action string like "openModal('herd',123)" into {fn, args}
+  function _parse(expr) {
+    expr = expr.trim();
+
+    // Handle compound expressions with semicolons (e.g. event.stopPropagation();delRec(...))
+    if (expr.includes(';')) {
+      const parts = expr.split(';').map(s=>s.trim()).filter(Boolean);
+      return { compound: parts };
+    }
+
+    // Handle element removal: document.getElementById('X').remove()
+    const rmById = expr.match(/^document\.getElementById\(['"]([^'"]+)['"]\)\.remove\(\)$/);
+    if (rmById) return { rmById: rmById[1] };
+
+    // Handle style set: document.getElementById('X').style.Y='Z'
+    const styleSet = expr.match(/^document\.getElementById\(['"]([^'"]+)['"]\)\.style\.(\w+)='([^']*)'$/);
+    if (styleSet) return { styleSet: [styleSet[1], styleSet[2], styleSet[3]] };
+
+    // Handle nav by data-page: document.querySelector('[data-page=X]')?.click()
+    const navPage = expr.match(/document\.querySelector\(['"]?\[data-page=([^\]'"]+)\]['"]?\)\??\.click\(\)/);
+    if (navPage) return { navPage: navPage[1] };
+
+    // Handle inline-error-help removal: this.nextSibling&&this.nextSibling.remove();this.remove()
+    if (expr.includes('this.nextSibling')) return { selfAndSiblingRemove: true };
+
+    // Handle ${action} pattern from addBtn — action is a raw string already
+    // Standard function call: fnName(arg1, arg2, ...)
+    const fnMatch = expr.match(/^(\w+)\((.*)\)$/s);
+    if (!fnMatch) return null;
+    const fnName = fnMatch[1];
+    const argsStr = fnMatch[2].trim();
+
+    // Parse args: handle strings, numbers, null, booleans
+    let args = [];
+    if (argsStr) {
+      // Split on commas not inside quotes/parens
+      const argParts = [];
+      let depth = 0, inStr = null, cur = '';
+      for (let i = 0; i < argsStr.length; i++) {
+        const ch = argsStr[i];
+        if (!inStr && (ch === "'" || ch === '"')) { inStr = ch; cur += ch; }
+        else if (inStr && ch === inStr && argsStr[i-1] !== '\') { inStr = null; cur += ch; }
+        else if (!inStr && (ch === '(' || ch === '[' || ch === '{')) { depth++; cur += ch; }
+        else if (!inStr && (ch === ')' || ch === ']' || ch === '}')) { depth--; cur += ch; }
+        else if (!inStr && ch === ',' && depth === 0) { argParts.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      if (cur.trim()) argParts.push(cur.trim());
+
+      args = argParts.map(a => {
+        if (a === 'null') return null;
+        if (a === 'true') return true;
+        if (a === 'false') return false;
+        if (/^-?\d+(\.\d+)?$/.test(a)) return Number(a);
+        if (/^['"].*['"]$/.test(a)) return a.slice(1,-1);
+        // object literal — skip, return raw string
+        return a;
+      });
+    }
+    return { fnName, args };
+  }
+
+  document.addEventListener('click', function(e) {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const expr = el.getAttribute('data-action');
+    if (!expr) return;
+
+    const parsed = _parse(expr);
+    if (!parsed) return;
+
+    // Compound: handle stopPropagation + delRec pattern
+    if (parsed.compound) {
+      for (const part of parsed.compound) {
+        if (part === 'event.stopPropagation()') { e.stopPropagation(); continue; }
+        const p2 = _parse(part);
+        if (p2 && p2.fnName && _W[p2.fnName]) _W[p2.fnName](p2.args, el);
+        else if (p2 && p2.rmById) { document.getElementById(p2.rmById)?.remove(); }
+        else if (p2 && p2.styleSet) { const el2=document.getElementById(p2.styleSet[0]); if(el2) el2.style[p2.styleSet[1]]=p2.styleSet[2]; }
+      }
+      return;
+    }
+    if (parsed.rmById) { document.getElementById(parsed.rmById)?.remove(); return; }
+    if (parsed.styleSet) { const el2=document.getElementById(parsed.styleSet[0]); if(el2) el2.style[parsed.styleSet[1]]=parsed.styleSet[2]; return; }
+    if (parsed.navPage) { navigateTo(parsed.navPage); return; }
+    if (parsed.selfAndSiblingRemove) { if(el.nextSibling) el.nextSibling.remove(); el.remove(); return; }
+    if (parsed.fnName && _W[parsed.fnName]) {
+      _W[parsed.fnName](parsed.args, el);
+      return;
+    }
+    // Unknown function — log and ignore (never eval)
+    console.warn('[dispatcher] unhandled data-action:', expr);
+  }, true); // capture phase so stopPropagation works correctly
+})();
+
 // ════════════════════════════════════════════════════════════════════════════
 // FRONTEND OBSERVABILITY LAYER
 // ════════════════════════════════════════════════════════════════════════════
@@ -5250,7 +5408,7 @@ function renderCmdResults(query) {
     html += `<div class="cmd-section-label">${group}</div>`;
     items.forEach(item => {
       const isSelected = globalIdx === 0 ? ' selected' : '';
-      html += `<div class="cmd-item${isSelected}" data-page="${item.page}" onclick="cmdNavigate('${item.page}')">
+      html += `<div class="cmd-item${isSelected}" data-page="${item.page}" data-action="cmdNavigate('${item.page}')">
         <span class="cmd-item-icon">${item.icon}</span>
         <span class="cmd-item-label">${item.label}</span>
         <span class="cmd-item-group">${item.group}</span>
@@ -5671,11 +5829,11 @@ function errInline(containerId, opts={}){
       <div class="inline-error-sub">${sub}</div>
       ${codeHtml}
       <div class="inline-error-actions">
-        <button class="inline-error-retry" id="err-retry-${containerId}" onclick="retryFromError('${containerId}')">
+        <button class="inline-error-retry" id="err-retry-${containerId}" data-action="retryFromError('${containerId}')">
           ${retryLabel}
         </button>
       </div>
-      <div class="inline-error-help" onclick="this.nextSibling&&this.nextSibling.remove();this.remove()" style="margin-top:14px">${helpText}</div>
+      <div class="inline-error-help" data-action="this.nextSibling&&this.nextSibling.remove();this.remove()" style="margin-top:14px">${helpText}</div>
     </div>`;
 }
 
@@ -5820,8 +5978,8 @@ function _sessionWarn(){
   el.innerHTML=`<div id="swb-title" style="font-weight:500;margin-bottom:4px">Session expiring soon</div>
 <div id="swb-sub" style="font-size:12px;opacity:0.85">You'll be signed out in <strong id="swb-countdown">5:00</strong> due to inactivity.</div>
 <div style="display:flex;gap:8px;margin-top:12px">
-  <button onclick="_sessionReset()" style="flex:1;padding:8px 0;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--ff-ui)">Stay signed in</button>
-  <button onclick="doLogout()" style="padding:8px 16px;background:transparent;color:var(--text-secondary);border:1px solid var(--bdr);border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--ff-ui)">Sign out</button>
+  <button data-action="_sessionReset()" style="flex:1;padding:8px 0;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:var(--ff-ui)">Stay signed in</button>
+  <button data-action="doLogout()" style="padding:8px 16px;background:transparent;color:var(--text-secondary);border:1px solid var(--bdr);border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--ff-ui)">Sign out</button>
 </div>`;
   el.style.cssText='position:fixed;bottom:80px;right:20px;z-index:9999;background:var(--s2);border:1px solid var(--warn-bdr);border-radius:12px;padding:16px 18px;max-width:300px;box-shadow:var(--sh-lg);animation:fadeUp 0.25s ease;';
   document.body.appendChild(el);
@@ -6008,15 +6166,15 @@ function enterApp(){
         <div style="font-family:var(--ff-display);font-size:20px;color:var(--text-primary);padding:4px 0 8px">
           Good ${new Date().getHours()<12?'morning':new Date().getHours()<17?'afternoon':'evening'}, ${u.name.split(' ')[0]}.
         </div>
-        <div class="mobile-field-card" onclick="document.querySelector('[data-page=livestock]').click()">
+        <div class="mobile-field-card" data-action="document.querySelector('[data-page=livestock]').click()">
           <span class="mobile-field-card-icon" style="color:var(--success-txt)">pets</span>
           <div><div class="mobile-field-card-title">My Tasks Today</div><div class="mobile-field-card-sub">View assignments and daily operations for your herds and fields</div></div>
         </div>
-        <div class="mobile-field-card" onclick="document.querySelector('[data-page=livestock]').click()">
+        <div class="mobile-field-card" data-action="document.querySelector('[data-page=livestock]').click()">
           <span class="mobile-field-card-icon" style="color:var(--copper)">agriculture</span>
           <div><div class="mobile-field-card-title">Herd & Crop Status</div><div class="mobile-field-card-sub">Check health status and field conditions across your assignments</div></div>
         </div>
-        <div class="mobile-field-card" onclick="document.querySelector('[data-page=reports]').click()">
+        <div class="mobile-field-card" data-action="document.querySelector('[data-page=reports]').click()">
           <span class="mobile-field-card-icon" style="color:var(--info-txt)">report_problem</span>
           <div><div class="mobile-field-card-title">Report an Issue</div><div class="mobile-field-card-sub">Flag equipment faults, animal health concerns or field problems</div></div>
         </div>`;
@@ -6181,7 +6339,7 @@ function loadPage(pg){
 function spill(s){const m={Operational:'success',Present:'success',Good:'success',Compliant:'success',Harvested:'success',Done:'success',Logged:'success',Active:'success',Growing:'info',Grazing:'info',Paddock:'info',Browse:'info',Upcoming:'info',Seedling:'warning',Monitor:'warning',Maintenance:'warning','Due Soon':'warning',Leave:'warning',Pending:'warning',Ripening:'warning',Repair:'error',Overdue:'error',Fallow:'error',Inactive:'error'};return`<span class="pill pill-${m[s]||'info'}">${s}</span>`;}
 function rpill(r){const m={owner:'copper',manager:'info',finance:'warning',field:'success'};return`<span class="pill pill-${m[r]||'info'}">${r}</span>`;}
 function hc(s){return s==='Overdue'?'var(--error-txt)':s==='Due Soon'||s==='Monitor'?'var(--warn-txt)':'var(--success-txt)';}
-function addBtn(label,action){return canWrite()?`<button class="btn btn-primary btn-sm" onclick="${action}">${label}</button>`:'';}
+function addBtn(label,action){return canWrite()?`<button class="btn btn-primary btn-sm" data-action="${action}">${label}</button>`:'';}
 
 // ─── CURRENCY FORMATTER ────────────────────────────────────────────────────────
 function fmtCurrency(n,short=false){
@@ -6321,7 +6479,7 @@ function _renderRelatedBar(containerId, keys) {
     .filter(k => _REL[k] && (!allowed.length || allowed.includes(_REL[k].page)))
     .map(k => {
       const r = _REL[k];
-      return `<span class="related-link" onclick="navigateTo('${r.page}')" title="Go to ${r.label}">` +
+      return `<span class="related-link" data-action="navigateTo('${r.page}')" title="Go to ${r.label}">` +
              `<span class="rel-icon">${r.icon}</span>${r.label}</span>`;
     }).join('');
   if (!links) return;
@@ -6344,7 +6502,7 @@ function _injectErpRelatedBar(page) {
     .filter(k => _REL[k] && (!allowed.length || allowed.includes(_REL[k].page)))
     .map(k => {
       const r = _REL[k];
-      return `<span class="related-link" onclick="navigateTo('${r.page}')" title="Go to ${r.label}">` +
+      return `<span class="related-link" data-action="navigateTo('${r.page}')" title="Go to ${r.label}">` +
              `<span class="rel-icon">${r.icon}</span>${r.label}</span>`;
     }).join('');
   if (!links) return;
@@ -6413,7 +6571,7 @@ async function loadDashboard(){
         alertList.innerHTML = `<div class="esb-all-clear"><span style="font-family:'Material Symbols Outlined';font-size:14px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">check_circle</span> No exceptions today</div>`;
       } else {
         alertList.innerHTML = alerts.slice(0,4).map(a =>
-          `<div class="esb-alert-item ${a.cls}" onclick="document.querySelector('[data-page=${a.page}]')?.click()" role="button">
+          `<div class="esb-alert-item ${a.cls}" data-action="document.querySelector('[data-page=${a.page}]')?.click()" role="button">
             <div class="esb-alert-dot"></div>
             <span>${a.text}</span>
           </div>`
@@ -6500,13 +6658,13 @@ async function loadDashboard(){
 
   // ── ERP Quick Links — inject into quick actions ──────────────────────────────
   const erpQuickBtns = `
-  <div class="qa-btn" onclick="loadErpDashboard()" style="border-color:var(--copper-border)">
+  <div class="qa-btn" data-action="loadErpDashboard()" style="border-color:var(--copper-border)">
     <div class="qa-icon" style="background:var(--copper-dim);border:1px solid var(--copper-border)">
       <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1">insights</span>
     </div>
     <div><div class="qa-label" style="color:var(--copper-lt)">Farm Overview</div><div class="qa-sub">P&L &amp; KPIs</div></div>
   </div>
-  <div class="qa-btn" onclick="loadErpActivities()">
+  <div class="qa-btn" data-action="loadErpActivities()">
     <div class="qa-icon" style="background:var(--success-bg);border:1px solid var(--success-bdr)">
       <span style="font-family:'Material Symbols Outlined';font-size:18px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1">agriculture</span>
     </div>
@@ -6541,19 +6699,19 @@ async function loadDashboard(){
 
   // ── Render stat cards — all clickable, navigate to module ────────────────
   document.getElementById('dash-stats').innerHTML=`
-    <div class="stat-card stat-accent" onclick="navigateTo('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
-    <div class="stat-card" onclick="navigateTo('livestock')" style="cursor:pointer" title="Open Livestock"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
-    <div class="stat-card" onclick="navigateTo('crops')" style="cursor:pointer" title="Open Crops"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
-    <div class="stat-card" onclick="loadPage('workers')" style="cursor:pointer" title="Open Workers"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
+    <div class="stat-card stat-accent" data-action="navigateTo('finance')" style="cursor:pointer" title="Open Finance"><div class="stat-card-inner"><div class="stat-card-icon bronze"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--copper-lt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">payments</span></div><div class="stat-card-body"><div class="stat-label">Total Revenue (YTD)</div><div class="stat-value">${fmt(d.revenue_ytd||0)}</div><div class="stat-delta delta-up">▲ Net ${fmt(d.net_profit||0)}</div></div></div></div>
+    <div class="stat-card" data-action="navigateTo('livestock')" style="cursor:pointer" title="Open Livestock"><div class="stat-card-inner"><div class="stat-card-icon green"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--success-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">pets</span></div><div class="stat-card-body"><div class="stat-label">Active Livestock</div><div class="stat-value">${Number(d.livestock_count||0).toLocaleString()}</div><div class="stat-delta" style="color:var(--text-faint)">head of cattle</div></div></div></div>
+    <div class="stat-card" data-action="navigateTo('crops')" style="cursor:pointer" title="Open Crops"><div class="stat-card-inner"><div class="stat-card-icon blue"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--info-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">grass</span></div><div class="stat-card-body"><div class="stat-label">Crop Hectares</div><div class="stat-value">${d.crop_hectares||0} ha</div><div class="stat-delta" style="color:var(--text-faint)">under cultivation</div></div></div></div>
+    <div class="stat-card" data-action="loadPage('workers')" style="cursor:pointer" title="Open Workers"><div class="stat-card-inner"><div class="stat-card-icon amber"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:var(--warn-txt);font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">groups</span></div><div class="stat-card-body"><div class="stat-label">Workers On-Site</div><div class="stat-value">${d.workers_on_site||0}</div><div class="stat-delta" style="color:var(--text-faint)">${(d.workers_total||0)-(d.workers_on_site||0)} on leave today</div></div></div></div>`;
 
   // ── Summary strip — clickable ─────────────────────────────────────────────
   const profitPct=d.revenue_ytd>0?Math.round(d.net_profit/d.revenue_ytd*100):0;
   const compOk=d.compliance_overdue===0;
   const stockOk=d.low_stock_items===0;
   document.getElementById('dash-summary').innerHTML=`
-    <div class="summary-card" onclick="navigateTo('finance')" style="cursor:pointer" title="Open Finance"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
-    <div class="summary-card" onclick="navigateTo('compliance')" style="cursor:pointer" title="Open Compliance"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
-    <div class="summary-card" onclick="loadPage('inventory')" style="cursor:pointer" title="Open Inventory"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
+    <div class="summary-card" data-action="navigateTo('finance')" style="cursor:pointer" title="Open Finance"><div class="summary-icon ${profitPct>=20?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">trending_up</span></div><div class="summary-body"><div class="summary-value">${profitPct}%</div><div class="summary-label">Profit Margin</div><div class="summary-delta ${profitPct>=20?'delta-up':'delta-down'}">${profitPct>=20?'▲ On target':'▼ Below target'}</div></div></div>
+    <div class="summary-card" data-action="navigateTo('compliance')" style="cursor:pointer" title="Open Compliance"><div class="summary-icon ${compOk?'green':'error'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">verified_user</span></div><div class="summary-body"><div class="summary-value">${compOk?'Clear':(d.compliance_overdue||0)+' overdue'}</div><div class="summary-label">Compliance</div><div class="summary-delta ${compOk?'delta-up':'delta-down'}">${compOk?'▲ All compliant':'▼ Action needed'}</div></div></div>
+    <div class="summary-card" data-action="loadPage('inventory')" style="cursor:pointer" title="Open Inventory"><div class="summary-icon ${stockOk?'green':'warning'}"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">inventory_2</span></div><div class="summary-body"><div class="summary-value">${stockOk?'Stocked':(d.low_stock_items||0)+' low'}</div><div class="summary-label">Inventory</div><div class="summary-delta ${stockOk?'delta-up':'delta-down'}">${stockOk?'▲ All above par':'▼ Needs reorder'}</div></div></div>`;
 
   // ── Alert Feed — cross-module exception summary ────────────────────────────
   document.getElementById('dash-ytd').textContent=fmt(d.revenue_ytd||0)+' YTD';
@@ -6626,7 +6784,7 @@ async function loadDashboard(){
     </div>`;
   }else{
     _feedHtml+=_af.map(item=>`
-      <div class="af-item ${item.cls}" onclick="document.querySelector('[data-page=${item.page}]')?.click()" role="button" tabindex="0">
+      <div class="af-item ${item.cls}" data-action="document.querySelector('[data-page=${item.page}]')?.click()" role="button" tabindex="0">
         <span class="af-icon" style="font-family:'Material Symbols Outlined';font-size:18px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">${item.icon}</span>
         <div class="af-body">
           <div class="af-label">${item.label}</div>
@@ -6752,11 +6910,11 @@ async function loadAssets(){
   document.getElementById('assets-stats').innerHTML=`<div class="stat-card"><div class="stat-label">Total Assets</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">registered</div></div><div class="stat-card stat-accent"><div class="stat-label">Operational</div><div class="stat-value">${ops}</div><div class="stat-delta delta-up">▲ ${rows.length?Math.round(ops/rows.length*100):0}% uptime</div></div><div class="stat-card"><div class="stat-label">In Maintenance</div><div class="stat-value">${maint}</div><div class="stat-delta ${maint>0?'delta-down':'delta-up'}">${maint>0?'▼ needs attention':'▲ all clear'}</div></div><div class="stat-card"><div class="stat-label">Asset Value</div><div class="stat-value">${fmtCurrency(val,true)}</div><div class="stat-delta" style="color:var(--text-muted)">total register</div></div>`;
   const cw=canWrite();
   document.getElementById('assets-add-btn').innerHTML=cw
-    ?`<button class="btn btn-primary btn-sm" onclick="openModal('asset')">+ Add Asset</button>`
+    ?`<button class="btn btn-primary btn-sm" data-action="openModal('asset')">+ Add Asset</button>`
     :'';
   document.getElementById('assets-tbody').innerHTML=rows.length
-    ?rows.map(r=>`<tr onclick="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}</td><td>${r.description}</td><td>${r.category}</td><td>${r.location}</td><td>${spill(r.status)}</td><td>${r.last_service||'—'}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;construction</div><span class="empty-title">No assets on the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Add your equipment, vehicles, irrigation systems and infrastructure to start tracking maintenance schedules and asset values.</span>${cw?`<button class="empty-cta" onclick="openModal('asset')">+ Register first asset</button>`:''}</td></tr>`;
+    ?rows.map(r=>`<tr data-action="${cw?`editRecord('asset',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.asset_id}</td><td>${r.description}</td><td>${r.category}</td><td>${r.location}</td><td>${spill(r.status)}</td><td>${r.last_service||'—'}</td><td>${cw?`<button class="btn btn-danger btn-sm" data-action="event.stopPropagation();delRec('asset',${r.id})">✕</button>`:''}</td></tr>`).join('')
+    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;construction</div><span class="empty-title">No assets on the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Add your equipment, vehicles, irrigation systems and infrastructure to start tracking maintenance schedules and asset values.</span>${cw?`<button class="empty-cta" data-action="openModal('asset')">+ Register first asset</button>`:''}</td></tr>`;
 }
 
 async function loadLivestock(){
@@ -6793,14 +6951,14 @@ async function loadLivestock(){
   document.getElementById('livestock-stats').innerHTML=`<div class="stat-card stat-accent"><div class="stat-label">Total Head</div><div class="stat-value">${total.toLocaleString()}</div><div class="stat-delta delta-up">▲ herd total</div></div>${herds.slice(0,3).map(h=>`<div class="stat-card"><div class="stat-label">${h.breed}</div><div class="stat-value">${h.count}</div><div class="stat-delta" style="color:var(--text-muted)">head</div></div>`).join('')}`;
   const cw=canWrite();
   document.getElementById('herd-add-btn').innerHTML=cw
-    ?`<button class="btn btn-primary btn-sm" onclick="openModal('herd')">+ Add Herd</button>
-      <button class="btn btn-secondary btn-sm" onclick="openModal('event')" style="margin-left:8px">+ Log Event</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadErpActivities()" style="margin-left:8px" title="Log feeding, vaccination etc.">⚙ Log Activity</button>`
+    ?`<button class="btn btn-primary btn-sm" data-action="openModal('herd')">+ Add Herd</button>
+      <button class="btn btn-secondary btn-sm" data-action="openModal('event')" style="margin-left:8px">+ Log Event</button>
+      <button class="btn btn-secondary btn-sm" data-action="loadErpActivities()" style="margin-left:8px" title="Log feeding, vaccination etc.">⚙ Log Activity</button>`
     :'';
-  document.getElementById('event-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('event')">+ Log Event</button>`:'';
+  document.getElementById('event-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" data-action="openModal('event')">+ Log Event</button>`:'';
   document.getElementById('livestock-tbody').innerHTML=herds.length
-    ?herds.map(h=>`<tr onclick="${cw?`editRecord('herd',${h.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${h.herd_name}</td><td>${h.count}</td><td>${h.avg_weight} kg</td><td>${spill(h.health)}</td><td>${spill(h.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('herd',${h.id})">✕</button>`:''}</td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;pets</div><span class="empty-title">No herds on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Register your livestock herds to track headcount, body condition scores, health events and movement logs across paddocks.</span>${cw?`<button class="empty-cta" onclick="openModal('herd')">+ Register first herd</button>`:''}</td></tr>`;
+    ?herds.map(h=>`<tr data-action="${cw?`editRecord('herd',${h.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${h.herd_name}</td><td>${h.count}</td><td>${h.avg_weight} kg</td><td>${spill(h.health)}</td><td>${spill(h.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" data-action="event.stopPropagation();delRec('herd',${h.id})">✕</button>`:''}</td></tr>`).join('')
+    :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;pets</div><span class="empty-title">No herds on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Register your livestock herds to track headcount, body condition scores, health events and movement logs across paddocks.</span>${cw?`<button class="empty-cta" data-action="openModal('herd')">+ Register first herd</button>`:''}</td></tr>`;
   const dc=s=>s==='Done'||s==='Logged'?'var(--success-txt)':s==='Pending'?'var(--warn-txt)':'var(--info)';
   document.getElementById('livestock-events').innerHTML=(events||[]).slice(0,8).map(e=>`<div class="list-item"><div class="list-dot" style="background:${dc(e.status)}"></div><div><div class="list-main">${e.herd_name} — ${e.description}</div><div class="list-sub">${e.event_date}</div></div><div class="list-right">${spill(e.status)}</div></div>`).join('')||'<div class="loading">No events logged</div>';
 }
@@ -6838,13 +6996,13 @@ async function loadCrops(){
   document.getElementById('crops-stats').innerHTML=`<div class="stat-card stat-accent"><div class="stat-label">Total Area</div><div class="stat-value">${(+totalHa).toFixed(1).replace(/\.0$/,'')} ha</div><div class="stat-delta delta-up">▲ total land</div></div><div class="stat-card"><div class="stat-label">In Production</div><div class="stat-value">${(+inProd).toFixed(1).replace(/\.0$/,'')} ha</div><div class="stat-delta" style="color:var(--text-muted)">${totalHa?Math.round(inProd/totalHa*100):0}% utilised</div></div><div class="stat-card"><div class="stat-label">Fallow</div><div class="stat-value">${(+fallow).toFixed(1).replace(/\.0$/,'')} ha</div><div class="stat-delta" style="color:var(--text-muted)">resting</div></div><div class="stat-card"><div class="stat-label">Est. Yield Value</div><div class="stat-value">${fmtCurrency(yv,true)}</div><div class="stat-delta delta-up">▲ projected</div></div>`;
   const cw=canWrite();
   document.getElementById('crop-add-btn').innerHTML=cw
-    ?`<button class="btn btn-primary btn-sm" onclick="openModal('crop')">+ Add Field</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadErpActivities()" style="margin-left:8px" title="Log a farm activity">⚙ Log Activity</button>
-      <button class="btn btn-secondary btn-sm" onclick="loadErpProduction()" style="margin-left:8px" title="Record harvest"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">agriculture</span> Record Harvest</button>`
+    ?`<button class="btn btn-primary btn-sm" data-action="openModal('crop')">+ Add Field</button>
+      <button class="btn btn-secondary btn-sm" data-action="loadErpActivities()" style="margin-left:8px" title="Log a farm activity">⚙ Log Activity</button>
+      <button class="btn btn-secondary btn-sm" data-action="loadErpProduction()" style="margin-left:8px" title="Record harvest"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">agriculture</span> Record Harvest</button>`
     :'';
   document.getElementById('crops-tbody').innerHTML=rows.length
-    ?rows.map(r=>`<tr onclick="${cw?`editRecord('crop',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.block}</td><td>${r.crop||'—'}</td><td>${parseFloat(r.area_ha)||0} ha</td><td>${r.planted||'—'}</td><td>${r.est_harvest||'—'}</td><td>${spill(r.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('crop',${r.id})">✕</button>`:''}</td></tr>`).join('')
-    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;grass</div><span class="empty-title">No fields in the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Define your crop blocks to track planting schedules, irrigation status, estimated yields and field-by-field profitability.</span>${cw?`<button class="empty-cta" onclick="openModal('crop')">+ Add first field block</button>`:''}</td></tr>`;
+    ?rows.map(r=>`<tr data-action="${cw?`editRecord('crop',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><td>${r.block}</td><td>${r.crop||'—'}</td><td>${parseFloat(r.area_ha)||0} ha</td><td>${r.planted||'—'}</td><td>${r.est_harvest||'—'}</td><td>${spill(r.status)}</td><td>${cw?`<button class="btn btn-danger btn-sm" data-action="event.stopPropagation();delRec('crop',${r.id})">✕</button>`:''}</td></tr>`).join('')
+    :`<tr class="empty-row"><td colspan="7"><div style="font-size:32px;margin-bottom:12px;grass</div><span class="empty-title">No fields in the register yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto 4px;line-height:1.65">Define your crop blocks to track planting schedules, irrigation status, estimated yields and field-by-field profitability.</span>${cw?`<button class="empty-cta" data-action="openModal('crop')">+ Add first field block</button>`:''}</td></tr>`;
   const active=rows.filter(r=>r.irrigation&&r.irrigation!=='—'&&r.status!=='Fallow'&&r.status!=='Harvested');
   document.getElementById('irrigation-status').innerHTML=active.map(r=>{const p=r.irrigation_pct||0,c=p>60?'moss':p>30?'':'info-fill';return`<div class="inv-row"><div class="inv-header"><span class="inv-name">${r.block} — ${r.crop}</span><span class="inv-qty" style="color:${p>40?'var(--success-txt)':'var(--warn-txt)'}">${r.irrigation} · ${p>40?'Active':'Paused'}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${p}%"></div></div></div>`}).join('')||'<div class="loading">No active irrigation</div>';
   const colors={Growing:'#5f8c4f',Seedling:'#c08a3e',Ripening:'#4f7088',Harvested:'#3f7a35',Fallow:'#3a362a'};
@@ -6883,10 +7041,10 @@ async function loadWorkers(){
   }
   document.getElementById('workers-stats').innerHTML=`<div class="stat-card"><div class="stat-label">Total Staff</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">registered</div></div><div class="stat-card stat-accent"><div class="stat-label">On Site Today</div><div class="stat-value">${present}</div><div class="stat-delta delta-up">▲ present</div></div><div class="stat-card"><div class="stat-label">Monthly Payroll</div><div class="stat-value">${fmtCurrency(payroll,true)}</div><div class="stat-delta" style="color:var(--text-muted)">total outgoings</div></div><div class="stat-card"><div class="stat-label">Avg Attendance</div><div class="stat-value">${rows.length?Math.round(present/rows.length*100):0}%</div><div class="stat-delta ${rows.length&&Math.round(present/rows.length*100)>=75?'delta-up':'delta-down'}">${rows.length&&Math.round(present/rows.length*100)>=75?'▲ on target':'▼ below target'}</div></div>`;
   const cw=canWrite();
-  document.getElementById('worker-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('worker')">+ Add Worker</button>`:'';
+  document.getElementById('worker-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" data-action="openModal('worker')">+ Add Worker</button>`:'';
   document.getElementById('workers-grid').innerHTML=rows.length
-    ?rows.map(r=>`<div class="worker-card" onclick="${cw?`editRecord('worker',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="worker-avatar">${r.initials}</div><div><div class="worker-name">${r.name}</div><div class="worker-role">${r.role}</div></div><div class="worker-badge">${spill(r.status)}</div></div>`).join('')
-    :`<div style="grid-column:1/-1;padding:48px 24px;text-align:center"><div style="font-size:32px;margin-bottom:12px;groups</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No staff on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your farm workers to track daily attendance, leave, roles and monthly payroll. Field supervisors and managers can then be assigned access roles.</span>${cw?`<button class="empty-cta" style="margin-top:16px" onclick="openModal('worker')">+ Add first staff member</button>`:''}</div>`;
+    ?rows.map(r=>`<div class="worker-card" data-action="${cw?`editRecord('worker',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="worker-avatar">${r.initials}</div><div><div class="worker-name">${r.name}</div><div class="worker-role">${r.role}</div></div><div class="worker-badge">${spill(r.status)}</div></div>`).join('')
+    :`<div style="grid-column:1/-1;padding:48px 24px;text-align:center"><div style="font-size:32px;margin-bottom:12px;groups</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No staff on record yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your farm workers to track daily attendance, leave, roles and monthly payroll. Field supervisors and managers can then be assigned access roles.</span>${cw?`<button class="empty-cta" style="margin-top:16px" data-action="openModal('worker')">+ Add first staff member</button>`:''}</div>`;
 }
 
 // Receive stock against an existing inventory item — adds quantity to on_hand
@@ -6927,7 +7085,7 @@ async function openReceiveStockPicker(){
         <button id="recv-save" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
           <span class="material-symbols-outlined" style="font-size:16px">check</span> Receive
         </button>
-        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">Cancel</button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" data-action="document.getElementById('erp-shared-modal').remove()">Cancel</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -6982,11 +7140,11 @@ async function loadInventory(){
   const low=rows.filter(r=>(parseFloat(r.on_hand)||0)<=(parseFloat(r.par_level)||0)),totalVal=rows.reduce((s,r)=>s+((parseFloat(r.on_hand)||0)*(parseFloat(r.unit_cost)||0)),0);
   document.getElementById('inventory-stats').innerHTML=`<div class="stat-card"><div class="stat-label">SKU Lines</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">tracked items</div></div><div class="stat-card"><div class="stat-label">Low Stock</div><div class="stat-value">${low.length}</div><div class="stat-delta ${low.length>0?'delta-down':'delta-up'}">${low.length>0?'▼ reorder needed':'▲ all stocked'}</div></div><div class="stat-card stat-accent"><div class="stat-label">Total Value</div><div class="stat-value">${fmtCurrency(totalVal,true)}</div><div class="stat-delta" style="color:var(--text-muted)">on hand</div></div><div class="stat-card"><div class="stat-label">Last Updated</div><div class="stat-value" style="font-size:16px;letter-spacing:-0.01em">${new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</div><div class="stat-delta" style="color:var(--text-muted)">today</div></div>`;
   const cw=canWrite();
-  document.getElementById('inv-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('inventory')">+ Add Item</button>` + 
-    `<button class="btn btn-secondary btn-sm" onclick="openReceiveStockPicker()" style="margin-left:8px">↓ Receive Stock</button>`:'';
+  document.getElementById('inv-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" data-action="openModal('inventory')">+ Add Item</button>` + 
+    `<button class="btn btn-secondary btn-sm" data-action="openReceiveStockPicker()" style="margin-left:8px">↓ Receive Stock</button>`:'';
   document.getElementById('inventory-levels').innerHTML=rows.length
-    ?rows.map(r=>{const p=Math.round(r.on_hand/r.max_level*100),c=p<25?'low':r.category==='Feed'||r.category==='Crop Input'?'moss':'info-fill';return`<div class="inv-row" onclick="${cw?`editRecord('inventory',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="inv-header"><span class="inv-name">${r.name}</span><span class="inv-qty">${r.on_hand.toLocaleString()} ${r.unit} / ${r.max_level.toLocaleString()} ${r.unit}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${Math.min(p,100)}%"></div></div></div>`;}).join('')
-    :`<div style="padding:56px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">inventory_2</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">Stock register is empty</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your inputs, fuel, feed and supplies to monitor stock levels, set reorder thresholds and get low-stock alerts.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:16px\" onclick=\"openModal('inventory')\"}>+ Add first stock item</button>`:''}</div>`;
+    ?rows.map(r=>{const p=Math.round(r.on_hand/r.max_level*100),c=p<25?'low':r.category==='Feed'||r.category==='Crop Input'?'moss':'info-fill';return`<div class="inv-row" data-action="${cw?`editRecord('inventory',${r.id})`:''}" style="cursor:${cw?'pointer':'default'}"><div class="inv-header"><span class="inv-name">${r.name}</span><span class="inv-qty">${r.on_hand.toLocaleString()} ${r.unit} / ${r.max_level.toLocaleString()} ${r.unit}</span></div><div class="progress-bar"><div class="progress-fill ${c}" style="width:${Math.min(p,100)}%"></div></div></div>`;}).join('')
+    :`<div style="padding:56px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">inventory_2</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">Stock register is empty</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:340px;margin:0 auto;line-height:1.65">Add your inputs, fuel, feed and supplies to monitor stock levels, set reorder thresholds and get low-stock alerts.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:16px\" data-action=\"openModal('inventory')\"}>+ Add first stock item</button>`:''}</div>`;
   document.getElementById('inventory-alerts').innerHTML=low.map(r=>{const crit=r.on_hand<r.par_level*0.5;return`<div class="alert ${crit?'alert-error':'alert-warning'}"><span class="alert-icon"><span style="font-family:'Material Symbols Outlined';font-size:16px;color:currentColor;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;vertical-align:middle" aria-hidden="true">warning</span></span><div><strong>${r.name}</strong> — ${crit?'critically low':'below threshold'}<br>${r.on_hand} ${r.unit} remaining (par: ${r.par_level})</div></div>`}).join('')||'<div class="loading">All stock levels OK</div>';
   document.getElementById('inventory-low-tbody').innerHTML=low.map(r=>`<tr><td>${r.name}</td><td>${r.unit}</td><td>${r.on_hand}</td><td>${r.par_level}</td><td>${spill(r.on_hand<r.par_level*0.5?'Repair':'Maintenance')}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:16px">All items above par level</td></tr>';
 }
@@ -7144,7 +7302,7 @@ async function loadFinance(){
             ? `<span style="color:var(--copper);font-weight:500">● </span>Linked to ERP season: <strong>${seasonName}</strong>`
             : `<span style="color:var(--text-faint)">○ </span>No active ERP season — using manual targets`}
         </div>
-        <button class="btn btn-sm btn-secondary" onclick="navigateTo('erp-budgets')" style="font-size:11px">
+        <button class="btn btn-sm btn-secondary" data-action="navigateTo('erp-budgets')" style="font-size:11px">
           Manage in ERP →
         </button>
       </div>
@@ -7165,16 +7323,16 @@ async function loadFinance(){
         <div style="font-size:13px;font-weight:600;color:${margin>=marginTarget?'var(--success-txt)':'var(--error-txt)'}">${margin>=marginTarget?'▲ On Target':'▼ Below Target'}</div>
       </div>
       ${cw?`<div style="padding-top:8px;border-top:1px solid var(--bdr);display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-sm btn-secondary" onclick="openMarginTargetEditor()">Set Margin Target</button>
-        <button class="btn btn-sm btn-primary" onclick="navigateTo('erp-budgets')">Add Budget Line</button>
+        <button class="btn btn-sm btn-secondary" data-action="openMarginTargetEditor()">Set Margin Target</button>
+        <button class="btn btn-sm btn-primary" data-action="navigateTo('erp-budgets')">Add Budget Line</button>
       </div>`:''}
     `;
   }
-  document.getElementById('income-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','income')">+ Add Income</button>`:'';
-  document.getElementById('expense-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('finance','expense')">+ Add Expense</button>`:'';
-  const fmtLine=(r,type)=>`<div class="finance-line"><div style="flex:1"><div>${r.description||r.category||'—'}</div><div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">${r.category||'—'} · ${r.date||'—'}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="finance-amount ${type==='income'?'amount-pos':'amount-neg'}">${type==='income'?'+':'−'} $${(r.amount||0).toLocaleString()}</span>${cw?`<button class="btn btn-danger btn-sm" onclick="delRec('finance',${r.id})">✕</button>`:''}</div></div>`;
-  const noIncHtml=`<div style="padding:48px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">payments</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No income recorded yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto;line-height:1.65">Log crop sales, livestock sales, grants and other revenue to build your P&amp;L and track profitability by category.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:14px\" onclick=\"openModal('finance','income')\"}>+ Log first income record</button>`:''}</div>`;
-  const noExpHtml=`<div style="padding:48px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">receipt_long</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No expenses recorded yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto;line-height:1.65">Record operating costs, input purchases, wages and overhead to track expense categories and see your true profit margin.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:14px\" onclick=\"openModal('finance','expense')\"}>+ Log first expense</button>`:''}</div>`;
+  document.getElementById('income-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" data-action="openModal('finance','income')">+ Add Income</button>`:'';
+  document.getElementById('expense-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" data-action="openModal('finance','expense')">+ Add Expense</button>`:'';
+  const fmtLine=(r,type)=>`<div class="finance-line"><div style="flex:1"><div>${r.description||r.category||'—'}</div><div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">${r.category||'—'} · ${r.date||'—'}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="finance-amount ${type==='income'?'amount-pos':'amount-neg'}">${type==='income'?'+':'−'} $${(r.amount||0).toLocaleString()}</span>${cw?`<button class="btn btn-danger btn-sm" data-action="delRec('finance',${r.id})">✕</button>`:''}</div></div>`;
+  const noIncHtml=`<div style="padding:48px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">payments</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No income recorded yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto;line-height:1.65">Log crop sales, livestock sales, grants and other revenue to build your P&amp;L and track profitability by category.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:14px\" data-action=\"openModal('finance','income')\"}>+ Log first income record</button>`:''}</div>`;
+  const noExpHtml=`<div style="padding:48px 24px;text-align:center"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">receipt_long</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px">No expenses recorded yet</span><span style="font-size:12px;color:var(--text-faint);display:block;max-width:320px;margin:0 auto;line-height:1.65">Record operating costs, input purchases, wages and overhead to track expense categories and see your true profit margin.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:14px\" data-action=\"openModal('finance','expense')\"}>+ Log first expense</button>`:''}</div>`;
   document.getElementById('finance-income').innerHTML=(income.length?income.map(r=>fmtLine(r,'income')).join('')+`<div class="finance-line" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:14px"><span style="color:var(--text-primary);font-weight:500">Total</span><span class="finance-amount" style="color:var(--text-primary);font-size:16px">$${totalIncome.toLocaleString()}</span></div>`:noIncHtml);
   document.getElementById('finance-expense').innerHTML=(expense.length?expense.map(r=>fmtLine(r,'expense')).join('')+`<div class="finance-line" style="border-top:1px solid var(--bdr);margin-top:8px;padding-top:14px"><span style="color:var(--text-primary);font-weight:500">Total</span><span class="finance-amount" style="color:var(--error-txt);font-size:16px">$${totalExpense.toLocaleString()}</span></div>`:noExpHtml);
 
@@ -7681,8 +7839,8 @@ function renderReportHistory(){
         <div class="report-meta">${ts ? 'Generated '+ts+' · ' : ''}${fmtBadge}${r.period ? ' · '+r.period : ''}</div>
       </div>
       <div class="report-actions">
-        <button class="btn btn-secondary btn-sm" onclick="_viewHistoryReport(${i})">View</button>
-        <button class="btn btn-secondary btn-sm" onclick="_downloadHistoryReport(${i})">Download</button>
+        <button class="btn btn-secondary btn-sm" data-action="_viewHistoryReport(${i})">View</button>
+        <button class="btn btn-secondary btn-sm" data-action="_downloadHistoryReport(${i})">Download</button>
       </div>
     </div>`;
   }).join('');
@@ -7837,10 +7995,10 @@ async function loadCompliance(){
   const compliant=rows.filter(r=>r.status==='Compliant').length,ds=rows.filter(r=>r.status==='Due Soon').length,ov=rows.filter(r=>r.status==='Overdue').length;
   document.getElementById('compliance-stats').innerHTML=`<div class="stat-card"><div class="stat-label">Total Items</div><div class="stat-value">${rows.length}</div><div class="stat-delta" style="color:var(--text-muted)">registered</div></div><div class="stat-card stat-accent"><div class="stat-label">Compliant</div><div class="stat-value">${compliant}</div><div class="stat-delta delta-up">▲ ${rows.length?Math.round(compliant/rows.length*100):0}% rate</div></div><div class="stat-card"><div class="stat-label">Due Soon</div><div class="stat-value">${ds}</div><div class="stat-delta ${ds>0?'delta-down':'delta-up'}">${ds>0?'▼ review needed':'▲ clear'}</div></div><div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value">${ov}</div><div class="stat-delta ${ov>0?'delta-down':'delta-up'}">${ov>0?'▼ action required':'▲ none overdue'}</div></div>`;
   const cw=canWrite();
-  document.getElementById('comp-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" onclick="openModal('compliance')">+ Add Item</button>`:'';
+  document.getElementById('comp-add-btn').innerHTML=cw?`<button class="btn btn-primary btn-sm" data-action="openModal('compliance')">+ Add Item</button>`:'';
   document.getElementById('compliance-list').innerHTML=rows.length
-    ?rows.map(r=>`<div class="comp-item" onclick="${cw?`editRecord('compliance',${r.id})`:''}"><div class="comp-status" style="background:${hc(r.status)}"></div><div><div class="comp-title">${r.title}</div><div class="comp-due">${r.issued_date?'Issued '+r.issued_date+' · ':''} ${r.expiry_date?'Expires '+r.expiry_date:''} ${r.issuing_body?'· '+r.issuing_body:''}</div></div><div class="comp-right">${spill(r.status)}${cw?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('compliance',${r.id})">✕</button>`:''}</div></div>`).join('')
-    :`<div style="padding:56px 24px;text-align:center;"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">verified_user</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">Compliance register is clear</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:380px;margin:0 auto;line-height:1.65;">Add your ZINWA licences, EMA permits, veterinary certificates and fire authority requirements — with due dates — to receive renewal alerts before they expire.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:16px;\" onclick=\"openModal('compliance')\"}>+ Add compliance item</button>`:''}</div>`;
+    ?rows.map(r=>`<div class="comp-item" data-action="${cw?`editRecord('compliance',${r.id})`:''}"><div class="comp-status" style="background:${hc(r.status)}"></div><div><div class="comp-title">${r.title}</div><div class="comp-due">${r.issued_date?'Issued '+r.issued_date+' · ':''} ${r.expiry_date?'Expires '+r.expiry_date:''} ${r.issuing_body?'· '+r.issuing_body:''}</div></div><div class="comp-right">${spill(r.status)}${cw?`<button class="btn btn-danger btn-sm" data-action="event.stopPropagation();delRec('compliance',${r.id})">✕</button>`:''}</div></div>`).join('')
+    :`<div style="padding:56px 24px;text-align:center;"><div style="font-family:'Material Symbols Outlined';font-size:40px;color:var(--text-faint);font-variation-settings:'FILL' 0,'wght' 200,'GRAD' 0,'opsz' 48;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:block;margin-bottom:14px;opacity:0.5">verified_user</div><span style="display:block;font-family:var(--ff-display);font-size:18px;color:var(--text-muted);font-style:italic;margin-bottom:8px;">Compliance register is clear</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:380px;margin:0 auto;line-height:1.65;">Add your ZINWA licences, EMA permits, veterinary certificates and fire authority requirements — with due dates — to receive renewal alerts before they expire.</span>${cw?`<button class=\"empty-cta\" style=\"margin-top:16px;\" data-action=\"openModal('compliance')\"}>+ Add compliance item</button>`:''}</div>`;
 }
 
 async function loadUsers(){
@@ -7859,12 +8017,12 @@ async function loadUsers(){
         <div class="inline-error-title">${title}</div>
         <div class="inline-error-sub">${sub}</div>
         <div class="inline-error-code">${code}</div>
-        <button class="inline-error-retry" onclick="retryFromError('users-tbody')">↻ Reload users</button>
+        <button class="inline-error-retry" data-action="retryFromError('users-tbody')">↻ Reload users</button>
       </div></td></tr>`;
     return;
   }
   document.getElementById('users-tbody').innerHTML=rows.length
-    ?rows.map(r=>`<tr class="${r.active?'':'user-inactive'}" style="cursor:pointer" onclick="editRecord('user',${r.id})"><td>${r.name}</td><td>${r.email}</td><td>${rpill(r.role)}</td><td>${spill(r.active?'Active':'Inactive')}</td><td>${r.last_login?r.last_login.split(' ')[0]:'Never'}</td><td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();delRec('user',${r.id})">✕</button></td></tr>`).join('')
+    ?rows.map(r=>`<tr class="${r.active?'':'user-inactive'}" style="cursor:pointer" data-action="editRecord('user',${r.id})"><td>${r.name}</td><td>${r.email}</td><td>${rpill(r.role)}</td><td>${spill(r.active?'Active':'Inactive')}</td><td>${r.last_login?r.last_login.split(' ')[0]:'Never'}</td><td><button class="btn btn-danger btn-sm" data-action="event.stopPropagation();delRec('user',${r.id})">✕</button></td></tr>`).join('')
     :`<tr class="empty-row"><td colspan="6"><div style="font-size:32px;margin-bottom:12px;manage_accounts</div><span class="empty-title">No team members added yet</span><span style="font-size:12.5px;color:var(--text-faint);display:block;max-width:360px;margin:0 auto 4px;line-height:1.65">Generate an invite code to add field supervisors, finance managers and farm administrators. Each role sees only the data relevant to their work.</span></td></tr>`;
 }
 
@@ -7884,7 +8042,7 @@ async function loadSettings(){
       <div class="inline-error-title" style="font-size:15px">${title}</div>
       <div class="inline-error-sub">${sub}</div>
       <div class="inline-error-code">${code}</div>
-      <button class="inline-error-retry" onclick="retryFromError('settings-estate')">↻ Reload settings</button>
+      <button class="inline-error-retry" data-action="retryFromError('settings-estate')">↻ Reload settings</button>
     </div>`;
     document.getElementById('settings-estate').innerHTML=errHtml;
     document.getElementById('settings-notif').innerHTML='';
@@ -7901,14 +8059,14 @@ async function loadSettings(){
     {k:'notif_compliance',l:'Compliance Reminders',s:'30-day advance notice'},
     {k:'notif_daily_summary',l:'Daily Summary Report',s:'Email at 06:00'},
     {k:'notif_sms',l:'SMS Alerts',s:'Critical alerts only'}
-  ].map(f=>`<div class="setting-row"><div><div class="setting-label">${f.l}</div><div class="setting-sub">${f.s}</div></div><div class="toggle ${s[f.k]==='true'?'':'off'}" onclick="toggleSetting(this,'${f.k}')"></div></div>`).join('');
+  ].map(f=>`<div class="setting-row"><div><div class="setting-label">${f.l}</div><div class="setting-sub">${f.s}</div></div><div class="toggle ${s[f.k]==='true'?'':'off'}" data-action="toggleSetting(this,'${f.k}')"></div></div>`).join('');
   const isDark=!document.body.classList.contains('light-mode');
   document.getElementById('settings-prefs').innerHTML=[
     {k:'pref_dark_mode',l:'Dark Mode',s:'Toggle between dark and light interface',val:isDark},
     {k:'pref_auto_backup',l:'Auto Backup',s:'Daily at midnight',val:s.pref_auto_backup==='true'},
     {k:'pref_2fa',l:'Two-Factor Auth',s:'Required for all users',val:s.pref_2fa==='true'},
     {k:'pref_audit_logging',l:'Audit Logging',s:'Track all data changes',val:s.pref_audit_logging==='true'}
-  ].map(f=>`<div class="setting-row"><div><div class="setting-label">${f.l}</div><div class="setting-sub">${f.s}</div></div><div class="toggle ${f.val?'':'off'}" onclick="toggleSetting(this,'${f.k}')"></div></div>`).join('');
+  ].map(f=>`<div class="setting-row"><div><div class="setting-label">${f.l}</div><div class="setting-sub">${f.s}</div></div><div class="toggle ${f.val?'':'off'}" data-action="toggleSetting(this,'${f.k}')"></div></div>`).join('');
   if(s.current_season)document.getElementById('topbar-season').textContent='Season: '+s.current_season;
 }
 
@@ -8123,8 +8281,8 @@ ${!d.id?`<div class="form-group" style="background:var(--s2);border-radius:8px;p
 <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;line-height:1.6;">Generate a one-time invite code to share with the new user. They'll use it to self-register at the login screen.</div>
 <div style="display:flex;gap:8px;align-items:center">
   <input class="form-input" id="f-invite-code" type="text" readonly placeholder="Click Generate to create a code" style="font-family:var(--ff-mono);font-size:12px;letter-spacing:0.06em;flex:1;">
-  <button type="button" class="btn btn-secondary btn-sm" onclick="generateInviteCode()" style="flex-shrink:0;white-space:nowrap">Generate</button>
-  <button type="button" class="btn btn-secondary btn-sm" id="copy-invite-btn" onclick="copyInviteCode()" style="flex-shrink:0;display:none">Copy</button>
+  <button type="button" class="btn btn-secondary btn-sm" data-action="generateInviteCode()" style="flex-shrink:0;white-space:nowrap">Generate</button>
+  <button type="button" class="btn btn-secondary btn-sm" id="copy-invite-btn" data-action="copyInviteCode()" style="flex-shrink:0;display:none">Copy</button>
 </div>
 <div style="font-size:10.5px;color:var(--text-faint);margin-top:7px;">Codes expire after 24 hours and can only be used once.</div>
 </div>`:''}
@@ -8150,8 +8308,8 @@ ${!d.id?`<div class="form-group" style="background:var(--s2);border-radius:8px;p
 // so it appears immediately without waiting for the background reload.
 function _optimisticInsert(type, rec) {
   const cw = ['owner','manager','finance'].includes(currentUser?.role);
-  const editBtn = (t,id) => cw ? `<button class="btn btn-secondary btn-sm" onclick="openModal('${t}',null,{id:${id}})">Edit</button>` : '';
-  const delBtn  = (t,id) => cw ? `<button class="btn btn-danger btn-sm" onclick="delRec('${t}',${id})">✕</button>` : '';
+  const editBtn = (t,id) => cw ? `<button class="btn btn-secondary btn-sm" data-action="openModal('${t}',null,{id:${id}})">Edit</button>` : '';
+  const delBtn  = (t,id) => cw ? `<button class="btn btn-danger btn-sm" data-action="delRec('${t}',${id})">✕</button>` : '';
   const actions = (t,id) => `<div style="display:flex;gap:6px">${editBtn(t,id)}${delBtn(t,id)}</div>`;
 
   let containerId, html;
@@ -8270,7 +8428,7 @@ async function modalSave(){
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <span class="finance-amount ${cls}">${sign} $${(saved.amount||0).toLocaleString()}</span>
-            ${cw?`<button class="btn btn-danger btn-sm" onclick="delRec('finance',${saved.id})">✕</button>`:''}
+            ${cw?`<button class="btn btn-danger btn-sm" data-action="delRec('finance',${saved.id})">✕</button>`:''}
           </div>
         </div>`;
         // Remove empty-state placeholder if present, prepend new row
@@ -8414,7 +8572,7 @@ async function generateDigestNow() {
           </div>
           <div style="padding:10px 20px 14px;border-top:1px solid var(--bdr2);display:flex;align-items:center;justify-content:space-between">
             <span style="font-size:10px;color:var(--text-faint)">Generated by MyFarm Estate Intelligence · ${today.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>
-            <button onclick="downloadDigest()" style="padding:6px 14px;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--ff-ui);display:flex;align-items:center;gap:5px">
+            <button data-action="downloadDigest()" style="padding:6px 14px;background:var(--copper);color:var(--bg);border:none;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:var(--ff-ui);display:flex;align-items:center;gap:5px">
               <span style="font-family:'Material Symbols Outlined';font-size:14px;font-variation-settings:'FILL' 1,'wght' 300,'GRAD' 0,'opsz' 20;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none">download</span>
               Save PDF
             </button>
@@ -8628,7 +8786,7 @@ async function loadAIInsights(){
         <div style="font-size:12.5px;color:var(--text-muted);line-height:1.65;max-width:280px;margin:0 auto 18px">
           Could not reach the server to load your farm data. Insights will appear once a connection is established.
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="refreshAI()">↻ Try again</button>
+        <button class="btn btn-secondary btn-sm" data-action="refreshAI()">↻ Try again</button>
       </div>`;
     return;
   }
@@ -8643,7 +8801,7 @@ async function loadAIInsights(){
     const ins = top[0];
     if (ins) {
       const now2=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
-      body.innerHTML=`<div style="font-size:12.5px;color:var(--text-secondary);line-height:1.65">${ins.text}</div>${ins.action&&ins.page?`<button class="ai-insight-action" style="margin-top:10px" onclick="document.querySelector('[data-page=${ins.page}]').click()">${ins.action} →</button>`:''}<div style="font-size:9px;color:var(--text-faint);margin-top:10px;font-family:var(--ff-mono)">Updated ${now2} · <button onclick="refreshAI()" style="background:none;border:none;color:var(--text-faint);font-family:var(--ff-mono);font-size:9px;cursor:pointer;padding:0">refresh</button></div>`;
+      body.innerHTML=`<div style="font-size:12.5px;color:var(--text-secondary);line-height:1.65">${ins.text}</div>${ins.action&&ins.page?`<button class="ai-insight-action" style="margin-top:10px" data-action="document.querySelector('[data-page=${ins.page}]').click()">${ins.action} →</button>`:''}<div style="font-size:9px;color:var(--text-faint);margin-top:10px;font-family:var(--ff-mono)">Updated ${now2} · <button data-action="refreshAI()" style="background:none;border:none;color:var(--text-faint);font-family:var(--ff-mono);font-size:9px;cursor:pointer;padding:0">refresh</button></div>`;
     }
     return;
   }
@@ -8654,7 +8812,7 @@ async function loadAIInsights(){
         ${typeIcon[ins.type]||'◈'} ${ins.type.charAt(0).toUpperCase()+ins.type.slice(1)}
       </div>
       <div class="ai-insight-text">${ins.text}</div>
-      ${ins.action&&ins.page?`<button class="ai-insight-action" onclick="document.querySelector('[data-page=${ins.page}]').click()">${ins.action} →</button>`:''}
+      ${ins.action&&ins.page?`<button class="ai-insight-action" data-action="document.querySelector('[data-page=${ins.page}]').click()">${ins.action} →</button>`:''}
     </div>`).join('')}</div>
   <div style="font-size:9.5px;color:var(--text-faint);margin-top:12px;text-align:right;font-family:var(--ff-mono);letter-spacing:0.04em;">Last updated ${now}</div>`;
 }
@@ -9101,7 +9259,7 @@ function entError(pageTitle, e){
       </div>
       <div class="page-error-title">${title}</div>
       <div class="page-error-sub">${sub}${code ? `<br><span style="font-family:var(--ff-mono);font-size:10px;color:var(--text-faint);letter-spacing:0.06em">${code}</span>` : ''}</div>
-      <button class="page-error-btn" onclick="loadPage(currentPage)">↻ Try again</button>
+      <button class="page-error-btn" data-action="loadPage(currentPage)">↻ Try again</button>
     </div>`);
 }
 
@@ -9169,7 +9327,7 @@ function erpModal(title, subtitle, fields, onSave){
         <button id="erp-modal-save" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">
           <span class="material-symbols-outlined" style="font-size:16px">check</span> Save
         </button>
-        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-shared-modal').remove()">
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" data-action="document.getElementById('erp-shared-modal').remove()">
           Cancel
         </button>
       </div>
@@ -9228,7 +9386,7 @@ function erpConfirm(title, message, onConfirm){
       <div style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:24px">${message}</div>
       <div style="display:flex;gap:10px">
         <button id="erp-confirm-yes" class="erp-btn primary" style="flex:1;justify-content:center;padding:13px;font-size:14px">Confirm</button>
-        <button class="erp-btn" style="padding:13px 22px;font-size:14px" onclick="document.getElementById('erp-confirm-modal').remove()">Cancel</button>
+        <button class="erp-btn" style="padding:13px 22px;font-size:14px" data-action="document.getElementById('erp-confirm-modal').remove()">Cancel</button>
       </div>
     </div>`;
   document.body.appendChild(modal);
@@ -9336,8 +9494,8 @@ async function loadErpDashboard(){
       </div>
     </div>
     <div style="margin-top:12px;display:flex;gap:8px">
-      <button class="erp-btn primary" onclick="loadErpProfitability()"><span class="material-symbols-outlined" style="font-size:15px">open_in_new</span> Full Analysis</button>
-      <button class="erp-btn" onclick="loadErpBudgets()"><span class="material-symbols-outlined" style="font-size:15px">savings</span> Budget Variance</button>
+      <button class="erp-btn primary" data-action="loadErpProfitability()"><span class="material-symbols-outlined" style="font-size:15px">open_in_new</span> Full Analysis</button>
+      <button class="erp-btn" data-action="loadErpBudgets()"><span class="material-symbols-outlined" style="font-size:15px">savings</span> Budget Variance</button>
     </div>
   </div>
 
@@ -9356,7 +9514,7 @@ async function loadErpDashboard(){
   <div class="erp-panel">
     <div class="erp-panel-title" style="justify-content:space-between">
       <span><span class="material-symbols-outlined nav-icon">agriculture</span> Recent Operations</span>
-      <button class="erp-btn" onclick="loadErpActivities()" style="padding:4px 10px;font-size:11px">View All</button>
+      <button class="erp-btn" data-action="loadErpActivities()" style="padding:4px 10px;font-size:11px">View All</button>
     </div>
     <table class="erp-table">
       <thead><tr><th>Activity</th><th>Unit</th><th>Date</th><th class="amount">Cost</th></tr></thead>
@@ -9440,7 +9598,7 @@ async function loadErpProfitability(){
     <p class="page-sub">Original profit, contingency, adjusted figures</p>
   </div>
   <div style="display:flex;gap:8px">
-    <button class="erp-btn primary" onclick="openContingencyEditor(${seasonId||'null'}, ${cont?.contingency_pct||10}, '${cont?.contingency_type||'percentage'}', ${cont?.contingency_fixed||0})"><span class="material-symbols-outlined" style="font-size:15px">tune</span> Set Contingency</button>
+    <button class="erp-btn primary" data-action="openContingencyEditor(${seasonId||'null'}, ${cont?.contingency_pct||10}, '${cont?.contingency_type||'percentage'}', ${cont?.contingency_fixed||0})"><span class="material-symbols-outlined" style="font-size:15px">tune</span> Set Contingency</button>
   </div>
 </div>
 
@@ -9517,7 +9675,7 @@ async function loadErpProfitability(){
     <div class="erp-panel">
       <div class="erp-panel-title" style="justify-content:space-between">
         <span><span class="material-symbols-outlined nav-icon">timeline</span> Revenue Projections</span>
-        <button class="erp-btn" onclick="openRevProjectionForm(${seasonId||'null'})" style="padding:4px 10px;font-size:11px">+ Add</button>
+        <button class="erp-btn" data-action="openRevProjectionForm(${seasonId||'null'})" style="padding:4px 10px;font-size:11px">+ Add</button>
       </div>
       <table class="erp-table">
         <thead><tr><th>Description</th><th class="amount">Projected</th><th class="amount">Actual</th></tr></thead>
@@ -9559,8 +9717,8 @@ async function loadErpProfitability(){
       <div><label class="erp-label">Fixed Amount ($)</label><input id="cont-fixed-val" type="number" class="erp-input" min="0" step="100"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
-      <button class="erp-btn primary" onclick="saveContingency()">Save</button>
-      <button class="erp-btn" onclick="closeContEditor()">Cancel</button>
+      <button class="erp-btn primary" data-action="saveContingency()">Save</button>
+      <button class="erp-btn" data-action="closeContEditor()">Cancel</button>
     </div>
   </div>
 </div>
@@ -9632,7 +9790,7 @@ async function loadErpBudgets(){
   erpContent(`
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
   <div><h1>Budgets &amp; Variance</h1><p class="page-sub">${activeSeason?.name||'All Seasons'}</p></div>
-  <button class="erp-btn primary" onclick="openAddBudgetForm(${seasonId||'null'})">+ Add Budget Line</button>
+  <button class="erp-btn primary" data-action="openAddBudgetForm(${seasonId||'null'})">+ Add Budget Line</button>
 </div>
 <div style="padding:8px 0 16px;font-size:11.5px;color:var(--text-faint)">
   <span style="color:var(--copper)">●</span> Budget lines set here feed directly into the Finance module's Budget &amp; Targets card. Actual spend is pulled live from finance transactions.
@@ -9748,7 +9906,7 @@ async function loadErpActivities(){
   erpContent(`
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
   <div><h1>Farm Activities</h1><p class="page-sub">Record what happened on the farm — stock is deducted and costs updated automatically</p></div>
-  <button class="erp-btn primary" onclick="openActivityForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Log Activity</button>
+  <button class="erp-btn primary" data-action="openActivityForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Log Activity</button>
 </div>
 
 <div class="erp-grid" style="grid-template-columns:repeat(4,1fr)">
@@ -9816,14 +9974,14 @@ async function loadErpActivities(){
   <div style="margin-bottom:12px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
       <label class="erp-label" style="margin:0">Inventory Consumed (auto-deducts stock)</label>
-      <button class="erp-btn" onclick="addInventoryLine()" style="padding:4px 10px;font-size:11px">+ Add Item</button>
+      <button class="erp-btn" data-action="addInventoryLine()" style="padding:4px 10px;font-size:11px">+ Add Item</button>
     </div>
     <div id="inv-lines"></div>
   </div>
 
   <div style="display:flex;gap:8px">
-    <button class="erp-btn primary" onclick="saveActivity()">Save Activity</button>
-    <button class="erp-btn" onclick="document.getElementById('act-form-panel').style.display='none'">Cancel</button>
+    <button class="erp-btn primary" data-action="saveActivity()">Save Activity</button>
+    <button class="erp-btn" data-action="document.getElementById('act-form-panel').style.display='none'">Cancel</button>
   </div>
   <div id="act-form-msg" style="margin-top:10px;font-size:13px;color:var(--success-txt);display:none"></div>
 </div>
@@ -9868,7 +10026,7 @@ function addInventoryLine(){
     <div><label class="erp-label">Inventory Item</label><select id="inv-item-${c}" class="erp-select">${invOptions}</select></div>
     <div><label class="erp-label">Quantity</label><input id="inv-qty-${c}" type="number" class="erp-input" min="0.01" step="0.01" value="1"></div>
     <div><label class="erp-label">Notes</label><input id="inv-note-${c}" class="erp-input" placeholder="optional"></div>
-    <button onclick="document.getElementById('inv-line-${c}').remove()" style="height:38px;background:var(--error-bg);border:1px solid var(--error-bdr);color:var(--error-txt);border-radius:var(--radius-sm);cursor:pointer;font-size:16px">×</button>
+    <button data-action="document.getElementById('inv-line-${c}').remove()" style="height:38px;background:var(--error-bg);border:1px solid var(--error-bdr);color:var(--error-txt);border-radius:var(--radius-sm);cursor:pointer;font-size:16px">×</button>
   `;
   document.getElementById('inv-lines').appendChild(el);
 }
@@ -10031,7 +10189,7 @@ async function loadErpProduction(){
   erpContent(`
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
   <div><h1>Production Records</h1><p class="page-sub">Harvest, sales, and yield tracking</p></div>
-  <button class="erp-btn primary" onclick="openProductionForm()">+ Log Production</button>
+  <button class="erp-btn primary" data-action="openProductionForm()">+ Log Production</button>
 </div>
 
 <div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
@@ -10074,8 +10232,8 @@ async function loadErpProduction(){
     <div><label class="erp-label">Actual Revenue ($)</label><input id="prod-rev" type="number" class="erp-input" min="0" step="0.01" value="0"></div>
   </div>
   <div style="display:flex;gap:8px;margin-top:8px">
-    <button class="erp-btn primary" onclick="saveProdBatch()">Save</button>
-    <button class="erp-btn" onclick="document.getElementById('prod-form').style.display='none'">Cancel</button>
+    <button class="erp-btn primary" data-action="saveProdBatch()">Save</button>
+    <button class="erp-btn" data-action="document.getElementById('prod-form').style.display='none'">Cancel</button>
   </div>
 </div>
 
@@ -10133,7 +10291,7 @@ async function loadErpDepreciation(){
   erpContent(`
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
   <div><h1>Asset Depreciation</h1><p class="page-sub">Straight-line &amp; declining balance depreciation tracking</p></div>
-  <button class="erp-btn primary" onclick="openDepreciationForm()">+ Add Depreciation Schedule</button>
+  <button class="erp-btn primary" data-action="openDepreciationForm()">+ Add Depreciation Schedule</button>
 </div>
 
 <div class="erp-grid" style="grid-template-columns:repeat(3,1fr)">
@@ -10155,8 +10313,8 @@ async function loadErpDepreciation(){
     <div><label class="erp-label">Start Date</label><input id="depr-start" type="date" class="erp-input" value="${new Date().toISOString().split('T')[0]}"></div>
   </div>
   <div style="display:flex;gap:8px;margin-top:8px">
-    <button class="erp-btn primary" onclick="saveDepreciation()">Save</button>
-    <button class="erp-btn" onclick="document.getElementById('depr-form').style.display='none'">Cancel</button>
+    <button class="erp-btn primary" data-action="saveDepreciation()">Save</button>
+    <button class="erp-btn" data-action="document.getElementById('depr-form').style.display='none'">Cancel</button>
   </div>
 </div>
 
@@ -10173,7 +10331,7 @@ async function loadErpDepreciation(){
         <td class="amount">${erpFmt.usd(d.accumulated_depreciation)}</td>
         <td class="amount">${erpFmt.usd(d.book_value)}</td>
         <td class="amount">${erpFmt.usd(d.residual_value)}</td>
-        <td><button class="erp-btn" onclick="runDepreciation(${d.id})" style="padding:4px 8px;font-size:11px">Run Period</button></td>
+        <td><button class="erp-btn" data-action="runDepreciation(${d.id})" style="padding:4px 8px;font-size:11px">Run Period</button></td>
       </tr>`).join('') || '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--text-muted)">No depreciation schedules yet</td></tr>'}
     </tbody>
   </table>
@@ -10344,7 +10502,7 @@ async function loadEntCogs(){
     <td>${r.season_name||'—'}</td>
     <td class="amount">${entFmt.usd(r.amount)}</td>
     <td>${entFmt.date(r.entry_date)}</td>
-    <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="deleteEntCogs(${r.id})">Delete</button></td>
+    <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" data-action="deleteEntCogs(${r.id})">Delete</button></td>
   </tr>`).join('');
 
   const bdown = (summary?.breakdown||[]).map(r=>`<tr>
@@ -10356,7 +10514,7 @@ async function loadEntCogs(){
   entContent(`
 <div class="page-header" style="justify-content:space-between;align-items:flex-start">
   <div><h1>COGS Ledger</h1><div class="page-subtitle">Cost of Goods Sold — crop, livestock and overhead entries</div></div>
-  <button class="erp-btn primary" onclick="openEntCogsForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Add Entry</button>
+  <button class="erp-btn primary" data-action="openEntCogsForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Add Entry</button>
 </div>
 <div class="erp-grid">
   ${entKpi('Total COGS',    entFmt.usd(summary?.total_cogs),   '', 'receipt_long', 'var(--error-txt)')}
@@ -10447,7 +10605,7 @@ async function loadEntCostAccounting(){
   entContent(`
 <div class="page-header" style="justify-content:space-between;align-items:flex-start">
   <div><h1>Cost Accounting</h1><div class="page-subtitle">Per-unit P&L with overhead allocation rules</div></div>
-  <button class="erp-btn primary" onclick="openEntAllocRuleForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Add Rule</button>
+  <button class="erp-btn primary" data-action="openEntAllocRuleForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> Add Rule</button>
 </div>
 <div class="erp-panel">
   <div class="erp-panel-title"><span class="material-symbols-outlined nav-icon">grid_on</span> Unit-Level P&L</div>
@@ -10506,14 +10664,14 @@ async function loadEntForecasting(){
     <td><span class="badge">${s.scenario_type}</span></td>
     <td class="amount">${entFmt.pct(s.yield_change_pct||0)}</td>
     <td class="amount">${entFmt.pct(s.price_change_pct||0)}</td>
-    <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="runEntScenario(${s.id})">▶ Run</button></td>
+    <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" data-action="runEntScenario(${s.id})">▶ Run</button></td>
   </tr>`).join('');
 
   const wi = whatif?.scenarios||{};
   entContent(`
 <div class="page-header" style="justify-content:space-between;align-items:flex-start">
   <div><h1>Forecasting &amp; Scenarios</h1><div class="page-subtitle">Cash-flow projections, what-if analysis and saved scenarios</div></div>
-  <button class="erp-btn primary" onclick="openEntScenarioForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> New Scenario</button>
+  <button class="erp-btn primary" data-action="openEntScenarioForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> New Scenario</button>
 </div>
 <div class="erp-grid-2">
   <div class="erp-panel">
@@ -10658,7 +10816,7 @@ async function loadEntLivestockAnalytics(){
         <tr><td>Gross Profit</td><td class="amount" style="color:${entFmt.clr(k.gross_profit||0)}">${entFmt.usd(k.gross_profit)}</td></tr>
         <tr><td>Gross Margin</td><td class="amount">${entFmt.pct(k.gross_margin_pct)}</td></tr>
       </tbody></table>
-      <button class="erp-btn" style="margin-top:10px;width:100%;justify-content:center" onclick="openEntLivestockSnapshotForm(${h.id},'${h.herd_name}')"><span class="material-symbols-outlined" style="font-size:14px">add</span> Log KPI Snapshot</button>
+      <button class="erp-btn" style="margin-top:10px;width:100%;justify-content:center" data-action="openEntLivestockSnapshotForm(${h.id},'${h.herd_name}')"><span class="material-symbols-outlined" style="font-size:14px">add</span> Log KPI Snapshot</button>
     </div>`;
   }).join('');
 
@@ -10721,7 +10879,7 @@ async function loadEntCropAnalytics(){
       <td class="amount" style="color:${entFmt.clr(a.profit_per_ha||0)}">${entFmt.usd(a.profit_per_ha)}/ha</td>
       <td class="amount">${entFmt.pct(a.net_margin_pct)}</td>
       <td class="amount">${a.yield_variance_pct != null ? entFmt.pct(a.yield_variance_pct) : '—'}</td>
-      <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="openEntCropRecordForm(${r.id},'${r.block}')">+ Record</button></td>
+      <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" data-action="openEntCropRecordForm(${r.id},'${r.block}')">+ Record</button></td>
     </tr>`;
   }).join('');
 
@@ -10883,7 +11041,7 @@ async function loadEntCalculations(){
           <td><code style="font-family:var(--ff-mono);font-size:12px;color:var(--copper-lt)">${f.name}</code></td>
           <td>${f.version}</td>
           <td style="color:var(--text-muted)">${f.description}</td>
-          <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="openEntFormulaInvoker('${f.name}')">▶ Invoke</button></td>
+          <td><button class="erp-btn" style="padding:3px 8px;font-size:11px" data-action="openEntFormulaInvoker('${f.name}')">▶ Invoke</button></td>
         </tr>`).join('')}
       </tbody></table>
     </div>`).join('');
@@ -10945,14 +11103,14 @@ async function loadEntScenarios(){
     <td class="amount">${entFmt.pct(s.fertiliser_change_pct||0)}</td>
     <td class="amount">${entFmt.pct(s.labour_change_pct||0)}</td>
     <td>
-      <button class="erp-btn" style="padding:3px 8px;font-size:11px" onclick="runEntScenario(${s.id})">▶ Run</button>
+      <button class="erp-btn" style="padding:3px 8px;font-size:11px" data-action="runEntScenario(${s.id})">▶ Run</button>
     </td>
   </tr>`).join('');
 
   entContent(`
 <div class="page-header" style="justify-content:space-between;align-items:flex-start">
   <div><h1>Scenario Modelling</h1><div class="page-subtitle">Worst / Expected / Best case projections and saved scenarios</div></div>
-  <button class="erp-btn primary" onclick="openEntScenarioForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> New Scenario</button>
+  <button class="erp-btn primary" data-action="openEntScenarioForm()"><span class="material-symbols-outlined" style="font-size:15px">add</span> New Scenario</button>
 </div>
 <div class="erp-grid-3">${wiCards}</div>
 <div class="erp-panel">
